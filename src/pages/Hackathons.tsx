@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "@/config";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -44,7 +45,7 @@ const Hackathons = () => {
 
     const fetchHackathons = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/hackathons");
+            const response = await fetch(`${API_BASE_URL}/api/hackathons`);
             const data = await response.json();
             if (data.success) {
                 // Filter out hidden hackathons
@@ -66,7 +67,7 @@ const Hackathons = () => {
                 participantType: "Individual",
                 ...individualForm
             };
-            const response = await fetch("http://localhost:5000/api/applications", {
+            const response = await fetch(`${API_BASE_URL}/api/applications`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
@@ -97,7 +98,7 @@ const Hackathons = () => {
                 teamMembers: members
             };
 
-            const response = await fetch("http://localhost:5000/api/applications", {
+            const response = await fetch(`${API_BASE_URL}/api/applications`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)

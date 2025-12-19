@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_BASE_URL } from "@/config";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -130,7 +131,7 @@ const Technology = () => {
         };
 
         try {
-            const response = await fetch("http://localhost:5000/api/technology-applications", {
+            const response = await fetch(`${API_BASE_URL}/api/technology-applications`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)

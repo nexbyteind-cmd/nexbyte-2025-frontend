@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "@/config";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { motion } from "framer-motion";
@@ -21,7 +22,7 @@ const Testimonials = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/testimonials");
+        const response = await fetch(`${API_BASE_URL}/api/testimonials`);
         const resData = await response.json();
         if (resData.success) {
           setData(resData.data);

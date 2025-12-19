@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_BASE_URL } from "@/config";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,7 +117,7 @@ const AdminPanel = () => {
     const fetchContacts = async () => {
         setLoading(true);
         try {
-            const response = await fetch("http://localhost:5000/api/contacts");
+            const response = await fetch(`${API_BASE_URL}/api/contacts`);
             const data = await response.json();
             if (data.success) setContacts(data.data);
         } catch (error) {
@@ -129,7 +130,7 @@ const AdminPanel = () => {
     const fetchHackathons = async () => {
         setLoading(true);
         try {
-            const response = await fetch("http://localhost:5000/api/hackathons");
+            const response = await fetch(`${API_BASE_URL}/api/hackathons`);
             const data = await response.json();
             if (data.success) setHackathons(data.data);
         } catch (error) {
@@ -141,7 +142,7 @@ const AdminPanel = () => {
 
     const fetchApplications = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/applications");
+            const response = await fetch(`${API_BASE_URL}/api/applications`);
             const data = await response.json();
             if (data.success) setApplications(data.data);
         } catch (error) {
@@ -152,7 +153,7 @@ const AdminPanel = () => {
     // --- Technology Applications Handlers ---
     const fetchTechApplications = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/technology-applications");
+            const response = await fetch(`${API_BASE_URL}/api/technology-applications`);
             const data = await response.json();
             if (data.success) setTechApplications(data.data);
         } catch (error) {
@@ -163,7 +164,7 @@ const AdminPanel = () => {
     // --- Marketing Applications Handlers ---
     const fetchMarketingApplications = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/marketing-applications");
+            const response = await fetch(`${API_BASE_URL}/api/marketing-applications`);
             const data = await response.json();
             if (data.success) setMarketingApplications(data.data);
         } catch (error) {
@@ -174,7 +175,7 @@ const AdminPanel = () => {
     // --- Testimonials & Content Handlers ---
     const fetchTestimonials = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/testimonials");
+            const response = await fetch(`${API_BASE_URL}/api/testimonials`);
             const data = await response.json();
             if (data.success) setTestimonials(data.data);
         } catch (error) {
@@ -190,8 +191,8 @@ const AdminPanel = () => {
 
             const method = editingContentId ? "PUT" : "POST";
             const url = editingContentId
-                ? `http://localhost:5000/api/testimonials/${editingContentId}`
-                : "http://localhost:5000/api/testimonials";
+                ? `${API_BASE_URL}/api/testimonials/${editingContentId}`
+                : `${API_BASE_URL}/api/testimonials`;
 
             const response = await fetch(url, {
                 method,
@@ -224,7 +225,7 @@ const AdminPanel = () => {
     const handleDeleteContent = async (id: string) => {
         if (!confirm("Delete this content?")) return;
         try {
-            await fetch(`http://localhost:5000/api/testimonials/${id}`, { method: "DELETE" });
+            await fetch(`${API_BASE_URL}/api/testimonials/${id}`, { method: "DELETE" });
             toast.success("Deleted");
             fetchTestimonials();
         } catch (e) { toast.error("Error deleting"); }
@@ -233,7 +234,7 @@ const AdminPanel = () => {
     // Helper to toggle active status
     const toggleContentStatus = async (id: string, current: boolean) => {
         try {
-            await fetch(`http://localhost:5000/api/testimonials/${id}/status`, {
+            await fetch(`${API_BASE_URL}/api/testimonials/${id}/status`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ isActive: !current })
@@ -246,7 +247,7 @@ const AdminPanel = () => {
     // --- Staffing Applications Handlers ---
     const fetchStaffingApplications = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/staffing-applications");
+            const response = await fetch(`${API_BASE_URL}/api/staffing-applications`);
             const data = await response.json();
             if (data.success) setStaffingApplications(data.data);
         } catch (error) {
@@ -324,7 +325,7 @@ const AdminPanel = () => {
                 teamSize: { min: newHackathon.teamSizeMin, max: newHackathon.teamSizeMax }
             };
 
-            const response = await fetch("http://localhost:5000/api/hackathons", {
+            const response = await fetch(`${API_BASE_URL}/api/hackathons`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
@@ -355,7 +356,7 @@ const AdminPanel = () => {
 
     const handleToggleVisibility = async (id: string, currentStatus: boolean) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/hackathons/${id}/visibility`, {
+            const response = await fetch(`${API_BASE_URL}/api/hackathons/${id}/visibility`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ isHidden: !currentStatus }) // Toggle
@@ -376,7 +377,7 @@ const AdminPanel = () => {
         if (!confirm("Are you sure you want to delete this hackathon? This cannot be undone.")) return;
 
         try {
-            const response = await fetch(`http://localhost:5000/api/hackathons/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/hackathons/${id}`, {
                 method: "DELETE"
             });
             const data = await response.json();
@@ -395,7 +396,7 @@ const AdminPanel = () => {
 
     const fetchPrograms = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/programs");
+            const response = await fetch(`${API_BASE_URL}/api/programs`);
             const data = await response.json();
             if (data.success) setPrograms(data.data);
         } catch (error) {
@@ -405,7 +406,7 @@ const AdminPanel = () => {
 
     const fetchProgramApplications = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/program-applications");
+            const response = await fetch(`${API_BASE_URL}/api/program-applications`);
             const data = await response.json();
             if (data.success) setProgramApplications(data.data);
         } catch (error) {
@@ -416,7 +417,7 @@ const AdminPanel = () => {
     const handleCreateProgram = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const response = await fetch("http://localhost:5000/api/programs", {
+            const response = await fetch(`${API_BASE_URL}/api/programs`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(newProgram)
@@ -442,7 +443,7 @@ const AdminPanel = () => {
     const handleDeleteProgram = async (id: string) => {
         if (!confirm("Delete this program?")) return;
         try {
-            const response = await fetch(`http://localhost:5000/api/programs/${id}`, { method: "DELETE" });
+            const response = await fetch(`${API_BASE_URL}/api/programs/${id}`, { method: "DELETE" });
             if (response.ok) {
                 toast.success("Program Deleted");
                 fetchPrograms();

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, Phone, MapPin, Send, Clock, MessageSquare, Globe, Headphones, Loader2 } from "lucide-react";
 import { useState, FormEvent } from "react";
+import { API_BASE_URL } from "@/config";
 import { toast } from "sonner";
 
 const contactMethods = [
@@ -83,8 +84,7 @@ const Contact = () => {
     setLoading(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const response = await fetch(`${apiUrl}/api/contact`, {
+      const response = await fetch(`${API_BASE_URL}/api/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

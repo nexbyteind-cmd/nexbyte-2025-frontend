@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "@/config";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -83,7 +84,7 @@ const Training = () => {
 
     const fetchPrograms = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/programs");
+            const response = await fetch(`${API_BASE_URL}/api/programs`);
             const data = await response.json();
             if (data.success) {
                 setPrograms(data.data);
@@ -115,7 +116,7 @@ const Training = () => {
         };
 
         try {
-            const response = await fetch("http://localhost:5000/api/program-applications", {
+            const response = await fetch(`${API_BASE_URL}/api/program-applications`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
