@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const navLinks = [
   { label: "Services", href: "/services" },
@@ -16,6 +16,7 @@ const navLinks = [
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate(); // ✅ FIX
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,10 +41,12 @@ const Navbar = () => {
         <nav className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xl">D</span>
-            </div>
-            <span className="text-xl font-bold">DigitalPro</span>
+            <img
+              src="/N logo .png"
+              alt="NexByte Logo"
+              className="w-10 h-10 object-contain"
+            />
+            <span className="text-xl font-bold">Nexbyteind</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -59,9 +62,13 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* CTA Button */}
+          {/* Desktop CTA Button */}
           <div className="hidden md:block">
-            <Button variant="success" size="default">
+            <Button
+              variant="success"
+              size="default"
+              onClick={() => navigate("/services")}
+            >
               Get Started
             </Button>
           </div>
@@ -98,7 +105,17 @@ const Navbar = () => {
                   {link.label}
                 </Link>
               ))}
-              <Button variant="success" size="default" className="mt-2">
+
+              {/* Mobile CTA */}
+              <Button
+                variant="success"
+                size="default"
+                className="mt-2"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  navigate("/services");
+                }}
+              >
                 Get Started
               </Button>
             </div>

@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Link } from "react-router-dom";
 
 const services = [
     {
@@ -283,7 +284,9 @@ const Marketing = () => {
                         <span className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">Digital Marketing</span>
                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">Complete Social Media & <br /><span className="text-gradient-primary">Marketing Solutions</span></h1>
                         <p className="text-lg text-muted-foreground max-w-3xl mx-auto mb-8">From strategy to execution, we drive real engagement and growth.</p>
-                        <Button size="lg" onClick={() => handleOpenModal()}>Get Started <ArrowRight className="ml-2 w-4 h-4" /></Button>
+                        <Link to="/contact">
+                            <Button size="lg">Get Started <ArrowRight className="ml-2 w-4 h-4" /></Button>
+                        </Link>
                     </motion.div>
                 </div>
             </section>

@@ -18,6 +18,9 @@ import Staffing from "./pages/Staffing";
 import Training from "./pages/Training";
 import Hackathons from "./pages/Hackathons";
 import AdminPanel from "./pages/AdminPanel"; // Import AdminPanel
+import OfficialRegistration from "./pages/OfficialRegistration";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +45,9 @@ const App = () => (
           <Route path="/about" element={<About />} />
           <Route path="/testimonials" element={<Testimonials />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/official-registration" element={<OfficialRegistration />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
           {/* ADD ALL CUSTOM ROUTES and  ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

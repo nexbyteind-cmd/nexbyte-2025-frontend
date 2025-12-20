@@ -92,7 +92,7 @@ const Testimonials = () => {
             >
               <h2 className="text-3xl md:text-4xl font-bold mb-4">What Our Clients Say</h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Don't just take our word for it. Here's what business leaders have to say about working with DigitalPro.
+                Don't just take our word for it. Here's what business leaders have to say about working with Nexbyteind.
               </p>
             </motion.div>
 
@@ -222,7 +222,7 @@ const Testimonials = () => {
                 Ready to Be Our Next Success Story?
               </h2>
               <p className="text-primary-foreground/80 text-lg mb-8 max-w-2xl mx-auto">
-                Join hundreds of businesses that have transformed their digital presence with DigitalPro.
+                Join hundreds of businesses that have transformed their digital presence with Nexbyteind.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <Button variant="secondary" size="lg" asChild>

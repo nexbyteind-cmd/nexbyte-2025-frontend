@@ -2,6 +2,8 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, TrendingUp, Users, Globe } from "lucide-react";
 
+import { Link } from "react-router-dom"; // Added import
+
 const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-hero">
@@ -57,14 +59,18 @@ const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
           >
-            <Button variant="hero" size="xl">
-              Explore Our Services
-              <ArrowRight className="w-5 h-5" />
-            </Button>
-            <Button variant="hero-outline" size="xl">
-              <Play className="w-5 h-5" />
-              Apply for Internship / Training
-            </Button>
+            <Link to="/services">
+              <Button variant="hero" size="xl">
+                Explore Our Services
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+            </Link>
+            <Link to="/services/training">
+              <Button variant="hero-outline" size="xl">
+                <Play className="w-5 h-5" />
+                Apply for Internship / Training
+              </Button>
+            </Link>
           </motion.div>
 
           {/* Stats */}

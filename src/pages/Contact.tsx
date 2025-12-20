@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Phone, MapPin, Send, Clock, MessageSquare, Globe, Headphones, Loader2 } from "lucide-react";
+import { Mail, Phone, Send, Clock, MessageSquare, Globe, Headphones, Loader2 } from "lucide-react";
 import { useState, FormEvent } from "react";
 import { API_BASE_URL } from "@/config";
 import { toast } from "sonner";
@@ -14,22 +14,15 @@ const contactMethods = [
     icon: Mail,
     title: "Email Us",
     description: "Send us an email anytime",
-    primary: "hello@digitalpro.com",
-    secondary: "support@digitalpro.com",
+    primary: "lokesh@nexbyte.com",
+    secondary: "nexbyteind@gmail.com",
   },
   {
     icon: Phone,
     title: "Call Us",
     description: "Mon-Fri from 9am to 6pm",
-    primary: "+1 (555) 123-4567",
-    secondary: "+1 (555) 987-6543",
-  },
-  {
-    icon: MapPin,
-    title: "Visit Us",
-    description: "Come say hello",
-    primary: "123 Digital Avenue, Suite 100",
-    secondary: "San Francisco, CA 94105",
+    primary: "+91 8247872473",
+    secondary: "",
   },
   {
     icon: Clock,
@@ -45,19 +38,16 @@ const supportOptions = [
     icon: MessageSquare,
     title: "Sales Inquiries",
     description: "Talk to our sales team about your project needs and get a custom quote.",
-    action: "Contact Sales",
   },
   {
     icon: Headphones,
     title: "Technical Support",
     description: "Get help with your existing projects and technical questions.",
-    action: "Get Support",
   },
   {
     icon: Globe,
     title: "Partnerships",
     description: "Interested in partnering with us? Let's discuss opportunities.",
-    action: "Partner With Us",
   },
 ];
 
@@ -236,7 +226,7 @@ const Contact = () => {
                         type="tel"
                         value={formData.phone}
                         onChange={handleChange}
-                        placeholder="+1 (555) 000-0000"
+                        placeholder="+91 8919200210"
                         className="bg-background"
                       />
                     </div>
@@ -273,22 +263,7 @@ const Contact = () => {
                     </select>
                   </div>
 
-                  <div>
-                    <label htmlFor="budget" className="text-sm font-medium mb-2 block">Project Budget</label>
-                    <select
-                      id="budget"
-                      name="budget"
-                      value={formData.budget}
-                      onChange={handleChange}
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                    >
-                      <option value="">Select budget range</option>
-                      <option value="small">$1,000 - $5,000</option>
-                      <option value="medium">$5,000 - $15,000</option>
-                      <option value="large">$15,000 - $50,000</option>
-                      <option value="enterprise">$50,000+</option>
-                    </select>
-                  </div>
+
 
                   <div>
                     <label htmlFor="message" className="text-sm font-medium mb-2 block">Tell Us About Your Project *</label>
@@ -337,9 +312,6 @@ const Contact = () => {
                         <div className="flex-1">
                           <h3 className="font-semibold mb-1">{option.title}</h3>
                           <p className="text-sm text-muted-foreground mb-2">{option.description}</p>
-                          <Button variant="link" className="p-0 h-auto text-primary">
-                            {option.action} →
-                          </Button>
                         </div>
                       </div>
                     ))}
@@ -374,12 +346,7 @@ const Contact = () => {
                 </div>
 
                 {/* Map Placeholder */}
-                <div className="bg-secondary/50 rounded-xl h-48 flex items-center justify-center border border-border/50">
-                  <div className="text-center">
-                    <MapPin className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-muted-foreground">San Francisco, CA</p>
-                  </div>
-                </div>
+
               </motion.div>
             </div>
           </div>

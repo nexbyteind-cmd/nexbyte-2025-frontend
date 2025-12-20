@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Mail, Phone, MapPin } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CTASection = () => {
+  const navigate = useNavigate(); // ✅ FIX
+
   return (
     <section className="py-24 bg-background relative overflow-hidden">
       {/* Background decoration */}
@@ -20,20 +23,31 @@ const CTASection = () => {
           className="max-w-4xl mx-auto text-center"
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Ready to <span className="text-gradient-primary">Transform</span> Your Digital Presence?
+            Ready to{" "}
+            <span className="text-gradient-primary">Transform</span> Your Digital Presence?
           </h2>
+
           <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto">
-            Let's discuss how we can help your business grow. Get a free consultation 
+            Let's discuss how we can help your business grow. Get a free consultation
             and custom strategy tailored to your goals.
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <Button variant="hero" size="xl">
+            <Button
+              variant="hero"
+              size="xl"
+              onClick={() => navigate("/contact")}
+            >
               Get Free Consultation
               <ArrowRight className="w-5 h-5" />
             </Button>
-            <Button variant="outline" size="xl">
+
+            <Button
+              variant="outline"
+              size="xl"
+              onClick={() => navigate("/contact")}
+            >
               View Our Work
             </Button>
           </div>
@@ -41,7 +55,7 @@ const CTASection = () => {
           {/* Contact info */}
           <div className="flex flex-wrap justify-center gap-8">
             <motion.a
-              href="mailto:hello@digitalagency.com"
+              href="mailto:lokesh@nexbyte.com"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -51,10 +65,11 @@ const CTASection = () => {
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Mail className="w-5 h-5 text-primary" />
               </div>
-              <span>hello@digitalagency.com</span>
+              <span>lokesh@nexbyte.com</span>
             </motion.a>
+
             <motion.a
-              href="tel:+1234567890"
+              href="tel:+918247872473"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -64,8 +79,9 @@ const CTASection = () => {
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Phone className="w-5 h-5 text-primary" />
               </div>
-              <span>+1 (234) 567-890</span>
+              <span>+91 8247872473</span>
             </motion.a>
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}

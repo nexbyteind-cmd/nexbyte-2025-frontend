@@ -1,9 +1,18 @@
 import { Instagram, Facebook, Linkedin, Youtube, Twitter, ArrowUp } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const socialLinks = [
+    { icon: Linkedin, url: "https://www.linkedin.com/company/nexbyte-services/" },
+    { icon: Instagram, url: "https://www.instagram.com/nexbyte_tech?igsh=OWJpZnZjd25hZ2p5&utm_source=qr" },
+    { icon: Twitter, url: "https://x.com/nexbyteind" }, // X icon used as Twitter
+    { icon: Youtube, url: "https://youtube.com/@nexbyteind?si=XET9tJAyE4lWN413" },
+    { icon: Facebook, url: "https://www.facebook.com/profile.php?id=61584986327411" },
+  ];
 
   return (
     <footer className="bg-foreground text-background py-16">
@@ -11,25 +20,24 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-xl">D</span>
-              </div>
-              <span className="text-xl font-bold">DigitalPro</span>
+            <div className="mb-6">
+              <img src="/n text logo.png" alt="NexByte Logo" className="h-20 w-auto object-contain" />
             </div>
             <p className="text-background/70 mb-6 max-w-md">
-              Your trusted partner for comprehensive digital solutions. 
-              From social media management to enterprise web development, 
+              Your trusted partner for comprehensive digital solutions.
+              From social media management to enterprise web development,
               we help businesses grow with data-driven strategies.
             </p>
             <div className="flex gap-3">
-              {[Instagram, Facebook, Linkedin, Youtube, Twitter].map((Icon, index) => (
+              {socialLinks.map((item, index) => (
                 <a
                   key={index}
-                  href="#"
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-10 h-10 rounded-lg bg-background/10 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
                 >
-                  <Icon className="w-5 h-5" />
+                  <item.icon className="w-5 h-5" />
                 </a>
               ))}
             </div>
@@ -39,10 +47,11 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Services</h4>
             <ul className="space-y-3 text-background/70">
-              <li><a href="#" className="hover:text-background transition-colors">Social Media Management</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">Digital Marketing</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">Website Development</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">Analytics & Insights</a></li>
+              <li><Link to="/services/marketing" className="hover:text-background transition-colors">Marketing</Link></li>
+              <li><Link to="/services/technology" className="hover:text-background transition-colors">Technology</Link></li>
+              <li><Link to="/services/training" className="hover:text-background transition-colors">Training</Link></li>
+              <li><Link to="/services/hackathons" className="hover:text-background transition-colors">Hackathons</Link></li>
+              <li><Link to="/analytics" className="hover:text-background transition-colors">Analytics & Insights</Link></li>
             </ul>
           </div>
 
@@ -50,10 +59,9 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Company</h4>
             <ul className="space-y-3 text-background/70">
-              <li><a href="#" className="hover:text-background transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">Our Work</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">Careers</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">Contact</a></li>
+              <li><Link to="/about" className="hover:text-background transition-colors">About Us</Link></li>
+              <li><Link to="/contact" className="hover:text-background transition-colors">Contact</Link></li>
+              <li><Link to="/official-registration" className="hover:text-background transition-colors">Official Registration</Link></li>
             </ul>
           </div>
         </div>
@@ -61,11 +69,11 @@ const Footer = () => {
         {/* Bottom bar */}
         <div className="pt-8 border-t border-background/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-background/50 text-sm">
-            © 2024 DigitalPro. All rights reserved.
+            © 2024 Nexbyteind. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-sm text-background/50">
-            <a href="#" className="hover:text-background transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-background transition-colors">Terms of Service</a>
+            <Link to="/privacy-policy" className="hover:text-background transition-colors">Privacy Policy</Link>
+            <Link to="/terms-of-service" className="hover:text-background transition-colors">Terms of Service</Link>
           </div>
           <button
             onClick={scrollToTop}

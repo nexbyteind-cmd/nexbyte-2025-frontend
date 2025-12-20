@@ -42,7 +42,8 @@ const AdminPanel = () => {
         techStack: "",
         startDate: "",
         endDate: "",
-        organizerContact: ""
+        organizerContact: "",
+        whatsappGroupLink: ""
     });
 
     // Programs State
@@ -338,7 +339,7 @@ const AdminPanel = () => {
                 // Reset form
                 setNewHackathon({
                     name: "", mode: "Online", description: "", teamSizeMin: 1, teamSizeMax: 4,
-                    isPaid: false, techStack: "", startDate: "", endDate: "", organizerContact: ""
+                    isPaid: false, techStack: "", startDate: "", endDate: "", organizerContact: "", whatsappGroupLink: ""
                 });
             } else {
                 toast.error("Failed to create hackathon");
@@ -752,6 +753,15 @@ const AdminPanel = () => {
                                                     placeholder="organizer@example.com"
                                                     value={newHackathon.organizerContact}
                                                     onChange={(e) => setNewHackathon({ ...newHackathon, organizerContact: e.target.value })}
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label>WhatsApp Group Link</Label>
+                                                <Input type="url"
+                                                    placeholder="https://chat.whatsapp.com/..."
+                                                    value={newHackathon.whatsappGroupLink}
+                                                    onChange={(e) => setNewHackathon({ ...newHackathon, whatsappGroupLink: e.target.value })}
                                                 />
                                             </div>
 

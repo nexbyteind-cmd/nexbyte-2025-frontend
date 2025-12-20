@@ -113,8 +113,8 @@ const ContactSection = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold mb-1">Email Us</h4>
-                  <p className="text-muted-foreground">hello@digitalpro.com</p>
-                  <p className="text-muted-foreground">support@digitalpro.com</p>
+                  <p className="text-muted-foreground">lokesh@nexbyte.com</p>
+                  <p className="text-muted-foreground">nexbyteind@gmail.com</p>
                 </div>
               </div>
 
@@ -124,21 +124,11 @@ const ContactSection = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold mb-1">Call Us</h4>
-                  <p className="text-muted-foreground">+1 (555) 123-4567</p>
-                  <p className="text-muted-foreground">+1 (555) 987-6543</p>
+                  <p className="text-muted-foreground">+91 8247872473</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1">Visit Us</h4>
-                  <p className="text-muted-foreground">123 Digital Avenue, Suite 100</p>
-                  <p className="text-muted-foreground">San Francisco, CA 94105</p>
-                </div>
-              </div>
+
 
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -156,7 +146,7 @@ const ContactSection = () => {
             <div className="bg-success/10 rounded-xl p-6 border border-success/20">
               <h4 className="font-semibold text-success mb-2">Quick Response Guarantee</h4>
               <p className="text-sm text-muted-foreground">
-                We respond to all inquiries within 24 hours. For urgent matters, call us directly for immediate assistance.
+                We respond to all inquiries within 6 hours. For urgent matters, call us directly for immediate assistance.
               </p>
             </div>
           </motion.div>
