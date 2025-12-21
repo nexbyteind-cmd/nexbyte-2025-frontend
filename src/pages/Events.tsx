@@ -67,6 +67,33 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import Carousel from "@/components/Carousel";
+
+const SectionHeader = ({ title, subtitle, icon: Icon, color }: SectionHeaderProps) => {
+    const colorClasses = {
+        blue: 'bg-blue-50 text-blue-700 border-blue-200',
+        purple: 'bg-purple-50 text-purple-700 border-purple-200',
+        orange: 'bg-orange-50 text-orange-700 border-orange-200',
+        green: 'bg-green-50 text-green-700 border-green-200'
+    };
+
+    return (
+        <div className="flex flex-col container mx-auto px-4 mb-10">
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+            >
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold mb-4 w-fit ${colorClasses[color as keyof typeof colorClasses] || colorClasses.blue}`}>
+                    <Icon className="w-4 h-4" />
+                    <span className="uppercase tracking-wider">{subtitle}</span>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900">{title}</h2>
+            </motion.div>
+        </div>
+    );
+};
 
 const Events = () => {
     const [trainings, setTrainings] = useState<Program[]>([]);
@@ -157,100 +184,10 @@ const Events = () => {
         }
     };
 
-    const SectionHeader = ({ title, subtitle, icon: Icon, color }: SectionHeaderProps) => {
-        const colorClasses = {
-            blue: 'bg-blue-50 text-blue-700 border-blue-200',
-            purple: 'bg-purple-50 text-purple-700 border-purple-200',
-            orange: 'bg-orange-50 text-orange-700 border-orange-200',
-            green: 'bg-green-50 text-green-700 border-green-200'
-        };
-        
-        return (
-            <div className="flex flex-col container mx-auto px-4 mb-10">
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                >
-                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold mb-4 w-fit ${colorClasses[color as keyof typeof colorClasses] || colorClasses.blue}`}>
-                        <Icon className="w-4 h-4" />
-                        <span className="uppercase tracking-wider">{subtitle}</span>
-                    </div>
-                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900">{title}</h2>
-                </motion.div>
-            </div>
-        );
-    };
+
 
     // --- CAROUSEL COMPONENT ---
-    const Carousel = ({ children }: { children: React.ReactNode[] }) => {
-        const [currentIndex, setCurrentIndex] = useState(0);
 
-        if (!children || children.length === 0) return null;
-
-        const nextSlide = () => {
-            setCurrentIndex((prev) => (prev + 1) % children.length);
-        };
-
-        const prevSlide = () => {
-            setCurrentIndex((prev) => (prev - 1 + children.length) % children.length);
-        };
-
-        return (
-            <div className="container mx-auto px-4 relative max-w-7xl">
-                <div className="relative overflow-hidden min-h-[380px] px-16">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={currentIndex}
-                            initial={{ opacity: 0, x: 100 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -100 }}
-                            transition={{ duration: 0.4, ease: "easeInOut" }}
-                            className="flex justify-center w-full"
-                        >
-                            {children[currentIndex]}
-                        </motion.div>
-                    </AnimatePresence>
-                </div>
-
-                {children.length > 1 && (
-                    <>
-                        <button
-                            onClick={prevSlide}
-                            className="absolute top-1/2 left-0 -translate-y-1/2 bg-white/90 backdrop-blur-sm border border-gray-200 p-3 rounded-full shadow-lg text-gray-700 hover:text-primary hover:scale-110 hover:bg-white transition-all z-20 hover:shadow-xl"
-                            aria-label="Previous slide"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
-                        <button
-                            onClick={nextSlide}
-                            className="absolute top-1/2 right-0 -translate-y-1/2 bg-white/90 backdrop-blur-sm border border-gray-200 p-3 rounded-full shadow-lg text-gray-700 hover:text-primary hover:scale-110 hover:bg-white transition-all z-20 hover:shadow-xl"
-                            aria-label="Next slide"
-                        >
-                            <ArrowRight className="w-5 h-5" />
-                        </button>
-                        
-                        {/* Carousel Indicators */}
-                        <div className="flex justify-center gap-2 mt-6">
-                            {children.map((_, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => setCurrentIndex(index)}
-                                    className={`transition-all duration-300 rounded-full ${
-                                        index === currentIndex
-                                            ? 'bg-primary w-8 h-2'
-                                            : 'bg-gray-300 hover:bg-gray-400 w-2 h-2'
-                                    }`}
-                                    aria-label={`Go to slide ${index + 1}`}
-                                />
-                            ))}
-                        </div>
-                    </>
-                )}
-            </div>
-        );
-    };
 
     // --- NEW WIDE CARD DESIGNS (COMPACT) ---
 
@@ -266,25 +203,25 @@ const Events = () => {
                 className="w-full"
             >
                 <Card className="w-full bg-white border border-blue-200/60 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group">
-                    <div className="flex flex-col md:flex-row min-h-[320px]">
+                    <div className="flex flex-col md:flex-row">
                         {/* LEFT CONTENT */}
-                        <div className="p-7 md:p-8 flex-1 flex flex-col justify-between">
-                            <div className="space-y-5">
-                                <div className="flex justify-between items-start gap-4">
-                                    <span className="bg-gradient-to-r from-blue-500 to-blue-600 text-black text-[10px] uppercase font-bold px-3 py-1.5 rounded-lg tracking-wider shadow-md">
+                        <div className="p-4 md:p-8 flex-1 flex flex-col justify-between">
+                            <div className="space-y-4 md:space-y-5">
+                                <div className="flex justify-between items-start gap-3 md:gap-4">
+                                    <span className="bg-gradient-to-r from-blue-500 to-blue-600 text-black text-[10px] uppercase font-bold px-2 py-1 md:px-3 md:py-1 rounded-lg tracking-wider shadow-md">
                                         🎓 TRAINING
                                     </span>
                                     {program.fee > 0 && (
-                                        <span className="text-blue-700 font-bold text-lg bg-blue-50 px-3 py-1 rounded-lg border border-blue-200">₹{program.fee.toLocaleString()}</span>
+                                        <span className="text-blue-700 font-bold text-sm md:text-lg bg-blue-50 px-2 py-1 md:px-3 md:py-1 rounded-lg border border-blue-200">₹{program.fee.toLocaleString()}</span>
                                     )}
                                 </div>
 
                                 <div>
-                                    <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 leading-tight group-hover:text-blue-600 transition-colors">{program.title}</h3>
+                                    <h3 className="text-lg md:text-3xl font-bold text-gray-900 mb-2 md:mb-3 leading-tight group-hover:text-blue-600 transition-colors">{program.title}</h3>
                                     <div className="text-gray-600 text-sm leading-relaxed">
                                         <p className={isExpanded ? '' : 'line-clamp-3'}>{program.description}</p>
                                         {program.description.length > 150 && (
-                                            <button onClick={() => toggleReadMore(program._id)} className="text-blue-600 font-semibold text-sm mt-2 hover:underline inline-flex items-center gap-1">
+                                            <button onClick={() => toggleReadMore(program._id)} className="text-blue-600 font-semibold text-sm mt-1 md:mt-2 hover:underline inline-flex items-center gap-1">
                                                 {isExpanded ? "Show Less" : "Read More"} <ArrowRight className="w-3 h-3" />
                                             </button>
                                         )}
@@ -292,56 +229,56 @@ const Events = () => {
                                 </div>
                             </div>
 
-                            <div className="mt-6 space-y-5">
-                                <div className="flex flex-wrap items-center gap-6 text-sm font-semibold text-gray-600">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                            <Clock className="w-4 h-4 text-blue-600" />
+                            <div className="mt-4 md:mt-6 space-y-4 md:space-y-5">
+                                <div className="flex flex-wrap items-center gap-3 md:gap-6 text-sm font-semibold text-gray-600">
+                                    <div className="flex items-center gap-1.5 md:gap-2">
+                                        <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                                            <Clock className="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
                                         </div>
-                                        <span>{program.duration}</span>
+                                        <span className="text-xs md:text-sm">{program.duration}</span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                            <MapPin className="w-4 h-4 text-blue-600" />
+                                    <div className="flex items-center gap-1.5 md:gap-2">
+                                        <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                                            <MapPin className="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
                                         </div>
-                                        <span>{program.mode}</span>
+                                        <span className="text-xs md:text-sm">{program.mode}</span>
                                     </div>
                                 </div>
 
-                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200">
-                                    <p className="text-xs text-blue-700 font-bold uppercase mb-2 tracking-wide">Skills You'll Master</p>
-                                    <p className="text-sm text-gray-800 font-medium">{program.skillsCovered}</p>
+                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 md:p-4 rounded-xl border border-blue-200">
+                                    <p className="text-[10px] md:text-xs text-blue-700 font-bold uppercase mb-1 md:mb-2 tracking-wide">Skills</p>
+                                    <p className="text-xs md:text-sm text-gray-800 font-medium line-clamp-2 md:line-clamp-none">{program.skillsCovered}</p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* RIGHT PANEL */}
-                        <div className="md:w-80 bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 border-l border-blue-200/50 p-7 flex flex-col justify-between">
-                            <div className="space-y-4">
-                                <div className="bg-white p-4 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
-                                    <p className="text-xs text-gray-500 font-bold uppercase mb-1.5 tracking-wide">Start Date</p>
-                                    <p className="text-gray-900 font-bold text-lg">{new Date(program.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        {/* RIGHT PANEL - COMPACT MOBILE GRID */}
+                        <div className="md:w-80 bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 border-t md:border-t-0 md:border-l border-blue-200/50 p-4 md:p-7 flex flex-col justify-between">
+                            <div className="grid grid-cols-2 md:grid-cols-1 gap-3 md:space-y-4">
+                                <div className="bg-white p-3 md:p-4 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+                                    <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-1 tracking-wide">Start Date</p>
+                                    <p className="text-xs md:text-lg text-gray-900 font-bold">{new Date(program.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                                 </div>
                                 {program.endDate && (
-                                    <div className="bg-white p-4 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
-                                        <p className="text-xs text-gray-500 font-bold uppercase mb-1.5 tracking-wide">End Date</p>
-                                        <p className="text-gray-900 font-bold text-lg">{new Date(program.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                    <div className="bg-white p-3 md:p-4 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+                                        <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-1 tracking-wide">End Date</p>
+                                        <p className="text-xs md:text-lg text-gray-900 font-bold">{new Date(program.endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                                     </div>
                                 )}
-                                <div className="bg-white p-4 rounded-xl border border-red-200 shadow-sm hover:shadow-md transition-shadow">
-                                    <p className="text-xs text-gray-500 font-bold uppercase mb-1.5 tracking-wide">Apply Before</p>
-                                    <p className="text-red-600 font-bold text-lg">{program.registrationDeadline ? new Date(program.registrationDeadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "Open"}</p>
+                                <div className="bg-white p-3 md:p-4 rounded-xl border border-red-200 shadow-sm hover:shadow-md transition-shadow col-span-2 md:col-span-1">
+                                    <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-1 tracking-wide">Apply Before</p>
+                                    <p className="text-sm md:text-lg text-red-600 font-bold">{program.registrationDeadline ? new Date(program.registrationDeadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "Open"}</p>
                                 </div>
                             </div>
 
-                            <div className="mt-6 space-y-3">
-                                <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-300/50 text-white font-semibold py-6 text-base" onClick={() => handleProgramApply(program)}>
-                                    Apply Now <ArrowRight className="w-5 h-5 ml-2" />
+                            <div className="mt-4 md:mt-6 space-y-3">
+                                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 text-sm md:text-base" onClick={() => handleProgramApply(program)}>
+                                    Apply Now
                                 </Button>
 
                                 {program.helplineNumber && (
-                                    <div className="flex items-center justify-center gap-2 text-blue-700 font-semibold text-xs bg-white/70 backdrop-blur-sm py-2 rounded-lg">
-                                        <PhoneCall className="w-3.5 h-3.5" /> {program.helplineNumber}
+                                    <div className="flex items-center justify-center gap-2 text-blue-700 font-semibold text-xs bg-white/70 backdrop-blur-sm py-2 rounded-lg border border-blue-100">
+                                        <PhoneCall className="w-3 h-3" /> {program.helplineNumber}
                                     </div>
                                 )}
                             </div>
@@ -364,27 +301,27 @@ const Events = () => {
                 className="w-full"
             >
                 <Card className="w-full bg-white border border-purple-200/60 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group">
-                    <div className="flex flex-col md:flex-row min-h-[320px]">
+                    <div className="flex flex-col md:flex-row">
                         {/* LEFT CONTENT */}
-                        <div className="p-7 md:p-8 flex-1 flex flex-col justify-between">
-                            <div className="space-y-5">
-                                <div className="flex justify-between items-start gap-4">
-                                    <span className="bg-gradient-to-r from-purple-500 to-purple-600 text-black text-[10px] uppercase font-bold px-3 py-1.5 rounded-lg tracking-wider shadow-md">
+                        <div className="p-4 md:p-8 flex-1 flex flex-col justify-between">
+                            <div className="space-y-4 md:space-y-5">
+                                <div className="flex justify-between items-start gap-3 md:gap-4">
+                                    <span className="bg-gradient-to-r from-purple-500 to-purple-600 text-black text-[10px] uppercase font-bold px-2 py-1 md:px-3 md:py-1 rounded-lg tracking-wider shadow-md">
                                         💼 INTERNSHIP
                                     </span>
                                     {program.stipend > 0 && (
-                                        <span className="text-green-700 font-bold text-sm bg-green-100 px-3 py-1.5 rounded-lg border border-green-300 flex items-center gap-1">
+                                        <span className="text-green-700 font-bold text-[10px] md:text-sm bg-green-100 px-2 py-1 md:px-3 md:py-1.5 rounded-lg border border-green-300 flex items-center gap-1">
                                             💰 ₹{program.stipend.toLocaleString()}/mo
                                         </span>
                                     )}
                                 </div>
 
                                 <div>
-                                    <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 leading-tight group-hover:text-purple-600 transition-colors">{program.title}</h3>
+                                    <h3 className="text-lg md:text-3xl font-bold text-gray-900 mb-2 md:mb-3 leading-tight group-hover:text-purple-600 transition-colors">{program.title}</h3>
                                     <div className="text-gray-600 text-sm leading-relaxed">
                                         <p className={isExpanded ? '' : 'line-clamp-3'}>{program.description}</p>
                                         {program.description.length > 150 && (
-                                            <button onClick={() => toggleReadMore(program._id)} className="text-purple-600 font-semibold text-sm mt-2 hover:underline inline-flex items-center gap-1">
+                                            <button onClick={() => toggleReadMore(program._id)} className="text-purple-600 font-semibold text-sm mt-1 md:mt-2 hover:underline inline-flex items-center gap-1">
                                                 {isExpanded ? "Show Less" : "Read More"} <ArrowRight className="w-3 h-3" />
                                             </button>
                                         )}
@@ -392,31 +329,31 @@ const Events = () => {
                                 </div>
                             </div>
 
-                            <div className="mt-6 space-y-5">
-                                <div className="flex flex-wrap items-center gap-6 text-sm font-semibold text-gray-600">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
-                                            <Clock className="w-4 h-4 text-purple-600" />
+                            <div className="mt-4 md:mt-6 space-y-4 md:space-y-5">
+                                <div className="flex flex-wrap items-center gap-3 md:gap-6 text-sm font-semibold text-gray-600">
+                                    <div className="flex items-center gap-1.5 md:gap-2">
+                                        <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                                            <Clock className="w-3 h-3 md:w-4 md:h-4 text-purple-600" />
                                         </div>
-                                        <span>{program.duration}</span>
+                                        <span className="text-xs md:text-sm">{program.duration}</span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
-                                            <MapPin className="w-4 h-4 text-purple-600" />
+                                    <div className="flex items-center gap-1.5 md:gap-2">
+                                        <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                                            <MapPin className="w-3 h-3 md:w-4 md:h-4 text-purple-600" />
                                         </div>
-                                        <span>{program.mode}</span>
+                                        <span className="text-xs md:text-sm">{program.mode}</span>
                                     </div>
                                 </div>
 
-                                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl border border-purple-200">
-                                    <p className="text-xs text-purple-700 font-bold uppercase mb-2 tracking-wide">Required Skills</p>
-                                    <p className="text-sm text-gray-800 font-medium mb-3">{program.requiredSkills}</p>
+                                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-3 md:p-4 rounded-xl border border-purple-200">
+                                    <p className="text-[10px] md:text-xs text-purple-700 font-bold uppercase mb-1 md:mb-2 tracking-wide">Required Skills</p>
+                                    <p className="text-xs md:text-sm text-gray-800 font-medium mb-2 md:mb-3 line-clamp-2 md:line-clamp-none">{program.requiredSkills}</p>
                                     {program.rounds && program.rounds.length > 0 && (
-                                        <div className="pt-3 border-t border-purple-200">
-                                            <p className="text-xs text-purple-700 font-bold uppercase mb-2 tracking-wide">Rounds of Internship</p>
-                                            <div className="flex flex-wrap gap-2">
+                                        <div className="pt-2 md:pt-3 border-t border-purple-200">
+                                            <p className="text-[10px] md:text-xs text-purple-700 font-bold uppercase mb-1 md:mb-2 tracking-wide">Rounds of Internship</p>
+                                            <div className="flex flex-wrap gap-1.5 md:gap-2">
                                                 {program.rounds.map((r: { name: string }, i: number) => (
-                                                    <span key={i} className="text-[10px] bg-white border border-purple-300 px-2 py-1 rounded-md text-purple-700 font-bold">{r.name}</span>
+                                                    <span key={i} className="text-[10px] bg-white border border-purple-300 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md text-purple-700 font-bold">{r.name}</span>
                                                 ))}
                                             </div>
                                         </div>
@@ -425,33 +362,33 @@ const Events = () => {
                             </div>
                         </div>
 
-                        {/* RIGHT PANEL */}
-                        <div className="md:w-80 bg-gradient-to-br from-purple-50 via-purple-50 to-pink-50 border-l border-purple-200/50 p-7 flex flex-col justify-between">
-                            <div className="space-y-4">
-                                <div className="bg-white p-4 rounded-xl border border-purple-200 shadow-sm hover:shadow-md transition-shadow">
-                                    <p className="text-xs text-gray-500 font-bold uppercase mb-1.5 tracking-wide">Start Date</p>
-                                    <p className="text-gray-900 font-bold text-lg">{new Date(program.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        {/* RIGHT PANEL - COMPACT MOBILE GRID */}
+                        <div className="md:w-80 bg-gradient-to-br from-purple-50 via-purple-50 to-pink-50 border-t md:border-t-0 md:border-l border-purple-200/50 p-4 md:p-7 flex flex-col justify-between">
+                            <div className="grid grid-cols-2 md:grid-cols-1 gap-3 md:space-y-4">
+                                <div className="bg-white p-3 md:p-4 rounded-xl border border-purple-200 shadow-sm hover:shadow-md transition-shadow">
+                                    <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-1 tracking-wide">Start Date</p>
+                                    <p className="text-xs md:text-lg text-gray-900 font-bold">{new Date(program.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                                 </div>
                                 {program.endDate && (
-                                    <div className="bg-white p-4 rounded-xl border border-purple-200 shadow-sm hover:shadow-md transition-shadow">
-                                        <p className="text-xs text-gray-500 font-bold uppercase mb-1.5 tracking-wide">End Date</p>
-                                        <p className="text-gray-900 font-bold text-lg">{new Date(program.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                    <div className="bg-white p-3 md:p-4 rounded-xl border border-purple-200 shadow-sm hover:shadow-md transition-shadow">
+                                        <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-1 tracking-wide">End Date</p>
+                                        <p className="text-xs md:text-lg text-gray-900 font-bold">{new Date(program.endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                                     </div>
                                 )}
-                                <div className="bg-white p-4 rounded-xl border border-red-200 shadow-sm hover:shadow-md transition-shadow">
-                                    <p className="text-xs text-gray-500 font-bold uppercase mb-1.5 tracking-wide">Application Deadline</p>
-                                    <p className="text-red-600 font-bold text-lg">{program.registrationDeadline ? new Date(program.registrationDeadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "Rolling Basis"}</p>
+                                <div className="bg-white p-3 md:p-4 rounded-xl border border-red-200 shadow-sm hover:shadow-md transition-shadow col-span-2 md:col-span-1">
+                                    <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-1 tracking-wide">Apply Before</p>
+                                    <p className="text-sm md:text-lg text-red-600 font-bold">{program.registrationDeadline ? new Date(program.registrationDeadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "Open"}</p>
                                 </div>
                             </div>
 
-                            <div className="mt-6 space-y-3">
-                                <Button className="w-full bg-purple-600 hover:bg-purple-700 shadow-lg text-white font-semibold py-6 text-base" onClick={() => handleProgramApply(program)}>
-                                    Apply Now <ArrowRight className="w-5 h-5 ml-2" />
+                            <div className="mt-4 md:mt-6 space-y-3">
+                                <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 text-sm md:text-base" onClick={() => handleProgramApply(program)}>
+                                    Apply Now
                                 </Button>
 
                                 {program.helplineNumber && (
-                                    <div className="flex items-center justify-center gap-2 text-purple-700 font-semibold text-xs bg-white/70 backdrop-blur-sm py-2 rounded-lg">
-                                        <PhoneCall className="w-3.5 h-3.5" /> {program.helplineNumber}
+                                    <div className="flex items-center justify-center gap-2 text-purple-700 font-semibold text-xs bg-white/70 backdrop-blur-sm py-2 rounded-lg border border-purple-100">
+                                        <PhoneCall className="w-3 h-3" /> {program.helplineNumber}
                                     </div>
                                 )}
                             </div>
@@ -479,29 +416,30 @@ const Events = () => {
                 className="w-full"
             >
                 <Card className="w-full bg-white border border-orange-200/60 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group">
-                    <div className="flex flex-col md:flex-row min-h-[320px]">
-                        <div className="p-7 md:p-8 flex-1 flex flex-col justify-between">
-                            <div className="space-y-5">
+                    <div className="flex flex-col md:flex-row min-h-0 md:min-h-[320px]">
+                        <div className="p-5 md:p-8 flex-1 flex flex-col justify-between">
+                            <div className="space-y-4 md:space-y-5">
                                 <div className="flex flex-wrap justify-between items-start gap-3">
                                     <div className="flex gap-2">
-                                        <span className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border shadow-sm ${hackathon.mode === 'Online' ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-black border-green-600' : 'bg-gradient-to-r from-orange-500 to-red-500 text-white border-orange-600'}`}>
-                                            {hackathon.mode === 'Online' ? '🌐 ONLINE' : '📍 OFFLINE'}
+                                        <span className={`px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border shadow-sm ${hackathon.mode === 'Online' ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-black border-green-600' : 'bg-gradient-to-r from-orange-500 to-red-500 text-white border-orange-600'}`}>
+                                            {// hackathon.mode === 'Online' ? '🌐 ONLINE' : '📍 OFFLINE' // Keeping original logic, just condensed class logic for replacement
+                                                hackathon.mode === 'Online' ? '🌐 ONLINE' : '📍 OFFLINE'}
                                         </span>
-                                        <div className="flex items-center gap-1.5 text-orange-700 text-[10px] font-bold bg-gradient-to-r from-orange-100 to-yellow-100 px-3 py-1.5 rounded-lg border border-orange-300 shadow-sm">
+                                        <div className="flex items-center gap-1.5 text-orange-700 text-[10px] font-bold bg-gradient-to-r from-orange-100 to-yellow-100 px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg border border-orange-300 shadow-sm">
                                             <Trophy className="w-3.5 h-3.5" /> WIN PRIZES
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-1.5 text-gray-600 text-[10px] font-bold bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-300">
+                                    <div className="flex items-center gap-1.5 text-gray-600 text-[10px] font-bold bg-gray-100 px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg border border-gray-300">
                                         <Users className="w-3.5 h-3.5" /> {hackathon.teamSize?.min}-{hackathon.teamSize?.max} Members
                                     </div>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 leading-tight group-hover:text-orange-600 transition-colors">{hackathon.name}</h3>
+                                    <h3 className="text-xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3 leading-tight group-hover:text-orange-600 transition-colors">{hackathon.name}</h3>
                                     <div className="text-gray-600 text-sm leading-relaxed">
                                         <p className={isExpanded ? '' : 'line-clamp-3'}>{hackathon.description}</p>
                                         {hackathon.description.length > 150 && (
-                                            <button onClick={() => toggleReadMore(hackathon._id)} className="text-orange-600 font-semibold text-sm mt-2 hover:underline inline-flex items-center gap-1">
+                                            <button onClick={() => toggleReadMore(hackathon._id)} className="text-orange-600 font-semibold text-sm mt-1 md:mt-2 hover:underline inline-flex items-center gap-1">
                                                 {isExpanded ? "Show Less" : "Read More"} <ArrowRight className="w-3 h-3" />
                                             </button>
                                         )}
@@ -509,12 +447,12 @@ const Events = () => {
                                 </div>
                             </div>
 
-                            <div className="mt-6">
-                                <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-xl border border-orange-200">
-                                    <p className="text-xs text-orange-800 font-bold uppercase mb-3 flex items-center gap-1.5"><Zap className="w-4 h-4" /> Tech Stack</p>
-                                    <div className="flex flex-wrap gap-2">
+                            <div className="mt-5 md:mt-6">
+                                <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-3 md:p-4 rounded-xl border border-orange-200">
+                                    <p className="text-[10px] md:text-xs text-orange-800 font-bold uppercase mb-2 md:mb-3 flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 md:w-4 md:h-4" /> Tech Stack</p>
+                                    <div className="flex flex-wrap gap-1.5 md:gap-2">
                                         {hackathon.techStack.split(",").map((tech: string, idx: number) => (
-                                            <span key={idx} className="text-xs px-3 py-1.5 bg-white text-gray-700 rounded-lg border border-orange-300 font-semibold shadow-sm hover:shadow-md transition-shadow">
+                                            <span key={idx} className="text-[10px] md:text-xs px-2 py-1 md:px-3 md:py-1.5 bg-white text-gray-700 rounded-lg border border-orange-300 font-semibold shadow-sm hover:shadow-md transition-shadow">
                                                 {tech.trim()}
                                             </span>
                                         ))}
@@ -522,15 +460,15 @@ const Events = () => {
                                 </div>
 
                                 {hackathon.benefits && (
-                                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl border border-purple-200 mt-4">
-                                        <p className="text-xs text-purple-800 font-bold uppercase mb-2 flex items-center gap-1.5"><Sparkles className="w-4 h-4" /> What You'll Get</p>
+                                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-3 md:p-4 rounded-xl border border-purple-200 mt-3 md:mt-4">
+                                        <p className="text-[10px] md:text-xs text-purple-800 font-bold uppercase mb-1.5 md:mb-2 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" /> What You'll Get</p>
                                         <p className="text-sm text-gray-700 leading-relaxed">{hackathon.benefits}</p>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="md:w-80 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 border-l border-orange-200/50 p-7 flex flex-col justify-between">
+                        <div className="md:w-80 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 border-t md:border-t-0 md:border-l border-orange-200/50 p-5 md:p-7 flex flex-col justify-between">
                             <div className="space-y-4">
                                 {hackathon.prizeMoney && (
                                     <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 p-4 rounded-xl shadow-lg text-center mb-4">
@@ -573,7 +511,7 @@ const Events = () => {
                     <div className="absolute top-20 right-0 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
                     <div className="absolute bottom-0 left-0 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-700"></div>
                 </div>
-                
+
                 <div className="container px-4 text-center relative z-10">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -688,7 +626,7 @@ const Events = () => {
                                                 <span className="text-blue-600 text-sm">95%</span>
                                             </div>
                                             <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden shadow-inner">
-                                                <motion.div 
+                                                <motion.div
                                                     initial={{ width: 0 }}
                                                     whileInView={{ width: "95%" }}
                                                     viewport={{ once: true }}
@@ -703,7 +641,7 @@ const Events = () => {
                                                 <span className="text-blue-600 text-sm">98%</span>
                                             </div>
                                             <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden shadow-inner">
-                                                <motion.div 
+                                                <motion.div
                                                     initial={{ width: 0 }}
                                                     whileInView={{ width: "98%" }}
                                                     viewport={{ once: true }}

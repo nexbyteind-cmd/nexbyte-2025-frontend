@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import Carousel from "@/components/Carousel";
 
 const Hackathons = () => {
     const [hackathons, setHackathons] = useState<any[]>([]);
@@ -122,74 +123,7 @@ const Hackathons = () => {
         setExpandedMap(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
-    // --- CAROUSEL COMPONENT ---
-    const Carousel = ({ children }: { children: React.ReactNode[] }) => {
-        const [currentIndex, setCurrentIndex] = useState(0);
 
-        if (!children || children.length === 0) return null;
-
-        const nextSlide = () => {
-            setCurrentIndex((prev) => (prev + 1) % children.length);
-        };
-
-        const prevSlide = () => {
-            setCurrentIndex((prev) => (prev - 1 + children.length) % children.length);
-        };
-
-        return (
-            <div className="container mx-auto px-4 relative max-w-7xl">
-                <div className="relative overflow-hidden min-h-[380px] px-16">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={currentIndex}
-                            initial={{ opacity: 0, x: 100 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -100 }}
-                            transition={{ duration: 0.4, ease: "easeInOut" }}
-                            className="flex justify-center w-full"
-                        >
-                            {children[currentIndex]}
-                        </motion.div>
-                    </AnimatePresence>
-                </div>
-
-                {children.length > 1 && (
-                    <>
-                        <button
-                            onClick={prevSlide}
-                            className="absolute top-1/2 left-0 -translate-y-1/2 bg-white/90 backdrop-blur-sm border border-gray-200 p-3 rounded-full shadow-lg text-gray-700 hover:text-primary hover:scale-110 hover:bg-white transition-all z-20 hover:shadow-xl"
-                            aria-label="Previous slide"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
-                        <button
-                            onClick={nextSlide}
-                            className="absolute top-1/2 right-0 -translate-y-1/2 bg-white/90 backdrop-blur-sm border border-gray-200 p-3 rounded-full shadow-lg text-gray-700 hover:text-primary hover:scale-110 hover:bg-white transition-all z-20 hover:shadow-xl"
-                            aria-label="Next slide"
-                        >
-                            <ArrowRight className="w-5 h-5" />
-                        </button>
-                        
-                        {/* Carousel Indicators */}
-                        <div className="flex justify-center gap-2 mt-6">
-                            {children.map((_, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => setCurrentIndex(index)}
-                                    className={`transition-all duration-300 rounded-full ${
-                                        index === currentIndex
-                                            ? 'bg-primary w-8 h-2'
-                                            : 'bg-gray-300 hover:bg-gray-400 w-2 h-2'
-                                    }`}
-                                    aria-label={`Go to slide ${index + 1}`}
-                                />
-                            ))}
-                        </div>
-                    </>
-                )}
-            </div>
-        );
-    };
 
     const renderHackathonCard = (hackathon: any) => {
         const isExpanded = expandedMap[hackathon._id];
@@ -198,138 +132,120 @@ const Hackathons = () => {
             return text.substring(0, maxLength) + '...';
         };
 
-        return (
-            <motion.div
-                key={hackathon._id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4 }}
-                className="w-full"
-            >
-                <Card className="w-full bg-white border border-orange-200/60 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group">
-                    <div className="flex flex-col md:flex-row min-h-[320px]">
-                        {/* Left Section - Main Content */}
-                        <div className="p-7 md:p-8 flex-1 flex flex-col justify-between">
-                            <div>
-                                <div className="flex items-start gap-4 mb-4">
-                                    <div className="bg-orange-100 text-orange-600 p-3 rounded-xl group-hover:bg-orange-500 group-hover:text-white transition-colors duration-300">
-                                        <Trophy className="w-6 h-6" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="text-2xl font-bold text-gray-900 mb-2">{hackathon.name}</h3>
-                                        <div className="flex items-center gap-2">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                                hackathon.mode === 'Online' 
-                                                    ? 'bg-green-100 text-green-700' 
-                                                    : 'bg-orange-100 text-orange-700'
+        return <motion.div
+            key={hackathon._id}
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+            className="w-full"
+        >
+            <Card className="w-full bg-white border border-orange-200/60 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group">
+                <div className="flex flex-col md:flex-row">
+                    {/* Left Section - Main Content */}
+                    <div className="p-4 md:p-8 flex-1 flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
+                                <div className="bg-orange-100 text-orange-600 p-2 md:p-3 rounded-xl group-hover:bg-orange-500 group-hover:text-white transition-colors duration-300">
+                                    <Trophy className="w-5 h-5 md:w-6 md:h-6" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-lg md:text-2xl font-bold text-gray-900 mb-1 md:mb-2 leading-tight">{hackathon.name}</h3>
+                                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                                        <span className={`px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-semibold ${hackathon.mode === 'Online'
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-orange-100 text-orange-700'
                                             }`}>
-                                                {hackathon.mode}
-                                            </span>
-                                            <span className="text-xs text-gray-500">
-                                                Team: {hackathon.teamSize?.min || 1}-{hackathon.teamSize?.max || 4} members
-                                            </span>
-                                        </div>
+                                            {hackathon.mode}
+                                        </span>
+                                        <span className="text-[10px] md:text-xs text-gray-500 font-medium">
+                                            Team: {hackathon.teamSize?.min || 1}-{hackathon.teamSize?.max || 4} ppl
+                                        </span>
                                     </div>
                                 </div>
-
-                                {/* Description */}
-                                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                                    {isExpanded ? hackathon.description : truncateText(hackathon.description, 150)}
-                                    {hackathon.description.length > 150 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => toggleReadMore(hackathon._id)}
-                                            className="text-orange-600 hover:text-orange-700 font-medium ml-2 text-xs"
-                                        >
-                                            {isExpanded ? 'Show Less' : 'Read More'}
-                                        </button>
-                                    )}
-                                </p>
-
-                                {/* Tech Stack */}
-                                <div className="mb-4 p-4 bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Code className="w-4 h-4 text-orange-600" />
-                                        <span className="text-xs font-semibold text-orange-700 uppercase tracking-wider">Tech Stack</span>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2">
-                                        {hackathon.techStack.split(',').slice(0, 5).map((tech: string, i: number) => (
-                                            <span key={i} className="px-3 py-1 bg-white text-orange-700 text-xs rounded-full font-medium border border-orange-300 shadow-sm">
-                                                {tech.trim()}
-                                            </span>
-                                        ))}
-                                        {hackathon.techStack.split(',').length > 5 && (
-                                            <span className="px-3 py-1 bg-white text-gray-600 text-xs rounded-full font-medium border border-gray-300 shadow-sm">
-                                                +{hackathon.techStack.split(',').length - 5} more
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Benefits */}
-                                {hackathon.benefits && (
-                                    <div className="mb-4 p-4 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <Sparkles className="w-4 h-4 text-purple-600" />
-                                            <span className="text-xs font-semibold text-purple-700 uppercase tracking-wider">What You'll Get</span>
-                                        </div>
-                                        <p className="text-sm text-gray-700 leading-relaxed">{hackathon.benefits}</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Right Section - Sidebar with Action */}
-                        <div className="md:w-80 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 border-l border-orange-200/50 p-7 flex flex-col justify-between">
-                            <div className="space-y-4">
-                                {hackathon.prizeMoney && (
-                                    <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 p-4 rounded-xl shadow-lg text-center mb-4">
-                                        <Trophy className="w-6 h-6 text-white mx-auto mb-2" />
-                                        <p className="text-xs font-bold text-white uppercase tracking-wider mb-1">Prize Pool</p>
-                                        <p className="text-2xl font-extrabold text-white">{hackathon.prizeMoney}</p>
-                                    </div>
-                                )}
-
-                                <div className="flex items-start gap-3 bg-white/60 backdrop-blur-sm p-3 rounded-lg border border-orange-100">
-                                    <Calendar className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Start Date</p>
-                                        <p className="text-sm font-bold text-gray-900">{new Date(hackathon.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-start gap-3 bg-white/60 backdrop-blur-sm p-3 rounded-lg border border-orange-100">
-                                    <Clock className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Register Before</p>
-                                        <p className="text-sm font-bold text-orange-700">{new Date(hackathon.registrationDeadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                                    </div>
-                                </div>
-
-                                {(hackathon.helplineNumber || hackathon.organizerContact) && (
-                                    <div className="flex items-start gap-3 bg-white/60 backdrop-blur-sm p-3 rounded-lg border border-orange-100">
-                                        <MessageSquare className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                                        <div>
-                                            <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Contact</p>
-                                            <p className="text-sm font-medium text-gray-900">{hackathon.helplineNumber || hackathon.organizerContact}</p>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
 
-                            <Button 
-                                onClick={() => setSelectedHackathon(hackathon)}
-                                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 transition-all duration-300 group/btn mt-6"
-                            >
-                                Apply Now 
-                                <ExternalLink className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                            </Button>
+                            {/* Description */}
+                            <p className="text-sm text-gray-600 mb-3 leading-relaxed line-clamp-3 md:line-clamp-none">
+                                {isExpanded ? hackathon.description : truncateText(hackathon.description, 120)}
+                                {hackathon.description.length > 120 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleReadMore(hackathon._id)}
+                                        className="text-orange-600 hover:text-orange-700 font-medium ml-1 text-xs"
+                                    >
+                                        {isExpanded ? 'Less' : 'More'}
+                                    </button>
+                                )}
+                            </p>
+
+                            {/* Tech Stack - Compact */}
+                            <div className="mb-3">
+                                <div className="flex items-center gap-1.5 mb-1.5">
+                                    <Code className="w-3 h-3 text-orange-600" />
+                                    <span className="text-[10px] font-bold text-orange-700 uppercase tracking-wide">Tech Stack</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {hackathon.techStack.split(',').slice(0, 6).map((tech: string, i: number) => (
+                                        <span key={i} className="px-2 py-0.5 bg-orange-50 text-orange-700 text-[10px] rounded border border-orange-200 font-medium">
+                                            {tech.trim()}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Benefits - Compact */}
+                            {hackathon.benefits && (
+                                <div className="p-3 bg-purple-50/50 rounded-lg border border-purple-100">
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                        <Sparkles className="w-3 h-3 text-purple-600" />
+                                        <span className="text-[10px] font-bold text-purple-700 uppercase">Perks</span>
+                                    </div>
+                                    <p className="text-xs text-gray-700 leading-snug line-clamp-2">{hackathon.benefits}</p>
+                                </div>
+                            )}
                         </div>
                     </div>
-                </Card>
-            </motion.div>
-        );
+
+                    {/* Right Section - Sidebar/Footer */}
+                    <div className="md:w-72 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 border-t md:border-t-0 md:border-l border-orange-200/50 p-4 md:p-6 flex flex-col justify-between">
+                        <div className="grid grid-cols-2 md:grid-cols-1 gap-3">
+                            {hackathon.prizeMoney && (
+                                <div className="col-span-2 md:col-span-1 bg-white/80 p-2.5 rounded-xl border border-orange-200 shadow-sm text-center">
+                                    <p className="text-[10px] font-bold text-orange-600 uppercase mb-0.5">Prize Pool</p>
+                                    <p className="text-lg md:text-xl font-extrabold text-gray-900">{hackathon.prizeMoney}</p>
+                                </div>
+                            )}
+
+                            <div className="bg-white/60 p-2.5 rounded-lg border border-orange-100">
+                                <p className="text-[10px] font-semibold text-gray-500 uppercase mb-0.5">Start Date</p>
+                                <p className="text-xs md:text-sm font-bold text-gray-900">{new Date(hackathon.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
+                            </div>
+
+                            <div className="bg-white/60 p-2.5 rounded-lg border border-orange-100">
+                                <p className="text-[10px] font-semibold text-gray-500 uppercase mb-0.5">Register By</p>
+                                <p className="text-xs md:text-sm font-bold text-red-600">{new Date(hackathon.registrationDeadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
+                            </div>
+
+                            {(hackathon.helplineNumber || hackathon.organizerContact) && (
+                                <div className="col-span-2 md:col-span-1 flex items-center gap-2 bg-white/60 p-2 rounded-lg border border-orange-100">
+                                    <MessageSquare className="w-3.5 h-3.5 text-orange-500" />
+                                    <span className="text-xs font-medium text-gray-700 truncate">{hackathon.helplineNumber || hackathon.organizerContact}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <Button
+                            onClick={() => setSelectedHackathon(hackathon)}
+                            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2.5 md:py-3 text-sm rounded-xl shadow-md shadow-orange-200 mt-4 md:mt-6 transition-all"
+                        >
+                            Apply Now
+                        </Button>
+                    </div>
+                </div>
+            </Card>
+        </motion.div>
+            ;
     };
 
     return (
@@ -343,7 +259,7 @@ const Hackathons = () => {
                     <div className="absolute top-20 right-0 w-72 h-72 bg-orange-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
                     <div className="absolute bottom-0 left-0 w-72 h-72 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-700"></div>
                 </div>
-                
+
                 <div className="container px-4 text-center relative z-10">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -582,7 +498,7 @@ const Hackathons = () => {
                     <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
                     <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
                 </div>
-                
+
                 <div className="container px-4 text-center relative z-10">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -598,7 +514,7 @@ const Hackathons = () => {
                         <h2 className="text-3xl md:text-4xl font-bold mb-3">Voice of Champions</h2>
                         <p className="text-white/90 text-lg">Hear from our past winners and participants</p>
                     </motion.div>
-                    
+
                     <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                         {[
                             { name: "Alex Johnson", role: "Full Stack Developer", quote: "Winning the NexByte Webathon gave me the confidence to launch my own startup. The mentorship was invaluable." },
