@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Phone, Send, Clock, MessageSquare, Globe, Headphones, Loader2 } from "lucide-react";
+import { Mail, Phone, Send, Clock, MessageSquare, Globe, Headphones, Loader2, Instagram, Facebook, Linkedin, Youtube, Twitter, MessageCircle } from "lucide-react";
 import { useState, FormEvent } from "react";
 import { API_BASE_URL } from "@/config";
 import { toast } from "sonner";
@@ -48,6 +48,44 @@ const supportOptions = [
     icon: Globe,
     title: "Partnerships",
     description: "Interested in partnering with us? Let's discuss opportunities.",
+  },
+];
+
+const socialPlatforms = [
+  {
+    icon: Instagram,
+    name: "Instagram",
+    description: "Reels, Stories, Posts & Growth",
+    url: "https://www.instagram.com/nexbyte_tech?igsh=OWJpZnZjd25hZ2p5&utm_source=qr",
+    gradient: "from-purple-500 to-pink-500",
+  },
+  {
+    icon: Facebook,
+    name: "Facebook",
+    description: "Pages, Groups & Ads",
+    url: "https://www.facebook.com/profile.php?id=61584986327411",
+    gradient: "from-blue-600 to-blue-700",
+  },
+  {
+    icon: Linkedin,
+    name: "LinkedIn",
+    description: "B2B Marketing & Networking",
+    url: "https://www.linkedin.com/company/nexbyte-services/",
+    gradient: "from-blue-500 to-blue-600",
+  },
+  {
+    icon: Youtube,
+    name: "YouTube",
+    description: "Videos, Shorts & SEO",
+    url: "https://youtube.com/@nexbyteind?si=XET9tJAyE4lWN413",
+    gradient: "from-red-600 to-red-700",
+  },
+  {
+    icon: MessageCircle,
+    name: "WhatsApp",
+    description: "Direct Chat & Support",
+    url: "https://wa.me/918247872473",
+    gradient: "from-green-500 to-green-600",
   },
 ];
 
@@ -326,6 +364,31 @@ const Contact = () => {
                   </p>
                 </div>
 
+                {/* Social Media Platforms */}
+                <div className="bg-background rounded-xl p-6 border border-border/50">
+                  <h3 className="font-semibold mb-4">Connect With Us</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    {socialPlatforms.map((platform, index) => (
+                      <a
+                        key={index}
+                        href={platform.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-secondary/50 transition-colors group"
+                        title={platform.name}
+                      >
+                        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${platform.gradient} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                          <platform.icon className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-xs font-medium text-center">{platform.name}</span>
+                      </a>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center mt-4">
+                    Follow us for updates, insights, and digital growth tips.
+                  </p>
+                </div>
+
                 {/* FAQ Teaser */}
                 <div className="bg-secondary/30 rounded-xl p-6">
                   <h3 className="font-semibold mb-3">Frequently Asked Questions</h3>
@@ -344,9 +407,6 @@ const Contact = () => {
                     </div>
                   </div>
                 </div>
-
-                {/* Map Placeholder */}
-
               </motion.div>
             </div>
           </div>
