@@ -99,7 +99,10 @@ const AdminPanel = () => {
         startDate: "",
         endDate: "",
         registrationDeadline: "",
+        registrationDeadline: "",
         helplineNumber: "",
+        whatsappGroupLink: "", // NEW
+        organizerEmail: "",    // NEW
         // Training specific
         fee: 0,
         skillsCovered: "",
@@ -606,7 +609,10 @@ const AdminPanel = () => {
             startDate: program.startDate,
             endDate: program.endDate,
             registrationDeadline: program.registrationDeadline,
+            registrationDeadline: program.registrationDeadline,
             helplineNumber: program.helplineNumber,
+            whatsappGroupLink: program.whatsappGroupLink || "", // NEW
+            organizerEmail: program.organizerEmail || "",       // NEW
             fee: program.fee || 0,
             skillsCovered: program.skillsCovered || "",
             stipend: program.stipend || 0,
@@ -625,7 +631,9 @@ const AdminPanel = () => {
         setNewProgram({
             type: "Training",
             title: "", description: "", mode: "Online", duration: "",
+            title: "", description: "", mode: "Online", duration: "",
             startDate: "", endDate: "", registrationDeadline: "", helplineNumber: "",
+            whatsappGroupLink: "", organizerEmail: "", // NEW
             fee: 0, skillsCovered: "", stipend: 0, requiredSkills: "",
             openings: 1, isPaid: true, certificateProvided: true, status: "Active", rounds: []
         });
@@ -1321,6 +1329,17 @@ const AdminPanel = () => {
                                                 <div className="space-y-2">
                                                     <Label>Helpline Number</Label>
                                                     <Input type="tel" value={newProgram.helplineNumber} onChange={(e) => setNewProgram({ ...newProgram, helplineNumber: e.target.value })} required />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label>Organizer Email</Label>
+                                                    <Input type="email" placeholder="organizer@example.com" value={newProgram.organizerEmail} onChange={(e) => setNewProgram({ ...newProgram, organizerEmail: e.target.value })} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>WhatsApp Group Link</Label>
+                                                    <Input type="url" placeholder="https://chat.whatsapp.com/..." value={newProgram.whatsappGroupLink} onChange={(e) => setNewProgram({ ...newProgram, whatsappGroupLink: e.target.value })} />
                                                 </div>
                                             </div>
 
