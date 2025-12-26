@@ -743,33 +743,33 @@ const Events = () => {
                     <form onSubmit={handleProgramSubmit} className="space-y-4 mt-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label>Full Name</Label>
+                                <Label>Full Name <span className="text-red-500">*</span></Label>
                                 <Input required value={programForm.fullName} onChange={e => setProgramForm({ ...programForm, fullName: e.target.value })} placeholder="John Doe" />
                             </div>
                             <div className="space-y-2">
-                                <Label>Email</Label>
+                                <Label>Email <span className="text-red-500">*</span></Label>
                                 <Input required type="email" value={programForm.email} onChange={e => setProgramForm({ ...programForm, email: e.target.value })} placeholder="john@example.com" />
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label>Phone Number</Label>
+                                <Label>Phone Number <span className="text-red-500">*</span></Label>
                                 <Input required type="tel" value={programForm.phone} onChange={e => setProgramForm({ ...programForm, phone: e.target.value })} placeholder="+91 98765 43210" />
                             </div>
                             <div className="space-y-2">
-                                <Label>Age</Label>
+                                <Label>Age <span className="text-red-500">*</span></Label>
                                 <Input required type="number" min="16" value={programForm.age} onChange={e => setProgramForm({ ...programForm, age: e.target.value })} placeholder="21" />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <Label>College / University Name</Label>
+                            <Label>College / University Name <span className="text-red-500">*</span></Label>
                             <Input required value={programForm.collegeName} onChange={e => setProgramForm({ ...programForm, collegeName: e.target.value })} placeholder="XYZ Institute of Technology" />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label>Year of Study</Label>
+                                <Label>Year of Study <span className="text-red-500">*</span></Label>
                                 <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={programForm.year} onChange={e => setProgramForm({ ...programForm, year: e.target.value })} required>
                                     <option value="">Select Year</option>
                                     <option value="1st Year">1st Year</option>
@@ -780,20 +780,20 @@ const Events = () => {
                                 </select>
                             </div>
                             <div className="space-y-2">
-                                <Label>Resume Link (Google Drive/LinkedIn)</Label>
+                                <Label>Resume Link (Google Drive/LinkedIn) <span className="text-red-500">*</span></Label>
                                 <Input required type="url" value={programForm.resumeLink} onChange={e => setProgramForm({ ...programForm, resumeLink: e.target.value })} placeholder="https://..." />
                             </div>
                         </div>
 
                         {selectedProgram?.type === "Training" ? (
                             <div className="space-y-2">
-                                <Label>Why do you want to join this training?</Label>
+                                <Label>Why do you want to join this training? <span className="text-red-500">*</span></Label>
                                 <textarea className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm border-gray-200" required value={programForm.whyJoin} onChange={e => setProgramForm({ ...programForm, whyJoin: e.target.value })} placeholder="Tell us about your learning goals..." />
                             </div>
                         ) : (
                             <>
                                 <div className="space-y-2">
-                                    <Label>Why should we hire you for this internship?</Label>
+                                    <Label>Why should we hire you for this internship? <span className="text-red-500">*</span></Label>
                                     <textarea className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm border-gray-200" required value={programForm.whyApply} onChange={e => setProgramForm({ ...programForm, whyApply: e.target.value })} placeholder="Highlight your skills and passion..." />
                                 </div>
                                 <div className="space-y-2">

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Lock, User, LogOut, MessageSquare, Trophy, Plus, Save, ChevronDown, ChevronUp, ExternalLink, Download, Eye, EyeOff, Trash2, GraduationCap, Monitor, Briefcase, TrendingUp, Megaphone, Quote, Mail } from "lucide-react";
+import { Lock, User, LogOut, MessageSquare, Trophy, Plus, Save, ChevronDown, ChevronUp, ExternalLink, Download, Eye, EyeOff, Trash2, GraduationCap, Monitor, Briefcase, TrendingUp, Megaphone, Quote, Mail, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 
@@ -57,6 +57,7 @@ const AdminPanel = () => {
     // Programs State
     const [programs, setPrograms] = useState<any[]>([]);
     const [programApplications, setProgramApplications] = useState<any[]>([]);
+    const [expandedPrograms, setExpandedPrograms] = useState<Record<string, boolean>>({});
 
     // Tech Applications State
     const [techApplications, setTechApplications] = useState<any[]>([]);
@@ -163,6 +164,29 @@ const AdminPanel = () => {
             toast.error("Error sending email.");
         } finally {
             setSendingEmail(false);
+        }
+    };
+
+    // --- NEW: Resend Email Handler ---
+    const [resendingId, setResendingId] = useState<string | null>(null);
+
+    const handleResendEmail = async (collectionRoute: string, id: string) => {
+        if (!confirm("Are you sure you want to resend the confirmation email?")) return;
+        setResendingId(id);
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/${collectionRoute}/${id}/resend-email`, {
+                method: "POST"
+            });
+            const data = await response.json();
+            if (data.success) {
+                toast.success("Email resent successfully!");
+            } else {
+                toast.error(data.message || "Failed to resend email.");
+            }
+        } catch (error) {
+            toast.error("Error resending email.");
+        } finally {
+            setResendingId(null);
         }
     };
 
@@ -850,6 +874,9 @@ const AdminPanel = () => {
                                                                     <Button variant="ghost" size="icon" onClick={() => openEmailModal(contact.email, `Re: ${contact.service} Enquiry`)}>
                                                                         <Mail className="w-4 h-4 text-blue-500" />
                                                                     </Button>
+                                                                    <Button variant="ghost" size="icon" title="Re-trigger Email" disabled={resendingId === contact._id} onClick={() => handleResendEmail('contacts', contact._id)}>
+                                                                        <RefreshCw className={`w-4 h-4 text-orange-500 ${resendingId === contact._id ? 'animate-spin' : ''}`} />
+                                                                    </Button>
                                                                     <Button variant="ghost" size="icon" onClick={() => handleDeleteRecord('contacts', contact._id, fetchContacts)}>
                                                                         <Trash2 className="w-4 h-4 text-red-500" />
                                                                     </Button>
@@ -1215,6 +1242,9 @@ const AdminPanel = () => {
                                                                                                     )}>
                                                                                                         <Mail className="w-4 h-4 text-blue-500" />
                                                                                                     </Button>
+                                                                                                    <Button variant="ghost" size="icon" title="Re-trigger Email" disabled={resendingId === app._id} onClick={() => handleResendEmail('applications', app._id)}>
+                                                                                                        <RefreshCw className={`w-4 h-4 text-orange-500 ${resendingId === app._id ? 'animate-spin' : ''}`} />
+                                                                                                    </Button>
                                                                                                     <Button variant="ghost" size="icon" title="Delete Application" onClick={() => handleDeleteRecord('applications', app._id, fetchApplications)}>
                                                                                                         <Trash2 className="w-4 h-4 text-red-500" />
                                                                                                     </Button>
@@ -1440,6 +1470,9 @@ const AdminPanel = () => {
                                                             <div className="flex items-center gap-2">
                                                                 <span className="text-xs text-muted-foreground">{apps.length} Applications</span>
                                                                 <div className="flex gap-2">
+                                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setExpandedPrograms(prev => ({ ...prev, [program._id]: !prev[program._id] }))}>
+                                                                        {expandedPrograms[program._id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                                    </Button>
                                                                     {/* CSV Download for Program Applicants - Placeholder Logic */}
                                                                     <Button variant="outline" size="sm" className="h-8 gap-1 text-green-600 border-green-200 hover:bg-green-50" onClick={() => {
                                                                         if (apps.length === 0) return toast.error("No applicants");
@@ -1462,7 +1495,7 @@ const AdminPanel = () => {
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        {apps.length > 0 && (
+                                                        {apps.length > 0 && expandedPrograms[program._id] && (
                                                             <div className="mt-4 bg-secondary/10 p-3 rounded-md">
                                                                 <h5 className="font-semibold text-sm mb-2">Applicants:</h5>
                                                                 <div className="overflow-x-auto">
@@ -1487,6 +1520,9 @@ const AdminPanel = () => {
                                                                                         <div className="flex gap-2">
                                                                                             <Button variant="ghost" size="icon" onClick={() => openEmailModal(app.email, `Regarding your application for ${program.title}`)}>
                                                                                                 <Mail className="w-4 h-4 text-blue-500" />
+                                                                                            </Button>
+                                                                                            <Button variant="ghost" size="icon" title="Re-trigger Email" disabled={resendingId === app._id} onClick={() => handleResendEmail('program-applications', app._id)}>
+                                                                                                <RefreshCw className={`w-4 h-4 text-orange-500 ${resendingId === app._id ? 'animate-spin' : ''}`} />
                                                                                             </Button>
                                                                                             <Button variant="ghost" size="icon" onClick={() => handleDeleteRecord('program-applications', app._id, fetchProgramApplications)}>
                                                                                                 <Trash2 className="w-4 h-4 text-red-500" />
@@ -1569,7 +1605,10 @@ const AdminPanel = () => {
                                                                     <Button variant="ghost" size="icon" onClick={() => openEmailModal(app.commonDetails?.email, `Re: ${app.serviceCategory} Inquiry`)}>
                                                                         <Mail className="w-4 h-4 text-blue-500" />
                                                                     </Button>
-                                                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteRecord('tech-applications', app._id, fetchTechApplications)}>
+                                                                    <Button variant="ghost" size="icon" title="Re-trigger Email" disabled={resendingId === app._id} onClick={() => handleResendEmail('technology-applications', app._id)}>
+                                                                        <RefreshCw className={`w-4 h-4 text-orange-500 ${resendingId === app._id ? 'animate-spin' : ''}`} />
+                                                                    </Button>
+                                                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteRecord('technology-applications', app._id, fetchTechApplications)}>
                                                                         <Trash2 className="w-4 h-4 text-red-500" />
                                                                     </Button>
                                                                 </div>
@@ -1640,6 +1679,9 @@ const AdminPanel = () => {
                                                                     <Button variant="ghost" size="icon" onClick={() => openEmailModal(app.companyDetails?.email, `Re: ${app.serviceCategory} Request`)}>
                                                                         <Mail className="w-4 h-4 text-blue-500" />
                                                                     </Button>
+                                                                    <Button variant="ghost" size="icon" title="Re-trigger Email" disabled={resendingId === app._id} onClick={() => handleResendEmail('staffing-applications', app._id)}>
+                                                                        <RefreshCw className={`w-4 h-4 text-orange-500 ${resendingId === app._id ? 'animate-spin' : ''}`} />
+                                                                    </Button>
                                                                     <Button variant="ghost" size="icon" onClick={() => handleDeleteRecord('staffing-applications', app._id, fetchStaffingApplications)}>
                                                                         <Trash2 className="w-4 h-4 text-red-500" />
                                                                     </Button>
@@ -1704,6 +1746,9 @@ const AdminPanel = () => {
                                                                     </Button>
                                                                     <Button variant="ghost" size="icon" onClick={() => openEmailModal(app.clientDetails?.email, `Re: ${app.clientDetails?.selectedService} Strategy`)}>
                                                                         <Mail className="w-4 h-4 text-blue-500" />
+                                                                    </Button>
+                                                                    <Button variant="ghost" size="icon" title="Re-trigger Email" disabled={resendingId === app._id} onClick={() => handleResendEmail('marketing-applications', app._id)}>
+                                                                        <RefreshCw className={`w-4 h-4 text-orange-500 ${resendingId === app._id ? 'animate-spin' : ''}`} />
                                                                     </Button>
                                                                     <Button variant="ghost" size="icon" onClick={() => handleDeleteRecord('marketing-applications', app._id, fetchMarketingApplications)}>
                                                                         <Trash2 className="w-4 h-4 text-red-500" />
