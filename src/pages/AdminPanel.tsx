@@ -1476,8 +1476,8 @@ const AdminPanel = () => {
                                                                     {/* CSV Download for Program Applicants - Placeholder Logic */}
                                                                     <Button variant="outline" size="sm" className="h-8 gap-1 text-green-600 border-green-200 hover:bg-green-50" onClick={() => {
                                                                         if (apps.length === 0) return toast.error("No applicants");
-                                                                        const headers = ["Name", "Email", "Phone", "Age", "College", "Type"];
-                                                                        const rows = apps.map(a => [a.fullName, a.email, a.phone, a.age, a.collegeName, program.type].map(f => `"${f || ''}"`).join(","));
+                                                                        const headers = ["Name", "Email", "Phone", "Age", "College", "Type", "Resume Link", "Portfolio Link"];
+                                                                        const rows = apps.map(a => [a.fullName, a.email, a.phone, a.age, a.collegeName, program.type, a.resumeLink, a.portfolioLink].map(f => `"${f || ''}"`).join(","));
                                                                         const csv = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
                                                                         const link = document.createElement("a");
                                                                         link.href = encodeURI(csv);
@@ -1506,6 +1506,8 @@ const AdminPanel = () => {
                                                                                 <TableHead className="text-xs">Email</TableHead>
                                                                                 <TableHead className="text-xs">Phone</TableHead>
                                                                                 <TableHead className="text-xs">College</TableHead>
+                                                                                <TableHead className="text-xs">Resume</TableHead>
+                                                                                <TableHead className="text-xs">Portfolio</TableHead>
                                                                                 <TableHead className="text-xs">Actions</TableHead>
                                                                             </TableRow>
                                                                         </TableHeader>
@@ -1516,6 +1518,20 @@ const AdminPanel = () => {
                                                                                     <TableCell className="text-xs">{app.email}</TableCell>
                                                                                     <TableCell className="text-xs">{app.phone}</TableCell>
                                                                                     <TableCell className="text-xs">{app.collegeName}</TableCell>
+                                                                                    <TableCell className="text-xs">
+                                                                                        {app.resumeLink ? (
+                                                                                            <a href={app.resumeLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
+                                                                                                View <ExternalLink className="w-3 h-3" />
+                                                                                            </a>
+                                                                                        ) : <span className="text-muted-foreground">-</span>}
+                                                                                    </TableCell>
+                                                                                    <TableCell className="text-xs">
+                                                                                        {app.portfolioLink ? (
+                                                                                            <a href={app.portfolioLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
+                                                                                                View <ExternalLink className="w-3 h-3" />
+                                                                                            </a>
+                                                                                        ) : <span className="text-muted-foreground">-</span>}
+                                                                                    </TableCell>
                                                                                     <TableCell>
                                                                                         <div className="flex gap-2">
                                                                                             <Button variant="ghost" size="icon" onClick={() => openEmailModal(app.email, `Regarding your application for ${program.title}`)}>
