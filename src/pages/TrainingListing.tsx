@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Monitor, ExternalLink, ArrowLeft, BookOpen, MapPin, Phone, ChevronRight } from "lucide-react";
+import { Calendar, Clock, Monitor, ExternalLink, ArrowLeft, BookOpen, MapPin, Phone, ChevronRight, MessageCircle } from "lucide-react";
 import { API_BASE_URL } from "@/config";
 import TrainingRegistrationModal from "@/components/TrainingRegistrationModal";
 
@@ -175,6 +175,16 @@ const TrainingListing = () => {
                                                     onClick={() => window.open(training.syllabusLink, '_blank')}
                                                 >
                                                     <BookOpen className="w-4 h-4 mr-2" /> Syllabus
+                                                </Button>
+                                            )}
+
+                                            {training.communityLink && !training.hiddenFields?.includes('communityLink') && (
+                                                <Button
+                                                    variant="outline"
+                                                    className="flex-1 h-12 rounded-xl border-green-200 text-green-700 hover:bg-white hover:text-green-800 font-bold"
+                                                    onClick={() => window.open(training.communityLink, '_blank')}
+                                                >
+                                                    <MessageCircle className="w-4 h-4 mr-2" /> Community
                                                 </Button>
                                             )}
 

@@ -140,7 +140,8 @@ const AdminPanel = () => {
         emailSubject: "", // NEW
         emailBody: "",    // NEW
         emailLinks: [] as { label: string, url: string, isButton: boolean }[], // NEW
-        hiddenFields: [] as string[] // NEW: For visibility toggles
+        hiddenFields: [] as string[], // NEW: For visibility toggles
+        communityLink: "" // NEW
     });
 
     // Helper functions for Email Links in Training
@@ -787,7 +788,7 @@ const AdminPanel = () => {
                 toast.success(isEditing ? "Training Updated" : "Training Created");
                 fetchTrainings();
                 setEditingTrainingId(null);
-                setNewTraining({ name: "", category: "Full Stack Software Development", topics: "", duration: "", mode: "Online", description: "", syllabusLink: "", status: "Active", formFields: [], startDate: "", endDate: "", applyBy: "", timing: "", note: "", emailSubject: "", emailBody: "", emailLinks: [], hiddenFields: [] });
+                setNewTraining({ name: "", category: "Full Stack Software Development", topics: "", duration: "", mode: "Online", description: "", syllabusLink: "", status: "Active", formFields: [], startDate: "", endDate: "", applyBy: "", timing: "", note: "", emailSubject: "", emailBody: "", emailLinks: [], hiddenFields: [], communityLink: "" });
             } else { toast.error("Operation failed"); }
         } catch (error) { toast.error("Error saving training"); }
     };
@@ -858,6 +859,7 @@ const AdminPanel = () => {
         }
         if (value === 'trainings') {
             fetchTrainings();
+            fetchTrainingApplications(); // FIX: Fetch applications to show count
         }
         if (value === 'training_apps') {
             fetchTrainingApplications();
@@ -2206,7 +2208,19 @@ const AdminPanel = () => {
                                                     </Button>
                                                 </div>
                                             </div>
-                                            <Input placeholder="Syllabus Link (URL)" value={newTraining.syllabusLink} onChange={e => setNewTraining({ ...newTraining, syllabusLink: e.target.value })} />
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <Input placeholder="Syllabus Link (URL)" value={newTraining.syllabusLink} onChange={e => setNewTraining({ ...newTraining, syllabusLink: e.target.value })} />
+                                                <div className="relative">
+                                                    <Input placeholder="Community Link (WhatsApp/Discord)" value={newTraining.communityLink} onChange={e => setNewTraining({ ...newTraining, communityLink: e.target.value })} />
+                                                    <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1 h-8 w-8 text-gray-400" onClick={() => {
+                                                        const isHidden = newTraining.hiddenFields?.includes('communityLink');
+                                                        const updated = isHidden ? newTraining.hiddenFields.filter(f => f !== 'communityLink') : [...(newTraining.hiddenFields || []), 'communityLink'];
+                                                        setNewTraining({ ...newTraining, hiddenFields: updated });
+                                                    }}>
+                                                        {newTraining.hiddenFields?.includes('communityLink') ? <EyeOff className="w-4 h-4 text-red-400" /> : <Eye className="w-4 h-4" />}
+                                                    </Button>
+                                                </div>
+                                            </div>
                                             <Textarea placeholder="Short Description *" value={newTraining.description} onChange={e => setNewTraining({ ...newTraining, description: e.target.value })} required />
 
                                             {/* Dynamic Form Builder */}
@@ -2325,7 +2339,7 @@ const AdminPanel = () => {
                                             </div>
 
                                             <Button type="submit" className="w-full">{editingTrainingId ? "Update Training" : "Create Training"}</Button>
-                                            {editingTrainingId && <Button type="button" variant="outline" className="w-full mt-2" onClick={() => { setNewTraining({ name: "", category: "Full Stack Software Development", topics: "", duration: "", mode: "Online", description: "", syllabusLink: "", status: "Active", formFields: [], startDate: "", endDate: "", applyBy: "", timing: "", note: "", emailSubject: "", emailBody: "", emailLinks: [], hiddenFields: [] }); setEditingTrainingId(null); }}>Cancel Edit</Button>}
+                                            {editingTrainingId && <Button type="button" variant="outline" className="w-full mt-2" onClick={() => { setNewTraining({ name: "", category: "Full Stack Software Development", topics: "", duration: "", mode: "Online", description: "", syllabusLink: "", status: "Active", formFields: [], startDate: "", endDate: "", applyBy: "", timing: "", note: "", emailSubject: "", emailBody: "", emailLinks: [], hiddenFields: [], communityLink: "" }); setEditingTrainingId(null); }}>Cancel Edit</Button>}
                                         </form>
                                     </CardContent>
                                 </Card>
@@ -2391,7 +2405,8 @@ const AdminPanel = () => {
                                                                         note: t.note || "",
                                                                         emailSubject: t.emailSubject || "",
                                                                         emailBody: t.emailBody || "",
-                                                                        emailLinks: t.emailLinks || []
+                                                                        emailLinks: t.emailLinks || [],
+                                                                        communityLink: t.communityLink || "" // Populating for edit
                                                                     });
                                                                 }}><Monitor className="w-4 h-4" /></Button>
                                                                 <Button size="sm" variant="ghost" className="text-red-500 h-8 w-8 p-0" onClick={() => handleDeleteTraining(t._id)}><Trash2 className="w-4 h-4" /></Button>
