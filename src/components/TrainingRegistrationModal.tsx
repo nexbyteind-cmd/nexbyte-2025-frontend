@@ -45,6 +45,7 @@ const TrainingRegistrationModal = ({ isOpen, onClose, training, onSuccess }: Tra
 
             const payload = {
                 trainingName: training?.name,
+                trainingId: training?._id,
                 applicantName: formData["Full Name"] || formData["Name"] || formData["name"], // Fallback logic or enforce specific field names
                 email: formData["Email"] || formData["email"],
                 ...formData
@@ -85,10 +86,10 @@ const TrainingRegistrationModal = ({ isOpen, onClose, training, onSuccess }: Tra
         { label: "Phone Number", type: "number", required: true },
     ];
 
-    // Combine base fields with custom training fields
+    // Combine base fields with custom training fields (filtering out hidden ones)
     const fieldsToRender: FormField[] = [
         ...baseFields,
-        ...(training?.formFields || [])
+        ...(training?.formFields || []).filter((f: any) => !f.isHidden)
     ];
 
     return (

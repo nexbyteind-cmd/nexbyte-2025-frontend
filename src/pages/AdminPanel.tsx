@@ -131,11 +131,37 @@ const AdminPanel = () => {
         description: "",
         syllabusLink: "",
         status: "Active",
-        formFields: [] as { label: string, type: string, required: boolean, options: string }[],
+        formFields: [] as { label: string, type: string, required: boolean, options: string, isHidden?: boolean }[],
         startDate: "",
         endDate: "",
-        applyBy: ""
+        applyBy: "",
+        timing: "", // NEW
+        note: "",   // NEW
+        emailSubject: "", // NEW
+        emailBody: "",    // NEW
+        emailLinks: [] as { label: string, url: string, isButton: boolean }[], // NEW
+        hiddenFields: [] as string[] // NEW: For visibility toggles
     });
+
+    // Helper functions for Email Links in Training
+    const addTrainingEmailLink = () => {
+        setNewTraining({
+            ...newTraining,
+            emailLinks: [...(newTraining.emailLinks || []), { label: "", url: "", isButton: false }]
+        });
+    };
+
+    const removeTrainingEmailLink = (index: number) => {
+        const updated = [...(newTraining.emailLinks || [])];
+        updated.splice(index, 1);
+        setNewTraining({ ...newTraining, emailLinks: updated });
+    };
+
+    const updateTrainingEmailLink = (index: number, field: string, value: any) => {
+        const updated = [...(newTraining.emailLinks || [])];
+        updated[index] = { ...updated[index], [field]: value };
+        setNewTraining({ ...newTraining, emailLinks: updated });
+    };
 
     // Helper to add a new custom field to the training form
     const addFormField = () => {
@@ -761,7 +787,7 @@ const AdminPanel = () => {
                 toast.success(isEditing ? "Training Updated" : "Training Created");
                 fetchTrainings();
                 setEditingTrainingId(null);
-                setNewTraining({ name: "", category: "Full Stack Software Development", topics: "", duration: "", mode: "Online", description: "", syllabusLink: "", status: "Active", formFields: [], startDate: "", endDate: "", applyBy: "" });
+                setNewTraining({ name: "", category: "Full Stack Software Development", topics: "", duration: "", mode: "Online", description: "", syllabusLink: "", status: "Active", formFields: [], startDate: "", endDate: "", applyBy: "", timing: "", note: "", emailSubject: "", emailBody: "", emailLinks: [], hiddenFields: [] });
             } else { toast.error("Operation failed"); }
         } catch (error) { toast.error("Error saving training"); }
     };
@@ -773,6 +799,37 @@ const AdminPanel = () => {
             fetchTrainings();
             toast.success("Training Deleted");
         } catch (e) { toast.error("Error deleting"); }
+    };
+
+    // NEW: Handle Training CSV Download
+    const handleDownloadTrainingCSV = (trainingName: string) => {
+        // Filter applications for this training
+        const relevantApps = trainingApplications.filter(app => app.trainingName === trainingName);
+
+        if (relevantApps.length === 0) return toast.error("No applications found for this training.");
+
+        const headers = ["Date", "Applicant Name", "Email", "Status", "Custom Fields"];
+
+        const rows = relevantApps.map(app => {
+            const date = new Date(app.submittedAt).toLocaleDateString();
+            // Flatten dynamic data for viewing
+            const dynamicDetails = app.dynamicData ? JSON.stringify(app.dynamicData).replace(/"/g, "'") : "";
+
+            return [
+                date,
+                app.applicantName,
+                app.email,
+                app.status,
+                dynamicDetails
+            ].map(f => `"${f || ''}"`).join(",");
+        });
+
+        const csv = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
+        const encodedUri = encodeURI(csv);
+        const link = document.createElement("a");
+        link.href = encodedUri;
+        link.download = `training_${trainingName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
     };
 
     // Trigger data fetch on tab change
@@ -2064,6 +2121,7 @@ const AdminPanel = () => {
                                                 <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={newTraining.category} onChange={e => setNewTraining({ ...newTraining, category: e.target.value })}>
                                                     <option>Full Stack Software Development</option>
                                                     <option>Artificial Intelligence & Generative AI</option>
+                                                    <option>Database Technologies</option>
                                                     <option>Machine Learning & Data Science</option>
                                                     <option>Cloud Computing</option>
                                                     <option>DevOps & Platform Engineering</option>
@@ -2084,7 +2142,16 @@ const AdminPanel = () => {
 
                                             <Input placeholder="Topics (Comma separated) *" value={newTraining.topics} onChange={e => setNewTraining({ ...newTraining, topics: e.target.value })} required />
                                             <div className="grid grid-cols-2 gap-2">
-                                                <Input placeholder="Duration (e.g. 3 Months) *" value={newTraining.duration} onChange={e => setNewTraining({ ...newTraining, duration: e.target.value })} required />
+                                                <div className="relative">
+                                                    <Input placeholder="Duration (e.g. 3 Months) *" value={newTraining.duration} onChange={e => setNewTraining({ ...newTraining, duration: e.target.value })} required />
+                                                    <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1 h-8 w-8 text-gray-400" onClick={() => {
+                                                        const isHidden = newTraining.hiddenFields?.includes('duration');
+                                                        const updated = isHidden ? newTraining.hiddenFields.filter(f => f !== 'duration') : [...(newTraining.hiddenFields || []), 'duration'];
+                                                        setNewTraining({ ...newTraining, hiddenFields: updated });
+                                                    }}>
+                                                        {newTraining.hiddenFields?.includes('duration') ? <EyeOff className="w-4 h-4 text-red-400" /> : <Eye className="w-4 h-4" />}
+                                                    </Button>
+                                                </div>
                                                 <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={newTraining.status} onChange={e => setNewTraining({ ...newTraining, status: e.target.value })}>
                                                     <option>Active</option>
                                                     <option>Inactive</option>
@@ -2092,11 +2159,51 @@ const AdminPanel = () => {
                                             </div>
 
                                             <div className="grid grid-cols-3 gap-4">
-                                                <Input type="date" placeholder="Start Date" value={newTraining.startDate} onChange={e => setNewTraining({ ...newTraining, startDate: e.target.value })} />
-                                                <Input type="date" placeholder="End Date" value={newTraining.endDate} onChange={e => setNewTraining({ ...newTraining, endDate: e.target.value })} />
-                                                <div className="flex flex-col gap-1">
+                                                <div className="relative">
+                                                    <Input type="date" placeholder="Start Date" value={newTraining.startDate} onChange={e => setNewTraining({ ...newTraining, startDate: e.target.value })} />
+                                                    <Button type="button" variant="ghost" size="icon" className="absolute right-8 top-1 h-8 w-8 text-gray-400" onClick={() => {
+                                                        const isHidden = newTraining.hiddenFields?.includes('startDate');
+                                                        const updated = isHidden ? newTraining.hiddenFields.filter(f => f !== 'startDate') : [...(newTraining.hiddenFields || []), 'startDate'];
+                                                        setNewTraining({ ...newTraining, hiddenFields: updated });
+                                                    }}>
+                                                        {newTraining.hiddenFields?.includes('startDate') ? <EyeOff className="w-3 h-3 text-red-400" /> : <Eye className="w-3 h-3" />}
+                                                    </Button>
+                                                </div>
+                                                <div className="relative">
+                                                    <Input type="date" placeholder="End Date" value={newTraining.endDate} onChange={e => setNewTraining({ ...newTraining, endDate: e.target.value })} />
+                                                </div>
+                                                <div className="flex flex-col gap-1 relative">
                                                     <span className="text-[10px] text-muted-foreground uppercase font-bold ml-1">Apply Before</span>
                                                     <Input type="date" value={newTraining.applyBy} onChange={e => setNewTraining({ ...newTraining, applyBy: e.target.value })} />
+                                                    <Button type="button" variant="ghost" size="icon" className="absolute right-8 top-5 h-8 w-8 text-gray-400" onClick={() => {
+                                                        const isHidden = newTraining.hiddenFields?.includes('applyBy');
+                                                        const updated = isHidden ? newTraining.hiddenFields.filter(f => f !== 'applyBy') : [...(newTraining.hiddenFields || []), 'applyBy'];
+                                                        setNewTraining({ ...newTraining, hiddenFields: updated });
+                                                    }}>
+                                                        {newTraining.hiddenFields?.includes('applyBy') ? <EyeOff className="w-3 h-3 text-red-400" /> : <Eye className="w-3 h-3" />}
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div className="relative">
+                                                    <Input placeholder="Timing (e.g. 10:00 AM - 12:00 PM)" value={newTraining.timing || ""} onChange={e => setNewTraining({ ...newTraining, timing: e.target.value })} />
+                                                    <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1 h-8 w-8 text-gray-400" onClick={() => {
+                                                        const isHidden = newTraining.hiddenFields?.includes('timing');
+                                                        const updated = isHidden ? newTraining.hiddenFields.filter(f => f !== 'timing') : [...(newTraining.hiddenFields || []), 'timing'];
+                                                        setNewTraining({ ...newTraining, hiddenFields: updated });
+                                                    }}>
+                                                        {newTraining.hiddenFields?.includes('timing') ? <EyeOff className="w-4 h-4 text-red-400" /> : <Eye className="w-4 h-4" />}
+                                                    </Button>
+                                                </div>
+                                                <div className="relative">
+                                                    <Input placeholder="Note (One line context)" value={newTraining.note || ""} onChange={e => setNewTraining({ ...newTraining, note: e.target.value })} />
+                                                    <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1 h-8 w-8 text-gray-400" onClick={() => {
+                                                        const isHidden = newTraining.hiddenFields?.includes('note');
+                                                        const updated = isHidden ? newTraining.hiddenFields.filter(f => f !== 'note') : [...(newTraining.hiddenFields || []), 'note'];
+                                                        setNewTraining({ ...newTraining, hiddenFields: updated });
+                                                    }}>
+                                                        {newTraining.hiddenFields?.includes('note') ? <EyeOff className="w-4 h-4 text-red-400" /> : <Eye className="w-4 h-4" />}
+                                                    </Button>
                                                 </div>
                                             </div>
                                             <Input placeholder="Syllabus Link (URL)" value={newTraining.syllabusLink} onChange={e => setNewTraining({ ...newTraining, syllabusLink: e.target.value })} />
@@ -2111,7 +2218,7 @@ const AdminPanel = () => {
 
                                                 {(newTraining.formFields || []).map((field, idx) => (
                                                     <div key={idx} className="flex flex-col gap-2 p-3 border rounded bg-background">
-                                                        <div className="flex gap-2">
+                                                        <div className="flex gap-2 items-center">
                                                             <Input
                                                                 placeholder="Field Label (e.g. LinkedIn Profile)"
                                                                 value={field.label}
@@ -2129,6 +2236,10 @@ const AdminPanel = () => {
                                                                 <option value="textarea">Text Area</option>
                                                                 <option value="select">Select</option>
                                                             </select>
+                                                            {/* Custom Field Visibility Toggle */}
+                                                            <Button type="button" variant="ghost" size="icon" className="text-gray-400" onClick={() => updateFormField(idx, 'isHidden', !field.isHidden)}>
+                                                                {field.isHidden ? <EyeOff className="w-4 h-4 text-red-400" /> : <Eye className="w-4 h-4" />}
+                                                            </Button>
                                                             <Button type="button" variant="ghost" size="icon" className="text-red-500" onClick={() => removeFormField(idx)}>
                                                                 <Trash2 className="w-4 h-4" />
                                                             </Button>
@@ -2158,8 +2269,63 @@ const AdminPanel = () => {
                                                 {(newTraining.formFields || []).length === 0 && <p className="text-xs text-muted-foreground text-center">No custom fields. Default fields: Name, Email.</p>}
                                             </div>
 
+                                            {/* Email Customization Section */}
+                                            <div className="space-y-4 border p-4 rounded-md bg-indigo-50/30">
+                                                <div className="flex items-center gap-2">
+                                                    <Mail className="w-4 h-4 text-indigo-600" />
+                                                    <h4 className="font-semibold text-sm">Email Customization</h4>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground">Customize the confirmation email sent to applicants.</p>
+
+                                                <Input
+                                                    placeholder="Email Subject (Default: Registration Confirmed...)"
+                                                    value={newTraining.emailSubject || ""}
+                                                    onChange={(e) => setNewTraining({ ...newTraining, emailSubject: e.target.value })}
+                                                />
+
+                                                <Textarea
+                                                    placeholder="Email Body (HTML supported). Use {{name}} for applicant name."
+                                                    value={newTraining.emailBody || ""}
+                                                    onChange={(e) => setNewTraining({ ...newTraining, emailBody: e.target.value })}
+                                                    className="min-h-[100px] font-mono text-sm"
+                                                />
+
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs">Important Links / Buttons</Label>
+                                                    {(newTraining.emailLinks || []).map((link, idx) => (
+                                                        <div key={idx} className="flex gap-2 items-center bg-background p-2 rounded border">
+                                                            <Input
+                                                                placeholder="Label"
+                                                                value={link.label}
+                                                                onChange={(e) => updateTrainingEmailLink(idx, 'label', e.target.value)}
+                                                                className="flex-1 h-8"
+                                                            />
+                                                            <Input
+                                                                placeholder="URL"
+                                                                value={link.url}
+                                                                onChange={(e) => updateTrainingEmailLink(idx, 'url', e.target.value)}
+                                                                className="flex-1 h-8"
+                                                            />
+                                                            <div className="flex items-center gap-1">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={link.isButton}
+                                                                    onChange={(e) => updateTrainingEmailLink(idx, 'isButton', e.target.checked)}
+                                                                    className="h-3 w-3"
+                                                                />
+                                                                <span className="text-[10px]">Btn</span>
+                                                            </div>
+                                                            <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-red-500" onClick={() => removeTrainingEmailLink(idx)}>
+                                                                <Trash2 className="w-3 h-3" />
+                                                            </Button>
+                                                        </div>
+                                                    ))}
+                                                    <Button type="button" variant="outline" size="sm" onClick={addTrainingEmailLink} className="w-full h-8 text-xs border-dashed text-indigo-600 border-indigo-200">+ Add Link</Button>
+                                                </div>
+                                            </div>
+
                                             <Button type="submit" className="w-full">{editingTrainingId ? "Update Training" : "Create Training"}</Button>
-                                            {editingTrainingId && <Button type="button" variant="outline" className="w-full mt-2" onClick={() => { setNewTraining({ name: "", category: "Full Stack Software Development", topics: "", duration: "", mode: "Online", description: "", syllabusLink: "", status: "Active", formFields: [], startDate: "", endDate: "", applyBy: "" }); setEditingTrainingId(null); }}>Cancel Edit</Button>}
+                                            {editingTrainingId && <Button type="button" variant="outline" className="w-full mt-2" onClick={() => { setNewTraining({ name: "", category: "Full Stack Software Development", topics: "", duration: "", mode: "Online", description: "", syllabusLink: "", status: "Active", formFields: [], startDate: "", endDate: "", applyBy: "", timing: "", note: "", emailSubject: "", emailBody: "", emailLinks: [], hiddenFields: [] }); setEditingTrainingId(null); }}>Cancel Edit</Button>}
                                         </form>
                                     </CardContent>
                                 </Card>
@@ -2176,6 +2342,7 @@ const AdminPanel = () => {
                                                 <option value="All">All Topics</option>
                                                 <option>Full Stack Software Development</option>
                                                 <option>Artificial Intelligence & Generative AI</option>
+                                                <option>Database Technologies</option>
                                                 <option>Machine Learning & Data Science</option>
                                                 <option>Cloud Computing</option>
                                                 <option>DevOps & Platform Engineering</option>
@@ -2200,8 +2367,18 @@ const AdminPanel = () => {
                                                                 <h4 className="font-bold">{t.name}</h4>
                                                                 <span className="text-xs text-muted-foreground">{t.category} • {t.mode}</span>
                                                             </div>
-                                                            <div className="flex gap-1">
-                                                                <Button size="sm" variant="outline" onClick={() => {
+                                                            <div className="flex gap-1 items-center">
+                                                                {/* Registration Count Badge */}
+                                                                <div className="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-md mr-1" title="Total Registrations">
+                                                                    {trainingApplications.filter(app => app.trainingName === t.name).length} Regs
+                                                                </div>
+
+                                                                {/* Download CSV Button */}
+                                                                <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50" onClick={() => handleDownloadTrainingCSV(t.name)} title="Download Applicant Data">
+                                                                    <Download className="w-4 h-4" />
+                                                                </Button>
+
+                                                                <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => {
                                                                     setEditingTrainingId(t._id);
                                                                     setNewTraining({
                                                                         ...t,
@@ -2209,10 +2386,15 @@ const AdminPanel = () => {
                                                                         formFields: t.formFields || [],
                                                                         startDate: t.startDate || "",
                                                                         endDate: t.endDate || "",
-                                                                        applyBy: t.applyBy || ""
+                                                                        applyBy: t.applyBy || "",
+                                                                        timing: t.timing || "",
+                                                                        note: t.note || "",
+                                                                        emailSubject: t.emailSubject || "",
+                                                                        emailBody: t.emailBody || "",
+                                                                        emailLinks: t.emailLinks || []
                                                                     });
                                                                 }}><Monitor className="w-4 h-4" /></Button>
-                                                                <Button size="sm" variant="ghost" className="text-red-500" onClick={() => handleDeleteTraining(t._id)}><Trash2 className="w-4 h-4" /></Button>
+                                                                <Button size="sm" variant="ghost" className="text-red-500 h-8 w-8 p-0" onClick={() => handleDeleteTraining(t._id)}><Trash2 className="w-4 h-4" /></Button>
                                                             </div>
                                                         </div>
                                                         <p className="text-sm text-muted-foreground line-clamp-2">{t.description}</p>

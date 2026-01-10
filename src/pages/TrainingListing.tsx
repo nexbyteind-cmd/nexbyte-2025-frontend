@@ -103,6 +103,11 @@ const TrainingListing = () => {
                                             <Badge className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white border-0 px-4 py-1.5 text-xs font-bold tracking-wide uppercase rounded-full shadow-lg shadow-indigo-500/20">
                                                 {training.mode || "Online"}
                                             </Badge>
+                                            {training.note && (
+                                                <Badge variant="outline" className="border-indigo-200 text-indigo-700 bg-indigo-50/50">
+                                                    {training.note}
+                                                </Badge>
+                                            )}
                                         </div>
 
                                         <h3 className="text-2xl font-bold text-slate-900 mb-3 leading-tight">
@@ -121,7 +126,7 @@ const TrainingListing = () => {
                                         </button>
 
                                         <div className="flex flex-wrap gap-3 mt-auto">
-                                            {training.duration && (
+                                            {(training.duration && !training.hiddenFields?.includes('duration')) && (
                                                 <div className="flex items-center text-xs font-bold text-slate-700 bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
                                                     <Clock className="w-3.5 h-3.5 mr-1.5 text-violet-600" />
                                                     {training.duration}
@@ -134,22 +139,32 @@ const TrainingListing = () => {
                                     <div className="bg-indigo-50/50 border-t border-indigo-100 p-6">
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
                                             {/* Start Date */}
-                                            <div className="bg-white p-3 rounded-xl border border-indigo-100 shadow-sm flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-1">Start Date</p>
-                                                <p className="font-bold text-slate-900 text-sm whitespace-nowrap">{formatDate(training.startDate)}</p>
-                                            </div>
+                                            {(!training.hiddenFields?.includes('startDate')) && (
+                                                <div className="bg-white p-3 rounded-xl border border-indigo-100 shadow-sm flex flex-col justify-center">
+                                                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-1">Start Date</p>
+                                                    <p className="font-bold text-slate-900 text-sm whitespace-nowrap">{formatDate(training.startDate)}</p>
+                                                </div>
+                                            )}
 
                                             {/* End Date */}
-                                            <div className="bg-white p-3 rounded-xl border border-indigo-100 shadow-sm flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-1">End Date</p>
-                                                <p className="font-bold text-slate-900 text-sm whitespace-nowrap">{formatDate(training.endDate)}</p>
-                                            </div>
+                                            {(!training.hiddenFields?.includes('endDate')) && (
+                                                <div className="bg-white p-3 rounded-xl border border-indigo-100 shadow-sm flex flex-col justify-center">
+                                                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-1">End Date</p>
+                                                    <p className="font-bold text-slate-900 text-sm whitespace-nowrap">{formatDate(training.endDate)}</p>
+                                                </div>
+                                            )}
 
-                                            {/* Apply Before */}
-                                            <div className="bg-white p-3 rounded-xl border border-red-100 shadow-sm flex flex-col justify-center ring-1 ring-red-50/50">
-                                                <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-1">Apply By</p>
-                                                <p className="font-bold text-red-600 text-sm whitespace-nowrap">{formatDate(training.applyBy)}</p>
-                                            </div>
+                                            {/* Apply Before OR Timing if Available */}
+                                            {(!training.hiddenFields?.includes('applyBy') && !training.hiddenFields?.includes('timing')) && (
+                                                <div className="bg-white p-3 rounded-xl border border-red-100 shadow-sm flex flex-col justify-center ring-1 ring-red-50/50">
+                                                    <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-1">
+                                                        {training.timing ? "Timing" : "Apply By"}
+                                                    </p>
+                                                    <p className="font-bold text-red-600 text-sm whitespace-nowrap">
+                                                        {training.timing ? training.timing : formatDate(training.applyBy)}
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="flex items-center gap-4">

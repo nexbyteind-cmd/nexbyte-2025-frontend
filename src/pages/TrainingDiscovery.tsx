@@ -6,6 +6,7 @@ import { Brain, Cloud, Code, Database, Globe, Lock, Cpu, Layers, Box, Terminal, 
 
 const topics = [
     { title: "Artificial Intelligence & Generative AI", icon: Brain, color: "text-purple-400", bg: "from-purple-500/20 to-indigo-500/20", border: "border-purple-500/20" },
+    { title: "Database Technologies", icon: Shield, color: "text-violet-400", bg: "from-violet-500/20 to-purple-500/20", border: "border-violet-500/20" },
     { title: "Machine Learning & Data Science", icon: Layers, color: "text-blue-400", bg: "from-blue-500/20 to-cyan-500/20", border: "border-blue-500/20" },
     { title: "Cloud Computing", icon: Cloud, color: "text-sky-400", bg: "from-sky-500/20 to-blue-500/20", border: "border-sky-500/20" },
     { title: "DevOps & Platform Engineering", icon: Terminal, color: "text-orange-400", bg: "from-orange-500/20 to-red-500/20", border: "border-orange-500/20" },
