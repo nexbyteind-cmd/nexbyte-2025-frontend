@@ -189,6 +189,10 @@ const AdminPanel = () => {
     // Training Filter State
     const [trainingTopicFilter, setTrainingTopicFilter] = useState("All");
 
+    // --- NEW: Training Application Filters ---
+    const [trainingAppCategory, setTrainingAppCategory] = useState("All");
+    const [trainingAppName, setTrainingAppName] = useState("All");
+
     // --- NEW: Email Modal State ---
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
     const [sendingEmail, setSendingEmail] = useState(false);
@@ -762,6 +766,44 @@ const AdminPanel = () => {
             const data = await response.json();
             if (data.success) setTrainingApplications(data.data);
         } catch (error) { console.error("Error fetching training applications"); }
+    };
+
+    const handleDownloadTrainingApplicationsCSV = () => {
+        // Filter based on current selection
+        let dataToExport = trainingApplications;
+
+        if (trainingAppName !== "All") {
+            dataToExport = dataToExport.filter(app => app.trainingName === trainingAppName);
+        } else if (trainingAppCategory !== "All") {
+            // Find all trainings in this category
+            const trainingNamesInCategory = trainings
+                .filter(t => t.category === trainingAppCategory)
+                .map(t => t.name);
+            dataToExport = dataToExport.filter(app => trainingNamesInCategory.includes(app.trainingName));
+        }
+
+        if (dataToExport.length === 0) return toast.error("No data to download");
+
+        const headers = ["Date", "Name", "Training", "Email", "Phone", "LinkedIn", "Status"];
+
+        const rows = dataToExport.map(app => {
+            return [
+                new Date(app.submittedAt).toLocaleDateString(),
+                app.name,
+                app.trainingName,
+                app.email,
+                app.phone,
+                app.linkedinProfile || "",
+                app.status
+            ].map(f => `"${f || ''}"`).join(",");
+        });
+
+        const csv = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
+        const encodedUri = encodeURI(csv);
+        const link = document.createElement("a");
+        link.href = encodedUri;
+        link.download = `training_applications_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
     };
 
     const handleCreateTraining = async (e: React.FormEvent) => {
@@ -2425,39 +2467,108 @@ const AdminPanel = () => {
                         {/* TRAINING APPLICATIONS TAB */}
                         <TabsContent value="training_apps" className="mt-0">
                             <Card>
-                                <CardHeader><CardTitle>Training Applications</CardTitle></CardHeader>
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <div className="flex flex-col gap-2">
+                                        <CardTitle>Training Applications</CardTitle>
+                                        <CardDescription>Select Category and Training to view applications</CardDescription>
+                                    </div>
+                                    <Button variant="outline" size="sm" onClick={handleDownloadTrainingApplicationsCSV} className="text-green-600 border-green-200">
+                                        <Download className="w-4 h-4 mr-2" />
+                                        Download CSV
+                                    </Button>
+                                </CardHeader>
                                 <CardContent>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Date</TableHead>
-                                                <TableHead>Name</TableHead>
-                                                <TableHead>Training</TableHead>
-                                                <TableHead>Contact</TableHead>
-                                                <TableHead>Transaction</TableHead>
-                                                <TableHead>Status</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {trainingApplications.map(app => (
-                                                <TableRow key={app._id}>
-                                                    <TableCell className="text-xs">{new Date(app.submittedAt).toLocaleDateString()}</TableCell>
-                                                    <TableCell>{app.name}</TableCell>
-                                                    <TableCell>{app.trainingName}</TableCell>
-                                                    <TableCell>
-                                                        <div className="flex flex-col text-xs">
-                                                            <span>{app.email}</span>
-                                                            {app.linkedinProfile && <a href={app.linkedinProfile} target="_blank" className="text-blue-500 hover:underline">LinkedIn</a>}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="text-xs">{app.transactionId}</TableCell>
-                                                    <TableCell>
-                                                        <span className="px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs font-bold">{app.status}</span>
-                                                    </TableCell>
+                                    <div className="flex gap-4 mb-6">
+                                        <div className="w-1/2">
+                                            <Label>Select Category</Label>
+                                            <select
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                value={trainingAppCategory}
+                                                onChange={(e) => {
+                                                    setTrainingAppCategory(e.target.value);
+                                                    setTrainingAppName("All"); // Reset training selection
+                                                }}
+                                            >
+                                                <option value="All">All Categories</option>
+                                                <option>Full Stack Software Development</option>
+                                                <option>Artificial Intelligence & Generative AI</option>
+                                                <option>Database Technologies</option>
+                                                <option>Machine Learning & Data Science</option>
+                                                <option>Cloud Computing</option>
+                                                <option>DevOps & Platform Engineering</option>
+                                                <option>Cybersecurity</option>
+                                                <option>Data Engineering & Analytics</option>
+                                                <option>AI Tools & Automation</option>
+                                                <option>Edge Computing & IoT</option>
+                                                <option>Blockchain & Web3</option>
+                                                <option>AR / VR / XR</option>
+                                                <option>Quantum Computing</option>
+                                            </select>
+                                        </div>
+                                        <div className="w-1/2">
+                                            <Label>Select Training</Label>
+                                            <select
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                value={trainingAppName}
+                                                onChange={(e) => setTrainingAppName(e.target.value)}
+                                                disabled={trainingAppCategory === "All"}
+                                            >
+                                                <option value="All">All Trainings</option>
+                                                {trainings
+                                                    .filter(t => t.category === trainingAppCategory)
+                                                    .map(t => (
+                                                        <option key={t._id} value={t.name}>{t.name}</option>
+                                                    ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Show Table Only if filtered or just show all but filtered */}
+                                    <div className="rounded-md border border-border">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Date</TableHead>
+                                                    <TableHead>Name</TableHead>
+                                                    <TableHead>Training</TableHead>
+                                                    <TableHead>Contact</TableHead>
+                                                    {/* Changed: Removed Transaction Column */}
+                                                    <TableHead>Status</TableHead>
                                                 </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {trainingApplications
+                                                    .filter(app => {
+                                                        const matchCategory = trainingAppCategory === "All" || trainings.find(t => t.name === app.trainingName)?.category === trainingAppCategory;
+                                                        const matchName = trainingAppName === "All" || app.trainingName === trainingAppName;
+                                                        return matchCategory && matchName;
+                                                    })
+                                                    .map(app => (
+                                                        <TableRow key={app._id}>
+                                                            <TableCell className="text-xs">{new Date(app.submittedAt).toLocaleDateString()}</TableCell>
+                                                            <TableCell>{app.name}</TableCell>
+                                                            <TableCell>{app.trainingName}</TableCell>
+                                                            <TableCell>
+                                                                <div className="flex flex-col text-xs">
+                                                                    <span>{app.email}</span>
+                                                                    <span>{app.phone}</span>
+                                                                    {app.linkedinProfile && <a href={app.linkedinProfile} target="_blank" className="text-blue-500 hover:underline">LinkedIn</a>}
+                                                                </div>
+                                                            </TableCell>
+                                                            {/* Changed: Removed Transaction Column */}
+                                                            <TableCell>
+                                                                <span className="px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs font-bold">{app.status}</span>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                {trainingApplications.length === 0 && (
+                                                    <TableRow>
+                                                        <TableCell colSpan={5} className="text-center h-24">No applications found.</TableCell>
+                                                    </TableRow>
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </TabsContent>
