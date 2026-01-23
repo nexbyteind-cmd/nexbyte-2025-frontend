@@ -22,15 +22,37 @@ const SocialPosts = () => {
     const [expandedPosts, setExpandedPosts] = useState<Record<string, boolean>>({});
     const [commentInput, setCommentInput] = useState<Record<string, string>>({}); // { postId: "open" | "" }
     const [commentValues, setCommentValues] = useState<Record<string, string>>({}); // { postId: text }
+    const [categories, setCategories] = useState<any[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState("All");
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
 
     useEffect(() => {
         fetchPosts();
-    }, [sortBy]);
+    }, [sortBy, selectedCategory]);
+
+    const fetchCategories = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/categories`);
+            const data = await response.json();
+            if (data.success) {
+                setCategories(data.data);
+            }
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        }
+    };
 
     const fetchPosts = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/api/social-posts?sort=${sortBy}`);
+            let url = `${API_BASE_URL}/api/social-posts?sort=${sortBy}`;
+            if (selectedCategory && selectedCategory !== "All") {
+                url += `&category=${encodeURIComponent(selectedCategory)}`;
+            }
+            const response = await fetch(url);
             const data = await response.json();
             if (data.success) {
                 setPosts(data.data);
@@ -108,32 +130,60 @@ const SocialPosts = () => {
             <div className="min-h-screen bg-gray-50 flex flex-col">
                 <Navbar />
 
-                <main className="flex-1 container mx-auto px-4 py-8 mt-20 max-w-6xl">
-                    <div className="text-center mb-8">
+                <main className="flex-1 container mx-auto px-2 py-6 mt-20 max-w-[1600px]">
+                    <div className="text-center mb-6">
                         {/* Cleaner Header */}
-                        <h1 className="text-2xl font-bold text-gray-900">Feed</h1>
-                        <p className="text-sm text-gray-500 mb-6">Latest updates from the community</p>
+                        <h1 className="text-2xl font-bold text-gray-900 mb-1">Feed</h1>
+                        <p className="text-xs text-gray-500 mb-4">Latest updates from the community</p>
 
-                        {/* Sorting Tabs */}
-                        <div className="flex justify-center gap-2 bg-gray-100 p-1 rounded-lg inline-flex">
-                            <button
-                                onClick={() => setSortBy("latest")}
-                                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${sortBy === "latest"
-                                    ? "bg-white text-gray-900 shadow-sm"
-                                    : "text-gray-500 hover:text-gray-700"
-                                    }`}
-                            >
-                                Latest
-                            </button>
-                            <button
-                                onClick={() => setSortBy("popular")}
-                                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1 ${sortBy === "popular"
-                                    ? "bg-white text-orange-600 shadow-sm"
-                                    : "text-gray-500 hover:text-gray-700"
-                                    }`}
-                            >
-                                <TrendingUp className="w-3 h-3" /> Trending
-                            </button>
+                        {/* Category Filters & Sorting */}
+                        <div className="flex flex-col items-center gap-3">
+                            {/* Categories */}
+                            <div className="flex flex-wrap justify-center gap-2 mb-2">
+                                <button
+                                    onClick={() => setSelectedCategory("All")}
+                                    className={`px-3 py-1 text-[10px] uppercase font-bold tracking-wide rounded-full transition-all ${selectedCategory === "All"
+                                        ? "bg-black text-white shadow-md"
+                                        : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                                        }`}
+                                >
+                                    All
+                                </button>
+                                {categories.map((cat) => (
+                                    <button
+                                        key={cat._id}
+                                        onClick={() => setSelectedCategory(cat.name)}
+                                        className={`px-3 py-1 text-[10px] uppercase font-bold tracking-wide rounded-full transition-all ${selectedCategory === cat.name
+                                            ? "bg-black text-white shadow-md"
+                                            : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                                            }`}
+                                    >
+                                        {cat.name}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Sorting Tabs */}
+                            <div className="flex justify-center gap-2 bg-gray-100 p-1 rounded-lg inline-flex">
+                                <button
+                                    onClick={() => setSortBy("latest")}
+                                    className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${sortBy === "latest"
+                                        ? "bg-white text-gray-900 shadow-sm"
+                                        : "text-gray-500 hover:text-gray-700"
+                                        }`}
+                                >
+                                    Latest
+                                </button>
+                                <button
+                                    onClick={() => setSortBy("popular")}
+                                    className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1 ${sortBy === "popular"
+                                        ? "bg-white text-orange-600 shadow-sm"
+                                        : "text-gray-500 hover:text-gray-700"
+                                        }`}
+                                >
+                                    <TrendingUp className="w-3 h-3" /> Trending
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -146,12 +196,12 @@ const SocialPosts = () => {
                             No posts available yet.
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                             {posts.map((post) => (
                                 <Card key={post._id} className="overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col bg-white h-full group">
                                     {/* Image Section First (Better for Grid) */}
                                     {post.image && (
-                                        <div className="w-full h-48 bg-gray-50 relative overflow-hidden">
+                                        <div className="w-full h-56 bg-gray-50 relative overflow-hidden">
                                             <IKImage
                                                 path={post.image}
                                                 transformation={[{ height: "400", width: "600" }]}
@@ -161,7 +211,7 @@ const SocialPosts = () => {
                                         </div>
                                     )}
 
-                                    <div className="flex flex-col flex-1 p-4">
+                                    <div className="flex flex-col flex-1 p-5">
                                         {/* Content Text */}
                                         <div className="mb-4 flex-1">
                                             <div className={`text-sm text-gray-800 whitespace-pre-wrap leading-relaxed ${!expandedPosts[post._id] && "line-clamp-3"}`}>

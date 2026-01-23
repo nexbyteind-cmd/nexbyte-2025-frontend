@@ -10,6 +10,8 @@ import { Trash2, Image as ImageIcon, Loader2, Eye, EyeOff, MessageSquare, Messag
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, X, Tag } from "lucide-react";
 
 // ImageKit Config
 const IK_PUBLIC_KEY = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY;
@@ -28,11 +30,18 @@ const SocialPostManager = () => {
     const [newPost, setNewPost] = useState({
         content: "",
         image: null as string | null,
+        category: "",
     });
     const [uploading, setUploading] = useState(false);
 
+    // Category State
+    const [categories, setCategories] = useState<any[]>([]);
+    const [newCategory, setNewCategory] = useState("");
+    const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+
     useEffect(() => {
         fetchPosts();
+        fetchCategories();
     }, [sortBy]);
 
     useEffect(() => {
@@ -62,6 +71,59 @@ const SocialPostManager = () => {
         }
     };
 
+    const fetchCategories = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/categories`);
+            const data = await response.json();
+            if (data.success) {
+                setCategories(data.data);
+            }
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        }
+    };
+
+    const handleCreateCategory = async () => {
+        if (!newCategory.trim()) return;
+        setIsCreatingCategory(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/categories`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: newCategory })
+            });
+            const data = await response.json();
+            if (data.success) {
+                toast.success("Category created");
+                setNewCategory("");
+                fetchCategories();
+            } else {
+                toast.error(data.message || "Failed to create category");
+            }
+        } catch (error) {
+            toast.error("Error creating category");
+        } finally {
+            setIsCreatingCategory(false);
+        }
+    };
+
+    const handleDeleteCategory = async (id: string) => {
+        if (!confirm("Delete this category?")) return;
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/categories/${id}`, {
+                method: "DELETE"
+            });
+            if (response.ok) {
+                toast.success("Category deleted");
+                fetchCategories();
+            } else {
+                toast.error("Failed to delete category");
+            }
+        } catch (error) {
+            toast.error("Error deleting category");
+        }
+    };
+
     const handleUploadError = (err: any) => {
         setUploading(false);
         toast.error("Image upload failed");
@@ -88,7 +150,7 @@ const SocialPostManager = () => {
 
             if (data.success) {
                 toast.success("Post created successfully!");
-                setNewPost({ content: "", image: null });
+                setNewPost({ content: "", image: null, category: "" });
                 fetchPosts();
             } else {
                 toast.error("Failed to create post");
@@ -154,6 +216,53 @@ const SocialPostManager = () => {
                             <CardDescription>Share updates with the community</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
+
+                            {/* Category Creation (Embedded) */}
+                            <div className="bg-gray-50 p-3 rounded-md border border-gray-100 mb-2">
+                                <Label className="text-xs text-gray-500 mb-1.5 block">Add New Category</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        placeholder="New Category Name"
+                                        value={newCategory}
+                                        onChange={(e) => setNewCategory(e.target.value)}
+                                        className="h-8 text-xs bg-white"
+                                    />
+                                    <Button size="sm" onClick={handleCreateCategory} disabled={isCreatingCategory || !newCategory.trim()} className="h-8">
+                                        {isCreatingCategory ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                                    </Button>
+                                </div>
+                                <div className="mt-2 flex flex-wrap gap-1">
+                                    {categories.map(cat => (
+                                        <div key={cat._id} className="text-[10px] bg-white border px-1.5 py-0.5 rounded flex items-center gap-1 group">
+                                            {cat.name}
+                                            <button onClick={() => handleDeleteCategory(cat._id)} className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <X className="w-2.5 h-2.5" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Category Selection */}
+                            <div className="space-y-2">
+                                <Label>Category</Label>
+                                <Select
+                                    value={newPost.category}
+                                    onValueChange={(val) => setNewPost({ ...newPost, category: val })}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map((cat) => (
+                                            <SelectItem key={cat._id} value={cat.name}>
+                                                {cat.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
                             <div className="space-y-2">
                                 <Label>Post Content</Label>
                                 <Textarea
@@ -280,6 +389,11 @@ const SocialPostManager = () => {
                                                 {new Date(post.createdAt).toLocaleDateString()}
                                             </p>
                                             {post.isHidden && <span className="text-[10px] uppercase font-bold text-gray-500 border border-gray-300 px-1 rounded">Hidden</span>}
+                                            {post.category && (
+                                                <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium border border-blue-100">
+                                                    {post.category}
+                                                </span>
+                                            )}
                                         </div>
 
                                         {/* Content Truncated */}
@@ -337,7 +451,7 @@ const SocialPostManager = () => {
                     </div>
                 </div>
             </div>
-        </IKContext>
+        </IKContext >
     );
 };
 
