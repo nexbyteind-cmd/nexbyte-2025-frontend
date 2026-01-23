@@ -11,13 +11,28 @@ import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, X, Tag } from "lucide-react";
+import { Plus, X, Tag, Pencil } from "lucide-react";
 
 // ImageKit Config
 const IK_PUBLIC_KEY = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY;
 const IK_URL_ENDPOINT = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
 
 const SocialPostManager = () => {
+    const authenticator = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/imagekit-auth`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Request failed with status ${response.status}: ${errorText}`);
+            }
+            const data = await response.json();
+            const { signature, expire, token } = data;
+            return { signature, expire, token };
+        } catch (error) {
+            throw new Error(`Authentication request failed: ${error.message}`); // Use error.message safely
+        }
+    };
+
     const [posts, setPosts] = useState<any[]>([]);
     const [filteredPosts, setFilteredPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -33,6 +48,7 @@ const SocialPostManager = () => {
         category: "",
     });
     const [uploading, setUploading] = useState(false);
+    const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
     // Category State
     const [categories, setCategories] = useState<any[]>([]);
@@ -160,6 +176,53 @@ const SocialPostManager = () => {
         }
     };
 
+    const handleEditClick = (post: any) => {
+        setNewPost({
+            content: post.content || "",
+            image: post.image || null,
+            category: post.category || ""
+        });
+        setEditingPostId(post._id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleCancelEdit = () => {
+        setNewPost({ content: "", image: null, category: "" });
+        setEditingPostId(null);
+    };
+
+    const handleUpdatePost = async () => {
+        if (!editingPostId) return;
+        if (!newPost.content && !newPost.image) {
+            return toast.error("Please add text or an image");
+        }
+
+        setUploading(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/social-posts/${editingPostId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    type: 'edit',
+                    payload: newPost
+                })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                toast.success("Post updated successfully!");
+                handleCancelEdit();
+                fetchPosts();
+            } else {
+                toast.error("Failed to update post");
+            }
+        } catch (error) {
+            toast.error("Error updating post");
+        } finally {
+            setUploading(false);
+        }
+    };
+
     const handleDeletePost = async (id: string) => {
         if (!confirm("Are you sure you want to delete this post?")) return;
         try {
@@ -206,14 +269,18 @@ const SocialPostManager = () => {
     };
 
     return (
-        <IKContext publicKey={IK_PUBLIC_KEY} urlEndpoint={IK_URL_ENDPOINT}>
+        <IKContext
+            publicKey={IK_PUBLIC_KEY}
+            urlEndpoint={IK_URL_ENDPOINT}
+            authenticator={authenticator}
+        >
             <div className="space-y-6">
                 {/* Create Post Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <Card className="lg:col-span-1 h-fit">
                         <CardHeader>
-                            <CardTitle>Create New Post</CardTitle>
-                            <CardDescription>Share updates with the community</CardDescription>
+                            <CardTitle>{editingPostId ? "Edit Post" : "Create New Post"}</CardTitle>
+                            <CardDescription>{editingPostId ? "Modify your existing post" : "Share updates with the community"}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
 
@@ -309,9 +376,16 @@ const SocialPostManager = () => {
                                 <p className="text-xs text-muted-foreground">Upload functionality requires backend signing (already setup).</p>
                             </div>
 
-                            <Button onClick={handleCreatePost} className="w-full" disabled={uploading}>
-                                {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Post Update"}
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button onClick={editingPostId ? handleUpdatePost : handleCreatePost} className="flex-1" disabled={uploading}>
+                                    {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (editingPostId ? "Update Post" : "Post Update")}
+                                </Button>
+                                {editingPostId && (
+                                    <Button variant="outline" onClick={handleCancelEdit} disabled={uploading}>
+                                        Cancel
+                                    </Button>
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -431,7 +505,17 @@ const SocialPostManager = () => {
                                                 {post.commentsHidden ? <MessageSquareOff className="h-3 w-3" /> : <MessageSquare className="h-3 w-3" />}
                                             </Button>
 
-                                            <div className="col-span-1"></div> {/* Spacer or Edit if needed later */}
+                                            <div className="col-span-1">
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    className="h-7 w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                    title="Edit Post"
+                                                    onClick={() => handleEditClick(post)}
+                                                >
+                                                    <Pencil className="h-3 w-3" />
+                                                </Button>
+                                            </div>
 
                                             {/* Delete */}
                                             <Button
