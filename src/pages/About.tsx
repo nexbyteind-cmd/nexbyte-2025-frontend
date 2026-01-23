@@ -48,7 +48,7 @@ const milestones = [
   { year: "2019", title: "100+ Clients", description: "Reached our first major milestone" },
   { year: "2021", title: "Global Expansion", description: "Extended services to international markets" },
   { year: "2023", title: "AI Integration", description: "Launched AI-powered analytics platform" },
-  { year: "2024", title: "500+ Brands", description: "Serving businesses across 20+ industries" }
+  { year: "2025", title: "500+ Brands", description: "Serving businesses across 20+ industries" }
 ];
 
 const stats = [
