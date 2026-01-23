@@ -27,6 +27,7 @@ import TrainingDiscovery from "./pages/TrainingDiscovery"; // NEW
 
 import TrainingListing from "./pages/TrainingListing"; // NEW
 import SocialPosts from "./pages/SocialPosts"; // NEW
+import PostDetail from "./pages/PostDetail"; // NEW
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
           <Route path="/services/hackathons" element={<Hackathons />} />
           <Route path="/services/hackathons" element={<Hackathons />} />
           <Route path="/social-posts" element={<SocialPosts />} /> {/* NEW */}
+          <Route path="/social-posts/:id" element={<PostDetail />} /> {/* NEW */}
           <Route path="/training-discovery" element={<TrainingDiscovery />} /> {/* NEW */}
           <Route path="/trainings/:topic" element={<TrainingListing />} /> {/* NEW */}
           <Route path="/events" element={<Events />} />
