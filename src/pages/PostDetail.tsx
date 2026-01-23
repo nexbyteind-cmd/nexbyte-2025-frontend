@@ -131,38 +131,33 @@ const PostDetail = () => {
 
                     <Card className="overflow-hidden border border-gray-100 shadow-md bg-white">
                         <CardContent className="p-0">
-                            {/* Author Header */}
-                            <div className="p-4 flex items-center gap-3 border-b border-gray-50">
-                                <Avatar className="h-10 w-10 border border-gray-200">
-                                    <AvatarImage src="/placeholder-user.jpg" />
-                                    <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">NB</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="text-sm font-semibold text-gray-900">NexByte Admin</p>
-                                    <p className="text-xs text-gray-500">
-                                        {new Date(post.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Post Content - Text */}
-                            {post.content && (
-                                <div className="px-4 py-3">
-                                    <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
-                                </div>
-                            )}
-
-                            {/* Image Section */}
+                            {/* Image Section First (Full Width) */}
                             {post.image && (
-                                <div className="w-full bg-gray-100 overflow-hidden">
+                                <div className="w-full bg-gray-50 overflow-hidden mb-4">
                                     <IKImage
                                         path={post.image}
-                                        transformation={[{ width: "800" }]}
-                                        className="w-full h-auto object-contain max-h-[500px]"
+                                        transformation={[{ width: "1200" }]}
+                                        className="w-full h-auto object-contain max-h-[600px] mx-auto"
                                         loading="lazy"
                                     />
                                 </div>
                             )}
+
+                            {/* Post Content */}
+                            <div className="px-6 pb-2">
+                                {post.content && (
+                                    <p className="text-gray-800 text-base leading-relaxed whitespace-pre-wrap mb-4">
+                                        {post.content}
+                                    </p>
+                                )}
+
+                                {/* Date Footer */}
+                                <div className="flex items-center gap-2 text-xs text-gray-400 border-t border-gray-50 pt-3">
+                                    <span>{new Date(post.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                    <span>•</span>
+                                    <span className="bg-gray-50 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide text-gray-500">Public</span>
+                                </div>
+                            </div>
 
                             {/* Stats */}
                             <div className="px-4 py-2 flex items-center justify-between text-xs text-gray-500 border-b border-gray-100">

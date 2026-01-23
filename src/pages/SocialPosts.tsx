@@ -20,7 +20,8 @@ const SocialPosts = () => {
     const [loading, setLoading] = useState(true);
     const [sortBy, setSortBy] = useState("latest"); // 'latest' | 'popular'
     const [expandedPosts, setExpandedPosts] = useState<Record<string, boolean>>({});
-    const [commentInput, setCommentInput] = useState<Record<string, string>>({}); // { postId: commentText }
+    const [commentInput, setCommentInput] = useState<Record<string, string>>({}); // { postId: "open" | "" }
+    const [commentValues, setCommentValues] = useState<Record<string, string>>({}); // { postId: text }
 
     useEffect(() => {
         fetchPosts();
@@ -73,8 +74,7 @@ const SocialPosts = () => {
         } catch (error) { }
     };
 
-    const handleComment = async (id: string) => {
-        const text = commentInput[id];
+    const handleComment = async (id: string, text: string) => {
         if (!text || !text.trim()) return;
 
         const newComment = {
@@ -86,6 +86,7 @@ const SocialPosts = () => {
         // Optimistic UI
         setPosts(posts.map(p => p._id === id ? { ...p, comments: [...(p.comments || []), newComment] } : p));
         setCommentInput({ ...commentInput, [id]: "" });
+        setCommentValues(prev => ({ ...prev, [id]: "" }));
 
         try {
             await fetch(`${API_BASE_URL}/api/social-posts/${id}`, {
@@ -107,7 +108,7 @@ const SocialPosts = () => {
             <div className="min-h-screen bg-gray-50 flex flex-col">
                 <Navbar />
 
-                <main className="flex-1 container mx-auto px-4 py-8 mt-20 max-w-2xl">
+                <main className="flex-1 container mx-auto px-4 py-8 mt-20 max-w-6xl">
                     <div className="text-center mb-8">
                         {/* Cleaner Header */}
                         <h1 className="text-2xl font-bold text-gray-900">Feed</h1>
@@ -145,159 +146,105 @@ const SocialPosts = () => {
                             No posts available yet.
                         </div>
                     ) : (
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {posts.map((post) => (
-                                <Card key={post._id} className="overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 bg-white">
-                                    <div className="flex flex-col h-full">
-                                        {/* Header */}
-                                        <div className="p-3 flex items-start gap-3">
-                                            <Avatar className="h-10 w-10 border border-gray-100 cursor-pointer">
-                                                <AvatarImage src="/placeholder-user.jpg" />
-                                                <AvatarFallback className="bg-blue-600 text-white font-semibold text-xs">NB</AvatarFallback>
-                                            </Avatar>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex justify-between items-center">
-                                                    <h3 className="text-sm font-semibold text-gray-900 truncate">NexByte Admin</h3>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                                <p className="text-xs text-gray-500 truncate">
-                                                    {new Date(post.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })} • <span className="text-gray-400">Public</span>
-                                                </p>
-                                            </div>
+                                <Card key={post._id} className="overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col bg-white h-full group">
+                                    {/* Image Section First (Better for Grid) */}
+                                    {post.image && (
+                                        <div className="w-full h-48 bg-gray-50 relative overflow-hidden">
+                                            <IKImage
+                                                path={post.image}
+                                                transformation={[{ height: "400", width: "600" }]}
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                loading="lazy"
+                                            />
                                         </div>
+                                    )}
 
+                                    <div className="flex flex-col flex-1 p-4">
                                         {/* Content Text */}
-                                        <div className="px-4 pb-2">
+                                        <div className="mb-4 flex-1">
                                             <div className={`text-sm text-gray-800 whitespace-pre-wrap leading-relaxed ${!expandedPosts[post._id] && "line-clamp-3"}`}>
                                                 {post.content}
                                             </div>
                                             {post.content && post.content.length > 150 && (
                                                 <button
                                                     onClick={() => toggleReadMore(post._id)}
-                                                    className="text-gray-500 hover:text-gray-700 text-xs font-medium mt-1 focus:outline-none"
+                                                    className="text-blue-600 hover:text-blue-700 text-xs font-semibold mt-1 focus:outline-none"
                                                 >
-                                                    {expandedPosts[post._id] ? "...see less" : "...see more"}
+                                                    {expandedPosts[post._id] ? "Show less" : "...see more"}
                                                 </button>
                                             )}
                                         </div>
 
-                                        {/* Image */}
-                                        {post.image && (
-                                            <div className="mt-2 bg-gray-100 overflow-hidden border-t border-b border-gray-100">
-                                                <IKImage
-                                                    path={post.image}
-                                                    transformation={[{ width: "800" }]}
-                                                    className="w-full h-auto object-contain max-h-[500px]"
-                                                    loading="lazy"
-                                                />
-                                            </div>
-                                        )}
-
-                                        {/* Social Counts */}
-                                        <div className="px-4 py-2 flex items-center justify-between text-xs text-gray-500 border-b border-gray-50 mx-2">
+                                        {/* Date & Stats Footer */}
+                                        <div className="flex items-center justify-between text-xs text-gray-400 border-t border-gray-50 pt-3 mt-auto">
                                             <div className="flex items-center gap-1">
-                                                {post.likes > 0 && (
-                                                    <>
-                                                        <div className="bg-blue-500 rounded-full p-0.5">
-                                                            <ThumbsUp className="w-2 h-2 text-white fill-white" />
-                                                        </div>
-                                                        <span className="hover:text-blue-600 hover:underline cursor-pointer">{post.likes}</span>
-                                                    </>
-                                                )}
+                                                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                                                <span>•</span>
+                                                <span className="bg-gray-50 px-1.5 py-0.5 rounded text-[10px] font-medium text-gray-500">Public</span>
                                             </div>
-                                            <div className="flex gap-3">
-                                                {post.comments?.length > 0 && <span className="hover:text-blue-600 hover:underline cursor-pointer">{post.comments.length} comments</span>}
-                                                {post.shares > 0 && <span className="hover:text-blue-600 hover:underline cursor-pointer">{post.shares} reposts</span>}
+                                            <div className="flex items-center gap-3">
+                                                <span className="flex items-center gap-1"><ThumbsUp className="w-3 h-3" /> {post.likes || 0}</span>
+                                                <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" /> {post.comments?.length || 0}</span>
                                             </div>
                                         </div>
 
-                                        {/* Action Buttons */}
-                                        <div className="px-2 py-1 flex items-center justify-between">
+                                        {/* Action Buttons (Compact) */}
+                                        <div className="flex gap-2 pt-3 mt-2 border-t border-gray-50">
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="flex-1 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md py-3 h-auto"
+                                                className={`flex-1 h-8 text-xs ${post.likes > 0 ? "text-blue-600 bg-blue-50" : "text-gray-600"}`}
                                                 onClick={() => handleLike(post._id)}
                                             >
-                                                <ThumbsUp className={`h-4 w-4 mr-2 ${post.likes > 0 ? "text-blue-600 fill-blue-600" : ""}`} />
-                                                <span className="font-semibold text-xs text-gray-600">Like</span>
+                                                <ThumbsUp className="h-3.5 w-3.5 mr-1.5" />
+                                                Like
                                             </Button>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className={`flex-1 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md py-3 h-auto ${post.commentsHidden ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                onClick={() => !post.commentsHidden && document.getElementById(`comment-${post._id}`)?.focus()}
+                                                className={`flex-1 h-8 text-xs ${post.commentsHidden ? 'opacity-50 cursor-not-allowed' : 'text-gray-600'}`}
+                                                onClick={() => !post.commentsHidden && setCommentInput(prev => ({ ...prev, [post._id]: prev[post._id] ? "" : "open" }))}
                                                 disabled={post.commentsHidden}
                                             >
-                                                {post.commentsHidden ? <MessageSquareOff className="h-4 w-4 mr-2" /> : <MessageSquare className="h-4 w-4 mr-2" />}
-                                                <span className="font-semibold text-xs text-gray-600">
-                                                    {post.commentsHidden ? 'Off' : 'Comment'}
-                                                </span>
+                                                {post.commentsHidden ? <MessageSquareOff className="h-3.5 w-3.5 mr-1.5" /> : <MessageSquare className="h-3.5 w-3.5 mr-1.5" />}
+                                                {post.commentsHidden ? 'Off' : 'Comment'}
                                             </Button>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="flex-1 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md py-3 h-auto"
+                                                className="flex-1 h-8 text-xs text-gray-600"
                                                 onClick={() => handleShare(post._id)}
                                             >
-                                                <Share2 className="h-4 w-4 mr-2" />
-                                                <span className="font-semibold text-xs text-gray-600">Share</span>
+                                                <Share2 className="h-3.5 w-3.5 mr-1.5" />
+                                                Share
                                             </Button>
                                         </div>
 
-                                        {/* Comment Input Section */}
-                                        {!post.commentsHidden && (commentInput[post._id] || (post.comments && post.comments.length > 0)) && (
-                                            <div className="bg-gray-50/50 p-3 pt-0 pb-3 transition-all duration-200">
-                                                {/* Input */}
-                                                <div className="flex gap-2 mb-3 mt-2">
-                                                    <Avatar className="h-8 w-8">
-                                                        <AvatarImage src="/placeholder-user.jpg" />
-                                                        <AvatarFallback className="bg-gray-200 text-gray-500 text-xs">G</AvatarFallback>
-                                                    </Avatar>
-                                                    <div className="flex-1 relative">
-                                                        <Input
-                                                            id={`comment-${post._id}`}
-                                                            placeholder="Add a comment..."
-                                                            className="h-9 text-sm bg-white border-gray-200 rounded-full pr-10 focus-visible:ring-1 focus-visible:ring-gray-300"
-                                                            value={commentInput[post._id] || ""}
-                                                            onChange={(e) => setCommentInput({ ...commentInput, [post._id]: e.target.value })}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === 'Enter') handleComment(post._id);
-                                                            }}
-                                                        />
-                                                        <Button
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            className="absolute right-1 top-0.5 h-8 w-8 text-blue-600 hover:bg-blue-50 rounded-full"
-                                                            onClick={() => handleComment(post._id)}
-                                                            disabled={!commentInput[post._id]?.trim()}
-                                                        >
-                                                            <Send className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
+                                        {/* Inline Comment Input */}
+                                        {!post.commentsHidden && commentInput[post._id] === "open" && (
+                                            <div className="mt-3 pt-3 border-t border-gray-100 animate-in fade-in slide-in-from-top-2">
+                                                <div className="relative">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Write a comment..."
+                                                        className="w-full pl-3 pr-9 py-2 text-xs bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                        value={commentValues[post._id] || ""}
+                                                        onChange={(e) => setCommentValues(prev => ({ ...prev, [post._id]: e.target.value }))}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                handleComment(post._id, commentValues[post._id] || "");
+                                                            }
+                                                        }}
+                                                    />
+                                                    <button
+                                                        onClick={() => handleComment(post._id, commentValues[post._id] || "")}
+                                                        className="absolute right-1 top-1 p-1 text-blue-600 hover:bg-blue-50 rounded-full"
+                                                    >
+                                                        <Send className="w-3.5 h-3.5" />
+                                                    </button>
                                                 </div>
-
-                                                {/* Comments List (Show only top 2 or all? Let's show all for now as user requested "just comments") */}
-                                                {post.comments && post.comments.length > 0 && (
-                                                    <div className="space-y-3 pl-10 pr-2">
-                                                        {post.comments.map((comment: any, idx: number) => (
-                                                            <div key={idx} className="bg-gray-100 rounded-r-lg rounded-bl-lg p-2.5 px-3">
-                                                                <div className="flex justify-between items-baseline mb-0.5">
-                                                                    {/* Simplified User Name */}
-                                                                    <span className="text-xs font-bold text-gray-900">
-                                                                        {comment.user === "Guest User" ? "Guest" : comment.user}
-                                                                    </span>
-                                                                    <span className="text-[10px] text-gray-400 ml-2">
-                                                                        {new Date(comment.date).toLocaleDateString()}
-                                                                    </span>
-                                                                </div>
-                                                                <p className="text-sm text-gray-800 leading-snug">{comment.text}</p>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
                                             </div>
                                         )}
                                     </div>
