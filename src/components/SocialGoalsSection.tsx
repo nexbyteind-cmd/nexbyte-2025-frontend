@@ -69,31 +69,57 @@ const SocialGoalsSection = ({
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {posts.map((post) => (
-                                <Card key={post._id} className="overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col h-full group">
-                                    {post.image && (
-                                        <div className="h-48 bg-gray-100 overflow-hidden relative">
-                                            <IKImage
-                                                path={post.image}
-                                                transformation={[{ height: "300", width: "500" }]}
-                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                                loading="lazy"
-                                            />
+                                <Card key={post._id} className="overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col h-full bg-white">
+                                    {/* Header */}
+                                    <div className="p-3 flex gap-3 items-start">
+                                        <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs">
+                                            NB
                                         </div>
-                                    )}
-                                    <CardContent className="p-5 flex-1 flex flex-col">
-                                        <div className="text-xs text-gray-400 mb-2 uppercase tracking-wide">
-                                            {new Date(post.createdAt).toLocaleDateString()}
+                                        <div className="flex-1">
+                                            <h3 className="text-sm font-semibold text-gray-900 leading-tight">NexByte Admin</h3>
+                                            <p className="text-[10px] text-gray-500 flex items-center gap-1">
+                                                {new Date(post.createdAt).toLocaleDateString()} • <span className="bg-gray-100 px-1 rounded text-[9px] font-medium text-gray-600">Public</span>
+                                            </p>
                                         </div>
-                                        <p className="text-gray-700 line-clamp-3 mb-4 flex-1">
+                                    </div>
+
+                                    {/* Content */}
+                                    <CardContent className="p-3 pt-0 flex-1 flex flex-col">
+                                        <p className="text-xs text-gray-700 leading-relaxed line-clamp-3 mb-3">
                                             {post.content}
                                         </p>
-                                        <div className="flex items-center text-sm text-gray-500 gap-4 mt-auto pt-4 border-t border-gray-50">
-                                            <div className="flex items-center gap-1">
-                                                <ThumbsUp className="w-4 h-4" /> {post.likes || 0}
+
+                                        {/* Image */}
+                                        {post.image && (
+                                            <div className="w-[calc(100%+1.5rem)] -ml-3 mb-3 h-40 bg-gray-50 relative group overflow-hidden">
+                                                <IKImage
+                                                    path={post.image}
+                                                    transformation={[{ height: "300", width: "500" }]}
+                                                    className="w-full h-full object-cover"
+                                                    loading="lazy"
+                                                />
                                             </div>
-                                            <div className="flex items-center gap-1">
-                                                <MessageCircle className="w-4 h-4" /> {post.comments?.length || 0}
-                                            </div>
+                                        )}
+
+                                        {/* Stats */}
+                                        <div className="flex items-center justify-between text-[10px] text-gray-500 border-t border-gray-100 pt-2 mt-auto">
+                                            <span className="flex items-center gap-1">👍 {post.likes || 0}</span>
+                                            <span className="flex items-center gap-1">{post.comments?.length || 0} comments</span>
+                                        </div>
+
+                                        {/* Fake Action Buttons (Visual only, scaling down the 'feed' look) */}
+                                        <div className="flex justify-between items-center mt-2 pt-1">
+                                            <button className="flex-1 flex items-center justify-center gap-1 py-1 text-gray-500 hover:bg-gray-50 rounded text-[10px] font-medium transition-colors">
+                                                <ThumbsUp className="w-3 h-3" /> Like
+                                            </button>
+                                            <button className="flex-1 flex items-center justify-center gap-1 py-1 text-gray-500 hover:bg-gray-50 rounded text-[10px] font-medium transition-colors">
+                                                <MessageCircle className="w-3 h-3" /> Comment
+                                            </button>
+                                            <Link to={`/social-posts/${post._id}`} className="flex-1">
+                                                <button className="w-full flex items-center justify-center gap-1 py-1 text-gray-500 hover:bg-gray-50 rounded text-[10px] font-medium transition-colors">
+                                                    <ArrowRight className="w-3 h-3" /> View
+                                                </button>
+                                            </Link>
                                         </div>
                                     </CardContent>
                                 </Card>

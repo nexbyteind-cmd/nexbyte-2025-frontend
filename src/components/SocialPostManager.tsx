@@ -252,8 +252,8 @@ const SocialPostManager = () => {
                             </div>
                         </div>
 
-                        {/* COMPACT GRID: 4 columns on md+ */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {/* COMPACT GRID: 3 columns on lg+ */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {filteredPosts.map((post) => (
                                 <Card key={post._id} className={`overflow-hidden flex flex-col ${post.isHidden ? 'opacity-60 bg-gray-50 border-dashed' : ''}`}>
                                     {/* Compact Image */}
