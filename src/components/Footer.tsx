@@ -1,10 +1,26 @@
 import { Instagram, Facebook, Linkedin, Youtube, Twitter, ArrowUp } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useRef } from "react";
 
 const Footer = () => {
+  const widgetRef = useRef<HTMLDivElement>(null);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  useEffect(() => {
+    if (widgetRef.current) {
+      const scriptId = "mapmyvisitors";
+      if (!document.getElementById(scriptId)) {
+        const script = document.createElement("script");
+        script.type = "text/javascript";
+        script.id = scriptId;
+        script.src = "//mapmyvisitors.com/map.js?d=5tx0EW8pZhiEy3KYuV1BAJe55P2ZABjJMLRjJDbC1io&cl=ffffff&w=a";
+        widgetRef.current.appendChild(script);
+      }
+    }
+  }, []);
 
   const socialLinks = [
     { icon: Linkedin, url: "https://www.linkedin.com/company/nexbyte-services/" },
@@ -17,7 +33,7 @@ const Footer = () => {
   return (
     <footer className="bg-foreground text-background py-16">
       <div className="container px-4">
-        <div className="grid md:grid-cols-4 gap-12 mb-12">
+        <div className="grid md:grid-cols-5 gap-8 mb-12">
           {/* Brand */}
           <div className="md:col-span-2">
             <div className="mb-6">
@@ -63,6 +79,14 @@ const Footer = () => {
               <li><Link to="/contact" className="hover:text-background transition-colors">Contact</Link></li>
               <li><Link to="/official-registration" className="hover:text-background transition-colors">Official Registration</Link></li>
             </ul>
+          </div>
+
+          {/* Visitors Widget */}
+          <div className="flex flex-col">
+            <h4 className="font-semibold mb-4">Visitors</h4>
+            <div ref={widgetRef} className="overflow-hidden rounded-lg bg-background/5">
+              {/* Script will be injected here */}
+            </div>
           </div>
         </div>
 
