@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { API_BASE_URL } from "@/config";
-import { IKContext, IKImage } from "imagekitio-react";
+import { IKContext, IKImage, IKUpload } from "imagekitio-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -279,16 +279,15 @@ const SocialPostManager = () => {
                                 {/* Keeping it simple with just text for now if no custom upload UI provided in previous logic, 
                                     but assuming standard IKUpload usage from context */}
                                 <div className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors relative">
-                                    <input
-                                        type="file"
-                                        accept="image/*"
+                                    <IKUpload
+                                        fileName="custom-post-image.jpg"
+                                        tags={["social-post"]}
+                                        useUniqueFileName={true}
+                                        responseFields={["tags"]}
+                                        onError={handleUploadError}
+                                        onSuccess={handleUploadSuccess}
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                        // Need actual file upload handler logic if not using IKUpload component directly.
-                                        // Assuming IKUpload was here before or we need to add it.
-                                        // Re-adding IKUpload as per original file usage pattern likely
-                                        title="Upload Image"
-                                        disabled={true} // Placeholder visual, actual IK below
-                                        style={{ pointerEvents: 'none' }}
+                                        onUploadStart={() => setUploading(true)}
                                     />
                                     <ImageIcon className="mx-auto h-8 w-8 text-gray-400 mb-2" />
                                     <span className="text-sm text-gray-500">
