@@ -40,6 +40,7 @@ const SocialPostManager = () => {
 
     // Filter State
     const [date, setDate] = useState<Date | undefined>(undefined);
+    const [adminSelectedCategory, setAdminSelectedCategory] = useState("All");
 
     // Form State
     const [newPost, setNewPost] = useState({
@@ -58,7 +59,7 @@ const SocialPostManager = () => {
     useEffect(() => {
         fetchPosts();
         fetchCategories();
-    }, [sortBy]);
+    }, [sortBy, adminSelectedCategory]);
 
     useEffect(() => {
         if (!date) {
@@ -73,7 +74,12 @@ const SocialPostManager = () => {
         setLoading(true);
         try {
             // Use Admin endpoint to get ALL posts (including hidden)
-            const response = await fetch(`${API_BASE_URL}/api/admin/social-posts?sort=${sortBy}`);
+            // Use Admin endpoint to get ALL posts (including hidden)
+            let url = `${API_BASE_URL}/api/admin/social-posts?sort=${sortBy}`;
+            if (adminSelectedCategory && adminSelectedCategory !== "All") {
+                url += `&category=${encodeURIComponent(adminSelectedCategory)}`;
+            }
+            const response = await fetch(url);
             const data = await response.json();
             if (data.success) {
                 setPosts(data.data);
@@ -89,7 +95,8 @@ const SocialPostManager = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/categories`);
+            // Admin needs to see ALL categories, including hidden ones
+            const response = await fetch(`${API_BASE_URL}/api/categories?includeHidden=true`);
             const data = await response.json();
             if (data.success) {
                 setCategories(data.data);
@@ -137,6 +144,25 @@ const SocialPostManager = () => {
             }
         } catch (error) {
             toast.error("Error deleting category");
+        }
+    };
+
+    const toggleCategoryVisibility = async (id: string, currentStatus: boolean) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/categories/${id}/visibility`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ isHidden: !currentStatus })
+            });
+            if (response.ok) {
+                toast.success(currentStatus ? "Category Unhidden" : "Category Hidden");
+                fetchCategories();
+                fetchPosts(); // Refresh posts as their visibility might depend on category
+            } else {
+                toast.error("Failed to update category visibility");
+            }
+        } catch (error) {
+            toast.error("Error updating category visibility");
         }
     };
 
@@ -300,11 +326,16 @@ const SocialPostManager = () => {
                                 </div>
                                 <div className="mt-2 flex flex-wrap gap-1">
                                     {categories.map(cat => (
-                                        <div key={cat._id} className="text-[10px] bg-white border px-1.5 py-0.5 rounded flex items-center gap-1 group">
+                                        <div key={cat._id} className={`text-xs bg-white border px-2 py-1 rounded flex items-center gap-2 group ${cat.isHidden ? 'opacity-60 border-dashed border-gray-400' : ''}`}>
                                             {cat.name}
-                                            <button onClick={() => handleDeleteCategory(cat._id)} className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <X className="w-2.5 h-2.5" />
-                                            </button>
+                                            <div className="flex gap-1 items-center ml-2 border-l pl-2 border-gray-200">
+                                                <button onClick={() => toggleCategoryVisibility(cat._id, cat.isHidden)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded" title={cat.isHidden ? "Unhide Category" : "Hide Category"}>
+                                                    {cat.isHidden ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                                </button>
+                                                <button onClick={() => handleDeleteCategory(cat._id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded" title="Delete Category">
+                                                    <X className="w-5 h-5" />
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -394,6 +425,24 @@ const SocialPostManager = () => {
                         <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
                             <h2 className="text-xl font-bold">Recent Posts ({filteredPosts.length})</h2>
                             <div className="flex items-center gap-2">
+                                {/* Category Filter */}
+                                <Select
+                                    value={adminSelectedCategory}
+                                    onValueChange={setAdminSelectedCategory}
+                                >
+                                    <SelectTrigger className="w-[180px] h-9 text-xs">
+                                        <SelectValue placeholder="Filter Category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="All">All Categories</SelectItem>
+                                        {categories.map((cat) => (
+                                            <SelectItem key={cat._id} value={cat.name}>
+                                                {cat.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+
                                 {/* Sorting Toggle */}
                                 <div className="flex items-center bg-gray-100/50 p-1 rounded-md border border-gray-200">
                                     <button
@@ -414,8 +463,8 @@ const SocialPostManager = () => {
 
                                 <Popover>
                                     <PopoverTrigger asChild>
-                                        <Button variant="outline" className={`w-[200px] justify-start text-left font-normal ${!date && "text-muted-foreground"}`}>
-                                            <Calendar className="mr-2 h-4 w-4" />
+                                        <Button variant="outline" className={`w-[180px] h-9 justify-start text-left font-normal text-xs ${!date && "text-muted-foreground"}`}>
+                                            <Calendar className="mr-2 h-3.5 w-3.5" />
                                             {date ? date.toDateString() : <span>Filter by Date</span>}
                                         </Button>
                                     </PopoverTrigger>
@@ -429,7 +478,7 @@ const SocialPostManager = () => {
                                     </PopoverContent>
                                 </Popover>
                                 {date && (
-                                    <Button variant="ghost" onClick={() => setDate(undefined)}>Clear</Button>
+                                    <Button variant="ghost" size="sm" onClick={() => setDate(undefined)} className="h-9 w-9 p-0"><X className="h-4 w-4" /></Button>
                                 )}
                             </div>
                         </div>

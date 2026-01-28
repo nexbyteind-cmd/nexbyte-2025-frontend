@@ -87,6 +87,7 @@ const Footer = () => {
             <div ref={widgetRef} className="overflow-hidden rounded-lg bg-background/5">
               {/* Script will be injected here */}
             </div>
+            <h4 className="text-background/70 mt-4">" Every multiple of <b>500th</b> visitor will receive an award "</h4>
           </div>
         </div>
 

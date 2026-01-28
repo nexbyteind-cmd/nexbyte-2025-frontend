@@ -9,7 +9,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from "react-router-dom";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar"; // Assuming this exists or using standard day picker
+import { Calendar } from "lucide-react";
+
 
 // ImageKit Config (Public Key Only for displaying)
 const IK_PUBLIC_KEY = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY;
@@ -18,20 +21,13 @@ const IK_URL_ENDPOINT = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
 const SocialPosts = () => {
     const [posts, setPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [sortBy, setSortBy] = useState("latest"); // 'latest' | 'popular'
+    const [sortBy, setSortBy] = useState("latest"); // 'latest' | 'general' | 'popular'
+    const [date, setDate] = useState<Date | undefined>(undefined);
     const [expandedPosts, setExpandedPosts] = useState<Record<string, boolean>>({});
     const [commentInput, setCommentInput] = useState<Record<string, string>>({}); // { postId: "open" | "" }
     const [commentValues, setCommentValues] = useState<Record<string, string>>({}); // { postId: text }
     const [categories, setCategories] = useState<any[]>([]);
     const [selectedCategory, setSelectedCategory] = useState("All");
-
-    useEffect(() => {
-        fetchCategories();
-    }, []);
-
-    useEffect(() => {
-        fetchPosts();
-    }, [sortBy, selectedCategory]);
 
     const fetchCategories = async () => {
         try {
@@ -52,6 +48,9 @@ const SocialPosts = () => {
             if (selectedCategory && selectedCategory !== "All") {
                 url += `&category=${encodeURIComponent(selectedCategory)}`;
             }
+            if (date) {
+                url += `&date=${date.toISOString()}`;
+            }
             const response = await fetch(url);
             const data = await response.json();
             if (data.success) {
@@ -63,6 +62,14 @@ const SocialPosts = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    useEffect(() => {
+        fetchPosts();
+    }, [sortBy, selectedCategory, date]);
 
     const handleLike = async (id: string) => {
         // Optimistic UI
@@ -163,11 +170,49 @@ const SocialPosts = () => {
                                 ))}
                             </div>
 
-                            {/* Sorting Tabs */}
-                            <div className="flex justify-center gap-2 bg-gray-100 p-1 rounded-lg inline-flex">
+                            <div className="flex justify-center gap-2 bg-gray-100 p-1 rounded-lg inline-flex items-center">
+                                {/* Date Filter for Latest - "left corner in that section" requested but we are centering filters. 
+                                    I'll place it at the start of this bar for better UX or just inside the bar. */}
+                                {sortBy === 'latest' && (
+                                    <div className="flex items-center mr-2">
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <button className={`p-1.5 rounded-md text-gray-500 hover:text-gray-900 hover:bg-white transition-all ${date ? "text-blue-600 bg-blue-50" : ""}`}>
+                                                    <Calendar className="w-4 h-4" />
+                                                </button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <CalendarComponent
+                                                    mode="single"
+                                                    selected={date}
+                                                    onSelect={setDate}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                        {date && (
+                                            <button
+                                                onClick={() => setDate(undefined)}
+                                                className="text-[10px] text-red-500 ml-1 hover:underline"
+                                            >
+                                                Clear
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+
                                 <button
                                     onClick={() => setSortBy("latest")}
                                     className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${sortBy === "latest"
+                                        ? "bg-white text-gray-900 shadow-sm"
+                                        : "text-gray-500 hover:text-gray-700"
+                                        }`}
+                                >
+                                    General
+                                </button>
+                                <button
+                                    onClick={() => setSortBy("general")}
+                                    className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${sortBy === "general"
                                         ? "bg-white text-gray-900 shadow-sm"
                                         : "text-gray-500 hover:text-gray-700"
                                         }`}
