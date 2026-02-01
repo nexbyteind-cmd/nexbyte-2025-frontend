@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Pencil, Plus, Image as ImageIcon, Loader2, ArrowUp, ArrowDown, Eye, EyeOff, ExternalLink, Link as LinkIcon, MapPin, Phone, Mail, Sun, Moon } from "lucide-react";
+import { Trash2, Pencil, Plus, Image as ImageIcon, Loader2, ArrowUp, ArrowDown, Eye, EyeOff, ExternalLink, Link as LinkIcon, MapPin, Phone, Mail, Sun, Moon, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
     Table,
@@ -70,9 +70,12 @@ const NewsAdminPanel = () => {
         },
         contactDetails: {
             phone: "",
+            telephone: "",
             email: "",
             address: "",
-            mapLink: ""
+            mapLink: "",
+            whatsapp: "",
+            communityLink: ""
         }
     });
     const [uploading, setUploading] = useState(false);
@@ -237,7 +240,10 @@ const NewsAdminPanel = () => {
             const res = await fetch(url, {
                 method,
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(adForm)
+                body: JSON.stringify({
+                    ...adForm,
+                    contactDetails: (Array.isArray(adForm.contactDetails) || !adForm.contactDetails) ? {} : adForm.contactDetails
+                })
             });
             const data = await res.json();
             if (data.success) {
@@ -277,9 +283,12 @@ const NewsAdminPanel = () => {
             },
             contactDetails: {
                 phone: ad.contactDetails?.phone || "",
+                telephone: ad.contactDetails?.telephone || "",
                 email: ad.contactDetails?.email || "",
                 address: ad.contactDetails?.address || "",
-                mapLink: ad.contactDetails?.mapLink || ""
+                mapLink: ad.contactDetails?.mapLink || "",
+                whatsapp: ad.contactDetails?.whatsapp || "",
+                communityLink: ad.contactDetails?.communityLink || ""
             }
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -326,7 +335,7 @@ const NewsAdminPanel = () => {
             images: [], highlights: [], externalLinks: [], hotNews: "",
             homepageVisible: false, colorPalette: "palette-1", themeMode: "dark",
             socialLinks: { facebook: "", twitter: "", instagram: "", whatsapp: "", linkedin: "", youtube: "" },
-            contactDetails: { phone: "", email: "", address: "", mapLink: "" }
+            contactDetails: { phone: "", telephone: "", email: "", address: "", mapLink: "", whatsapp: "", communityLink: "" }
         });
     }
 
@@ -548,7 +557,19 @@ const NewsAdminPanel = () => {
                                                     className="pl-8"
                                                     value={adForm.contactDetails.phone}
                                                     onChange={e => setAdForm({ ...adForm, contactDetails: { ...adForm.contactDetails, phone: e.target.value } })}
-                                                    placeholder="+91 9876543210"
+                                                    placeholder="Enter Phone Number"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Telephone Number</Label>
+                                            <div className="relative">
+                                                <Phone className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    className="pl-8"
+                                                    value={adForm.contactDetails.telephone}
+                                                    onChange={e => setAdForm({ ...adForm, contactDetails: { ...adForm.contactDetails, telephone: e.target.value } })}
+                                                    placeholder="Enter Telephone Number"
                                                 />
                                             </div>
                                         </div>
@@ -560,7 +581,7 @@ const NewsAdminPanel = () => {
                                                     className="pl-8"
                                                     value={adForm.contactDetails.email}
                                                     onChange={e => setAdForm({ ...adForm, contactDetails: { ...adForm.contactDetails, email: e.target.value } })}
-                                                    placeholder="info@example.com"
+                                                    placeholder="Enter Email Address"
                                                 />
                                             </div>
                                         </div>
@@ -572,7 +593,7 @@ const NewsAdminPanel = () => {
                                                     className="pl-8"
                                                     value={adForm.contactDetails.address}
                                                     onChange={e => setAdForm({ ...adForm, contactDetails: { ...adForm.contactDetails, address: e.target.value } })}
-                                                    placeholder="Store Address / City"
+                                                    placeholder="Enter Store Address / City"
                                                 />
                                             </div>
                                         </div>
@@ -584,7 +605,31 @@ const NewsAdminPanel = () => {
                                                     className="pl-8"
                                                     value={adForm.contactDetails.mapLink}
                                                     onChange={e => setAdForm({ ...adForm, contactDetails: { ...adForm.contactDetails, mapLink: e.target.value } })}
-                                                    placeholder="https://maps.google.com/..."
+                                                    placeholder="Enter Google Maps Link"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>WhatsApp Number</Label>
+                                            <div className="relative">
+                                                <MessageCircle className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    className="pl-8"
+                                                    value={adForm.contactDetails.whatsapp}
+                                                    onChange={e => setAdForm({ ...adForm, contactDetails: { ...adForm.contactDetails, whatsapp: e.target.value } })}
+                                                    placeholder="Enter WhatsApp Number"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Community Link</Label>
+                                            <div className="relative">
+                                                <ExternalLink className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    className="pl-8"
+                                                    value={adForm.contactDetails.communityLink}
+                                                    onChange={e => setAdForm({ ...adForm, contactDetails: { ...adForm.contactDetails, communityLink: e.target.value } })}
+                                                    placeholder="Enter Community Group Link"
                                                 />
                                             </div>
                                         </div>

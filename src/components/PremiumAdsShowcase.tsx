@@ -61,7 +61,7 @@ const PremiumAdsShowcase = () => {
                         <div className="flex justify-between items-end w-full max-w-7xl px-4 md:px-8">
                             <div className="text-left">
                                 <h3 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-                                    Featured Partners
+                                    Advertisements
                                 </h3>
                                 <p className="text-muted-foreground mt-1">Exclusive deals and updates</p>
                             </div>

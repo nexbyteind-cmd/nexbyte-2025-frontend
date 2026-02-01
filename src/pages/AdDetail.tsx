@@ -22,7 +22,9 @@ import {
     ChevronRight,
     Linkedin,
     Youtube,
-    MessageCircle
+    MessageCircle,
+    Users,
+
 } from "lucide-react";
 
 const urlEndpoint = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
@@ -206,78 +208,142 @@ const AdDetail = () => {
                                     </p>
                                 </div>
                             </div>
+                            <div>
+                                {ad.contactDetails?.communityLink && (
+                                    <a href={ad.contactDetails.communityLink} target="_blank" rel="noreferrer">
+                                        <Button variant="outline" className={`w-full ${isLight ? 'border-zinc-300' : 'border-zinc-700'} hover:bg-zinc-100 dark:hover:bg-zinc-800`}>
+                                            <Users className="w-5 h-5 mr-2" />
+                                            Join Community
+                                        </Button>
+                                    </a>
+                                )}
+                            </div>
                         </div>
 
-                        {/* CONTACT */}
-                        <div className={`${cardBg} rounded-2xl p-6 space-y-4 transition-colors`}>
+                        {/* CONTACT CARD */}
+                        <div className={`${cardBg} rounded-2xl p-6 space-y-6 transition-colors`}>
                             <h3 className={`text-lg font-semibold ${isLight ? 'text-black' : 'text-white'}`}>Contact</h3>
 
-                            {ad.contactDetails?.phone && (
-                                <a href={`tel:${ad.contactDetails.phone}`} className={`flex items-center gap-3 ${theme.hoverText} group`}>
-                                    <Phone className={`w-4 h-4 ${theme.accent}`} />
-                                    {ad.contactDetails.phone}
+                            {/* Phone & Telephone - Side by Side */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                {ad.contactDetails?.phone && (
+                                    <a href={`tel:${ad.contactDetails.phone}`} className={`flex-1 flex items-center gap-3 p-3 rounded-lg ${isLight ? 'bg-zinc-100 hover:bg-zinc-200' : 'bg-zinc-800 hover:bg-zinc-700'} transition-colors`}>
+                                        <div className={`p-2 rounded-full ${theme.bgAccentLight}`}>
+                                            <Phone className={`w-4 h-4 ${theme.accent}`} />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-xs opacity-70">Phone</span>
+                                            <span className="font-medium text-sm">{ad.contactDetails.phone}</span>
+                                        </div>
+                                    </a>
+                                )}
+
+                                {ad.contactDetails?.telephone && (
+                                    <a href={`tel:${ad.contactDetails.telephone}`} className={`flex-1 flex items-center gap-3 p-3 rounded-lg ${isLight ? 'bg-zinc-100 hover:bg-zinc-200' : 'bg-zinc-800 hover:bg-zinc-700'} transition-colors`}>
+                                        <div className={`p-2 rounded-full ${theme.bgAccentLight}`}>
+                                            <Phone className={`w-4 h-4 ${theme.accent}`} />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-xs opacity-70">Telephone</span>
+                                            <span className="font-medium text-sm">{ad.contactDetails.telephone}</span>
+                                        </div>
+                                    </a>
+                                )}
+                            </div>
+
+                            {/* Email - Full Width Row */}
+                            {ad.contactDetails?.email && (
+                                <a href={`mailto:${ad.contactDetails.email}`} className={`w-full flex items-center gap-3 p-3 rounded-lg ${isLight ? 'bg-zinc-100 hover:bg-zinc-200' : 'bg-zinc-800 hover:bg-zinc-700'} transition-colors`}>
+                                    <div className={`p-2 rounded-full ${theme.bgAccentLight}`}>
+                                        <Mail className={`w-4 h-4 ${theme.accent}`} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs opacity-70">Email</span>
+                                        <span className="font-medium text-sm">{ad.contactDetails.email}</span>
+                                    </div>
                                 </a>
                             )}
 
-                            {ad.contactDetails?.email && (
-                                <a href={`mailto:${ad.contactDetails.email}`} className={`flex items-center gap-3 ${theme.hoverText} group`}>
-                                    <Mail className={`w-4 h-4 ${theme.accent}`} />
-                                    {ad.contactDetails.email}
-                                </a>
-                            )}
+
+
+                            {/* WhatsApp & Community Buttons */}
+                            <div className="grid grid-cols-1 gap-3">
+                                {ad.contactDetails?.whatsapp && (
+                                    <a href={ad.contactDetails.whatsapp.includes('chat.whatsapp.com') ? ad.contactDetails.whatsapp : `https://wa.me/${ad.contactDetails.whatsapp}`} target="_blank" rel="noreferrer">
+                                        <Button className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold">
+                                            <MessageCircle className="w-5 h-5 mr-2" />
+                                            Chat on WhatsApp
+                                        </Button>
+                                    </a>
+                                )}
+
+                            </div>
                         </div>
 
-                        {/* LOCATION + SOCIAL */}
+                        {/* LOCATION CARD */}
                         <div className={`${cardBg} rounded-2xl p-6 space-y-4 transition-colors`}>
                             <h3 className={`text-lg font-semibold ${isLight ? 'text-black' : 'text-white'}`}>Location</h3>
 
-                            {ad.contactDetails?.address && (
-                                <div className="flex gap-3 group">
-                                    <MapPin className={`w-4 h-4 mt-1 ${theme.accent}`} />
-                                    <span>{ad.contactDetails.address}</span>
+                            {ad.contactDetails?.address ? (
+                                <div className="space-y-4">
+                                    <div className="flex gap-3">
+                                        <MapPin className={`w-5 h-5 mt-0.5 ${theme.accent} shrink-0`} />
+                                        <p className={`text-sm leading-relaxed ${mutedText}`}>
+                                            {ad.contactDetails.address}
+                                        </p>
+                                    </div>
+
+                                    {ad.contactDetails?.mapLink && (
+                                        <a href={ad.contactDetails.mapLink} target="_blank" rel="noreferrer" className="block">
+                                            <Button variant="outline" className={`w-full ${isLight ? 'border-zinc-300 hover:bg-zinc-100 text-zinc-700' : 'border-zinc-700 hover:bg-zinc-800 text-zinc-300'}`}>
+                                                <ExternalLink className="mr-2 w-4 h-4" />
+                                                Get Directions
+                                            </Button>
+                                        </a>
+                                    )}
                                 </div>
+                            ) : (
+                                <p className={`text-sm italic ${mutedText}`}>No location details available.</p>
                             )}
 
-                            {ad.contactDetails?.mapLink && (
-                                <a href={ad.contactDetails.mapLink} target="_blank" rel="noreferrer" className="block mt-2">
-                                    <Button variant="outline" size="sm" className={`w-full ${isLight ? 'border-zinc-300 hover:bg-zinc-100 text-zinc-600' : 'border-zinc-700 hover:bg-zinc-800 text-zinc-400'} hover:text-primary group`}>
-                                        Get Directions
-                                        <ExternalLink className={`ml-2 w-3 h-3 ${theme.accent}`} />
-                                    </Button>
-                                </a>
-                            )}
+                            {/* Social Icons */}
+                            <div>
+                                <p className="text-sm font-semibold text-gray-900 mb-5">
+                                    Follow us on social media
+                                </p>
 
-                            <div className={`flex gap-4 pt-3 border-t ${isLight ? 'border-zinc-200' : 'border-zinc-800'}`}>
-                                {ad.socialLinks?.facebook && (
-                                    <a href={ad.socialLinks.facebook} target="_blank" rel="noreferrer">
-                                        <Facebook className={`w-5 h-5 ${theme.accent}`} />
-                                    </a>
-                                )}
-                                {ad.socialLinks?.twitter && (
-                                    <a href={ad.socialLinks.twitter} target="_blank" rel="noreferrer">
-                                        <Twitter className={`w-5 h-5 ${theme.accent}`} />
-                                    </a>
-                                )}
-                                {ad.socialLinks?.instagram && (
-                                    <a href={ad.socialLinks.instagram} target="_blank" rel="noreferrer">
-                                        <Instagram className={`w-5 h-5 ${theme.accent}`} />
-                                    </a>
-                                )}
-                                {ad.socialLinks?.whatsapp && (
-                                    <a href={ad.socialLinks.whatsapp} target="_blank" rel="noreferrer">
-                                        <MessageCircle className={`w-5 h-5 ${theme.accent}`} />
-                                    </a>
-                                )}
-                                {ad.socialLinks?.linkedin && (
-                                    <a href={ad.socialLinks.linkedin} target="_blank" rel="noreferrer">
-                                        <Linkedin className={`w-5 h-5 ${theme.accent}`} />
-                                    </a>
-                                )}
-                                {ad.socialLinks?.youtube && (
-                                    <a href={ad.socialLinks.youtube} target="_blank" rel="noreferrer">
-                                        <Youtube className={`w-5 h-5 ${theme.accent}`} />
-                                    </a>
-                                )}
+                                <div className="flex flex-wrap gap-2">
+                                    {ad.socialLinks?.facebook && (
+                                        <a href={ad.socialLinks.facebook} target="_blank" rel="noreferrer" className={`p-2 rounded-full ${theme.bgAccentLight} transition-colors group`}>
+                                            <Facebook className={`w-5 h-5 mt-0.5 ${theme.accent} shrink-0`} />
+                                        </a>
+                                    )}
+                                    {ad.socialLinks?.twitter && (
+                                        <a href={ad.socialLinks.twitter} target="_blank" rel="noreferrer" className={`p-2 rounded-full ${theme.bgAccentLight} transition-colors group`}>
+                                            <Twitter className={`w-5 h-5 mt-0.5 ${theme.accent} shrink-0`} />
+                                        </a>
+                                    )}
+                                    {ad.socialLinks?.instagram && (
+                                        <a href={ad.socialLinks.instagram} target="_blank" rel="noreferrer" className={`p-2 rounded-full ${theme.bgAccentLight} transition-colors group`}>
+                                            <Instagram className={`w-5 h-5 mt-0.5 ${theme.accent} shrink-0`} />
+                                        </a>
+                                    )}
+                                    {ad.socialLinks?.whatsapp && (
+                                        <a href={ad.socialLinks.whatsapp} target="_blank" rel="noreferrer" className={`p-2 rounded-full ${theme.bgAccentLight} transition-colors group`}>
+                                            <MessageCircle className={`w-5 h-5 mt-0.5 ${theme.accent} shrink-0`} />
+                                        </a>
+                                    )}
+                                    {ad.socialLinks?.linkedin && (
+                                        <a href={ad.socialLinks.linkedin} target="_blank" rel="noreferrer" className={`p-2 rounded-full ${theme.bgAccentLight} transition-colors group`}>
+                                            <Linkedin className={`w-5 h-5 mt-0.5 ${theme.accent} shrink-0`} />
+                                        </a>
+                                    )}
+                                    {ad.socialLinks?.youtube && (
+                                        <a href={ad.socialLinks.youtube} target="_blank" rel="noreferrer" className={`p-2 rounded-full ${theme.bgAccentLight} transition-colors group`}>
+                                            <Youtube className={`w-5 h-5 mt-0.5 ${theme.accent} shrink-0`} />
+                                        </a>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
