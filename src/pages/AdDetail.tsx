@@ -107,6 +107,76 @@ const AdDetail = () => {
     const navText = isLight ? "bg-white/80 border-b border-zinc-200 text-black" : "bg-zinc-900 border-b border-zinc-800 text-white"; // Assuming Navbar handles its own transparency, but we can wrap it or pass props. For now, we adjust container.
     const heroBg = isLight ? "bg-zinc-50 border-b border-zinc-200" : "bg-zinc-900 border-b border-zinc-800";
 
+    const customSections = ad.customSections || [];
+
+    // STRICT ORDER GROUPING
+    const sectionsByType = {
+        text: customSections.filter((s: any) => s.layout === 'text'),
+        grid: customSections.filter((s: any) => s.layout === 'grid'),
+        list: customSections.filter((s: any) => s.layout === 'list'),
+        cards: customSections.filter((s: any) => s.layout === 'cards'),
+    };
+
+    const CustomSectionRenderer = ({ section, theme, isLight, cardBg, mutedText }: any) => (
+        <div className="space-y-6">
+            <h3 className="text-2xl font-bold border-l-4 pl-4 border-zinc-200 dark:border-zinc-700">
+                {section.title}
+            </h3>
+
+            {/* LAYOUT: TEXT */}
+            {section.layout === "text" && (
+                <div className="whitespace-pre-wrap opacity-80 leading-relaxed text-lg">
+                    {section.items[0]?.content}
+                </div>
+            )}
+
+            {/* LAYOUT: GRID (Specs) */}
+            {section.layout === "grid" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {section.items.map((item: any, i: number) => (
+                        <div key={i} className={`p-4 rounded-xl flex justify-between items-center ${isLight ? 'bg-zinc-50' : 'bg-zinc-900/50'} border ${isLight ? 'border-zinc-100' : 'border-zinc-800'}`}>
+                            <span className="opacity-70 font-medium">{item.heading}</span>
+                            <span className="font-semibold">{item.content}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* LAYOUT: LIST (Checklist) */}
+        {section.layout === "list" && (
+  <ul className="grid grid-cols-1 gap-5">
+    {section.items.map((item: any, i: number) => (
+      <li
+        key={i}
+        className="flex gap-3 items-start p-1 transition-colors"
+      >
+        <div className={`mt-1 p-1 rounded-full ${theme.bgAccentLight}`}>
+          <CheckCircle className={`w-4 h-4 ${theme.accent}`} />
+        </div>
+
+        <span className="text-lg leading-relaxed opacity-90">
+          {item.content}
+        </span>
+      </li>
+    ))}
+  </ul>
+)}
+
+
+            {/* LAYOUT: CARDS (Features) */}
+            {section.layout === "cards" && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {section.items.map((item: any, i: number) => (
+                        <div key={i} className={`${cardBg} p-6 rounded-xl hover:scale-[1.02] transition-transform duration-300`}>
+                            <h4 className={`font-bold text-lg mb-2 ${theme.textAccent}`}>{item.heading}</h4>
+                            <p className={`text-sm ${mutedText} leading-relaxed`}>{item.content}</p>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+
     return (
         <IKContext urlEndpoint={urlEndpoint} publicKey={publicKey}>
             <div className={`min-h-screen ${bgMain} ${textMain}`}>
@@ -209,14 +279,29 @@ const AdDetail = () => {
                                 </div>
                             </div>
                             <div>
-                                {ad.contactDetails?.communityLink && (
-                                    <a href={ad.contactDetails.communityLink} target="_blank" rel="noreferrer">
-                                        <Button variant="outline" className={`w-full ${isLight ? 'border-zinc-300' : 'border-zinc-700'} hover:bg-zinc-100 dark:hover:bg-zinc-800`}>
-                                            <Users className="w-5 h-5 mr-2" />
-                                            Join Community
-                                        </Button>
-                                    </a>
-                                )}
+{ad.contactDetails?.communityLink && (
+  <a
+    href={ad.contactDetails.communityLink}
+    target="_blank"
+    rel="noreferrer"
+    className="block"
+  >
+    <div
+      className={`
+        w-full flex items-center justify-center gap-2
+        py-3 rounded-lg
+        border-2 ${theme.borderAccent}
+      `}
+    >
+      <Users className={`w-5 h-5 ${theme.accent}`} />
+      <span className={`text-base font-bold ${theme.accent}`}>
+        Join Community
+      </span>
+    </div>
+  </a>
+)}
+
+
                             </div>
                         </div>
 
@@ -308,9 +393,10 @@ const AdDetail = () => {
 
                             {/* Social Icons */}
                             <div>
-                                <p className="text-sm font-semibold text-gray-900 mb-5">
-                                    Follow us on social media
-                                </p>
+                              <p className={`text-sm font-bold tracking-wide mb-5 ${theme.accent}`}>
+  Follow us on social media
+</p>
+
 
                                 <div className="flex flex-wrap gap-2">
                                     {ad.socialLinks?.facebook && (
@@ -351,23 +437,92 @@ const AdDetail = () => {
                 </section>
 
                 {/* ================= CONTENT ================= */}
-                <main className="container mx-auto px-4 py-20 grid grid-cols-1 lg:grid-cols-3 gap-12">
-                    <div className="lg:col-span-2">
-                        <h2 className="text-3xl font-bold mb-6">About This Offer</h2>
-                        <div className="whitespace-pre-wrap opacity-80">
-                            {ad.description}
+                <main className="container mx-auto px-4 py-20 space-y-16">
+                    {/* TOP SECTION: DESCRIPTION & HIGHLIGHTS */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                        {/* LEFT: Description */}
+                        <div className="lg:col-span-2">
+                            <h2 className="text-3xl font-bold mb-6">About This Offer</h2>
+                            <div className="whitespace-pre-wrap opacity-80 text-lg leading-relaxed">
+                                {ad.description}
+                            </div>
+                        </div>
+
+                        {/* RIGHT: Key Highlights (Fixed) */}
+                        <div className="h-fit sticky top-24">
+                            <div className={`${cardBg} rounded-2xl p-6`}>
+                                <h3 className="text-xl font-bold mb-4">Key Highlights</h3>
+                                <ul className="space-y-3">
+                                    {ad.highlights?.map((h: string, i: number) => (
+                                        <li key={i} className="flex gap-3">
+                                            <CheckCircle className={`w-4 h-4 ${theme.accent} mt-1`} />
+                                            <span>{h}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
                         </div>
                     </div>
-                    <div className={`${cardBg} rounded-2xl p-6 h-fit sticky top-24`}>
-                        <h3 className="text-xl font-bold mb-4">Key Highlights</h3>
-                        <ul className="space-y-3">
-                            {ad.highlights?.map((h: string, i: number) => (
-                                <li key={i} className="flex gap-3">
-                                    <CheckCircle className={`w-4 h-4 ${theme.accent} mt-1`} />
-                                    <span>{h}</span>
-                                </li>
-                            ))}
-                        </ul>
+
+                    {/* CUSTOM SECTIONS - STRICT ORDER: TEXT -> GRID -> LIST -> CARDS */}
+                    <div className="space-y-16">
+                        {/* 1. TEXT SECTIONS */}
+                        {sectionsByType.text.length > 0 && (
+                            <div className="space-y-12">
+                                {sectionsByType.text.map((section: any) => (
+                                    <CustomSectionRenderer key={section.id} section={section} theme={theme} isLight={isLight} cardBg={cardBg} mutedText={mutedText} />
+                                ))}
+                            </div>
+                        )}
+
+                        {/* 2. GRID SECTIONS */}
+                        {sectionsByType.grid.length > 0 && (
+                            <div className="space-y-12">
+                                {sectionsByType.grid.map((section: any) => (
+                                    <CustomSectionRenderer key={section.id} section={section} theme={theme} isLight={isLight} cardBg={cardBg} mutedText={mutedText} />
+                                ))}
+                            </div>
+                        )}
+
+                        {/* LIST + CARDS SIDE BY SIDE */}
+                        {(sectionsByType.list.length > 0 || sectionsByType.cards.length > 0) && (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+
+                                {/* LEFT: LIST SECTIONS */}
+                                {sectionsByType.list.length > 0 && (
+                                    <div className="space-y-12">
+                                        {sectionsByType.list.map((section: any) => (
+                                            <CustomSectionRenderer
+                                                key={section.id}
+                                                section={section}
+                                                theme={theme}
+                                                isLight={isLight}
+                                                cardBg={cardBg}
+                                                mutedText={mutedText}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* RIGHT: CARDS SECTIONS */}
+                                {sectionsByType.cards.length > 0 && (
+                                    <div className="space-y-12">
+                                        {sectionsByType.cards.map((section: any) => (
+                                            <CustomSectionRenderer
+                                                key={section.id}
+                                                section={section}
+                                                theme={theme}
+                                                isLight={isLight}
+                                                cardBg={cardBg}
+                                                mutedText={mutedText}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+
+                            </div>
+                        )}
+
                     </div>
                 </main>
 

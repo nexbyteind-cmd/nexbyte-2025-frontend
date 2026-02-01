@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Pencil, Plus, Image as ImageIcon, Loader2, ArrowUp, ArrowDown, Eye, EyeOff, ExternalLink, Link as LinkIcon, MapPin, Phone, Mail, Sun, Moon, MessageCircle } from "lucide-react";
+import { Trash2, Pencil, Plus, Image as ImageIcon, Loader2, ArrowUp, ArrowDown, Eye, EyeOff, ExternalLink, Link as LinkIcon, MapPin, Phone, Mail, Sun, Moon, MessageCircle, X } from "lucide-react";
 import { toast } from "sonner";
 import {
     Table,
@@ -76,7 +76,8 @@ const NewsAdminPanel = () => {
             mapLink: "",
             whatsapp: "",
             communityLink: ""
-        }
+        },
+        customSections: [] as any[]
     });
     const [uploading, setUploading] = useState(false);
 
@@ -289,7 +290,8 @@ const NewsAdminPanel = () => {
                 mapLink: ad.contactDetails?.mapLink || "",
                 whatsapp: ad.contactDetails?.whatsapp || "",
                 communityLink: ad.contactDetails?.communityLink || ""
-            }
+            },
+            customSections: ad.customSections || []
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -335,9 +337,62 @@ const NewsAdminPanel = () => {
             images: [], highlights: [], externalLinks: [], hotNews: "",
             homepageVisible: false, colorPalette: "palette-1", themeMode: "dark",
             socialLinks: { facebook: "", twitter: "", instagram: "", whatsapp: "", linkedin: "", youtube: "" },
-            contactDetails: { phone: "", telephone: "", email: "", address: "", mapLink: "", whatsapp: "", communityLink: "" }
+            contactDetails: { phone: "", telephone: "", email: "", address: "", mapLink: "", whatsapp: "", communityLink: "" },
+            customSections: []
         });
     }
+
+    const addCustomSection = () => {
+        setAdForm({
+            ...adForm,
+            customSections: [
+                ...adForm.customSections,
+                { id: Date.now(), title: "", layout: "text", items: [{ content: "" }] }
+            ]
+        });
+    };
+
+    const updateCustomSection = (index: number, field: string, value: any) => {
+        const updatedSections = [...adForm.customSections];
+        updatedSections[index] = { ...updatedSections[index], [field]: value };
+        // Reset items if layout changes to default structure
+        if (field === 'layout') {
+            if (value === 'text') updatedSections[index].items = [{ content: "" }];
+            else if (value === 'grid') updatedSections[index].items = [{ heading: "", content: "" }];
+            else if (value === 'list') updatedSections[index].items = [{ content: "" }];
+            else if (value === 'cards') updatedSections[index].items = [{ heading: "", content: "" }];
+        }
+        setAdForm({ ...adForm, customSections: updatedSections });
+    };
+
+    const removeCustomSection = (index: number) => {
+        const updatedSections = [...adForm.customSections];
+        updatedSections.splice(index, 1);
+        setAdForm({ ...adForm, customSections: updatedSections });
+    };
+
+    const addSectionItem = (sectionIndex: number) => {
+        const updatedSections = [...adForm.customSections];
+        const section = updatedSections[sectionIndex];
+        if (section.layout === 'grid' || section.layout === 'cards') {
+            section.items.push({ heading: "", content: "" });
+        } else {
+            section.items.push({ content: "" });
+        }
+        setAdForm({ ...adForm, customSections: updatedSections });
+    };
+
+    const removeSectionItem = (sectionIndex: number, itemIndex: number) => {
+        const updatedSections = [...adForm.customSections];
+        updatedSections[sectionIndex].items.splice(itemIndex, 1);
+        setAdForm({ ...adForm, customSections: updatedSections });
+    };
+
+    const updateSectionItem = (sectionIndex: number, itemIndex: number, field: string, value: string) => {
+        const updatedSections = [...adForm.customSections];
+        updatedSections[sectionIndex].items[itemIndex] = { ...updatedSections[sectionIndex].items[itemIndex], [field]: value };
+        setAdForm({ ...adForm, customSections: updatedSections });
+    };
 
     return (
         <IKContext
@@ -634,6 +689,106 @@ const NewsAdminPanel = () => {
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+
+                                {/* CUSTOM SECTIONS */}
+                                <div className="space-y-4 pt-4 border-t">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="text-lg font-semibold">Custom Sections</h3>
+                                        <Button type="button" variant="outline" size="sm" onClick={addCustomSection}>
+                                            <Plus className="w-4 h-4 mr-2" /> Add Section
+                                        </Button>
+                                    </div>
+
+                                    {adForm.customSections.map((section, sIdx) => (
+                                        <Card key={section.id} className="p-4 border-dashed bg-gray-50/50">
+                                            <div className="flex justify-between items-start gap-4 mb-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+                                                    <Input
+                                                        placeholder="Section Title (e.g. Specifications)"
+                                                        value={section.title}
+                                                        onChange={(e) => updateCustomSection(sIdx, "title", e.target.value)}
+                                                    />
+                                                    <Select
+                                                        value={section.layout}
+                                                        onValueChange={(val) => updateCustomSection(sIdx, "layout", val)}
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Layout Style" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="text">Full Width Text Block</SelectItem>
+                                                            <SelectItem value="grid">2-Column Grid (Key: Value)</SelectItem>
+                                                            <SelectItem value="list">Bulletin / Check List</SelectItem>
+                                                            <SelectItem value="cards">Info Cards / Highlights</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <Button type="button" variant="ghost" size="icon" className="text-red-500" onClick={() => removeCustomSection(sIdx)}>
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+
+                                            {/* Section Content Editor */}
+                                            <div className="space-y-2">
+                                                {section.layout === "text" && (
+                                                    <Textarea
+                                                        placeholder="Enter rich text content..."
+                                                        value={section.items[0]?.content || ""}
+                                                        onChange={(e) => updateSectionItem(sIdx, 0, "content", e.target.value)}
+                                                        className="min-h-[100px]"
+                                                    />
+                                                )}
+
+                                                {(section.layout === "grid" || section.layout === "cards") && (
+                                                    <div className="space-y-2">
+                                                        {section.items.map((item: any, iIdx: number) => (
+                                                            <div key={iIdx} className="flex gap-2">
+                                                                <Input
+                                                                    placeholder={section.layout === "grid" ? "Label (e.g. Processor)" : "Title (e.g. Feature Name)"}
+                                                                    value={item.heading || ""}
+                                                                    onChange={(e) => updateSectionItem(sIdx, iIdx, "heading", e.target.value)}
+                                                                    className="flex-1"
+                                                                />
+                                                                <Input
+                                                                    placeholder={section.layout === "grid" ? "Value (e.g. M1 Pro)" : "Description"}
+                                                                    value={item.content || ""}
+                                                                    onChange={(e) => updateSectionItem(sIdx, iIdx, "content", e.target.value)}
+                                                                    className="flex-[2]"
+                                                                />
+                                                                <Button type="button" variant="ghost" size="icon" onClick={() => removeSectionItem(sIdx, iIdx)}>
+                                                                    <X className="w-4 h-4" />
+                                                                </Button>
+                                                            </div>
+                                                        ))}
+                                                        <Button type="button" variant="outline" size="sm" onClick={() => addSectionItem(sIdx)}>
+                                                            <Plus className="w-3 h-3 mr-2" /> Add Item
+                                                        </Button>
+                                                    </div>
+                                                )}
+
+                                                {section.layout === "list" && (
+                                                    <div className="space-y-2">
+                                                        {section.items.map((item: any, iIdx: number) => (
+                                                            <div key={iIdx} className="flex gap-2">
+                                                                <Input
+                                                                    placeholder="List Item"
+                                                                    value={item.content || ""}
+                                                                    onChange={(e) => updateSectionItem(sIdx, iIdx, "content", e.target.value)}
+                                                                />
+                                                                <Button type="button" variant="ghost" size="icon" onClick={() => removeSectionItem(sIdx, iIdx)}>
+                                                                    <X className="w-4 h-4" />
+                                                                </Button>
+                                                            </div>
+                                                        ))}
+                                                        <Button type="button" variant="outline" size="sm" onClick={() => addSectionItem(sIdx)}>
+                                                            <Plus className="w-3 h-3 mr-2" /> Add Item
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </Card>
+                                    ))}
                                 </div>
 
                                 <div className="space-y-2">
