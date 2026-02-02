@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { API_BASE_URL } from "@/config";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Lock, User, LogOut, MessageSquare, Trophy, Plus, Save, ChevronDown, ChevronUp, ExternalLink, Download, Eye, EyeOff, Trash2, GraduationCap, Monitor, Briefcase, TrendingUp, Megaphone, Quote, Mail, RefreshCw } from "lucide-react";
+import { Lock, User, LogOut, MessageSquare, Trophy, Plus, Save, ChevronDown, ChevronUp, ExternalLink, Download, Eye, EyeOff, Trash2, GraduationCap, Monitor, Briefcase, TrendingUp, Megaphone, Quote, Mail, RefreshCw, PenTool, ClipboardList, StickyNote } from "lucide-react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 
@@ -23,6 +23,8 @@ import { Textarea } from "@/components/ui/textarea";
 import SocialPostManager from "@/components/SocialPostManager";
 import AIPostManager from '@/components/AIPostManager'; // NEW
 import NewsAdminPanel from './NewsAdminPanel';
+import NotesTool from '@/components/NotesTool';
+import TodoTool from '@/components/TodoTool';
 
 
 
@@ -31,6 +33,8 @@ const AdminPanel = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState("");
     const [activeTab, setActiveTab] = useState("contacts");
+    const [isToolsOpen, setIsToolsOpen] = useState(true); // Default open or closed? User said "first item", maybe open by default or let user toggle. Let's start true or false. User said "when clicking on Tools, it expands". So start false usually, but "first item" implies importance. Let's start false.
+
 
     // Data States
     const [contacts, setContacts] = useState<any[]>([]);
@@ -986,6 +990,51 @@ const AdminPanel = () => {
                 </div>
 
                 <nav className="flex-1 space-y-2">
+                    {/* TOOLS DROPDOWN */}
+                    <div>
+                        <Button
+                            variant="ghost"
+                            className="w-full justify-between hover:bg-muted/50"
+                            onClick={() => setIsToolsOpen(!isToolsOpen)}
+                        >
+                            <div className="flex items-center">
+                                <PenTool className="w-4 h-4 mr-2" />
+                                Tools
+                            </div>
+                            {isToolsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </Button>
+
+                        <AnimatePresence>
+                            {isToolsOpen && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: "auto", opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden ml-4 pl-2 border-l border-border/50 space-y-1 mt-1"
+                                >
+                                    <Button
+                                        variant={activeTab === "notes" ? "secondary" : "ghost"}
+                                        size="sm"
+                                        className="w-full justify-start h-8"
+                                        onClick={() => setActiveTab("notes")}
+                                    >
+                                        <StickyNote className="w-3 h-3 mr-2" />
+                                        Notes
+                                    </Button>
+                                    <Button
+                                        variant={activeTab === "todo" ? "secondary" : "ghost"}
+                                        size="sm"
+                                        className="w-full justify-start h-8"
+                                        onClick={() => setActiveTab("todo")}
+                                    >
+                                        <ClipboardList className="w-3 h-3 mr-2" />
+                                        Todo
+                                    </Button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
                     <Button
                         variant={activeTab === "contacts" ? "secondary" : "ghost"}
                         className="w-full justify-start"
@@ -1097,6 +1146,16 @@ const AdminPanel = () => {
 
                 <main className="flex-1 overflow-auto p-6">
                     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+
+                        {/* NOTES TAB */}
+                        <TabsContent value="notes" className="mt-0">
+                            <NotesTool />
+                        </TabsContent>
+
+                        {/* TODO TAB */}
+                        <TabsContent value="todo" className="mt-0">
+                            <TodoTool />
+                        </TabsContent>
 
                         {/* CONTACTS TAB */}
                         <TabsContent value="contacts" className="mt-0">
