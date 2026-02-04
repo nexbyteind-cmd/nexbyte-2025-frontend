@@ -40,8 +40,11 @@ import {
 const AdminPanel = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState("");
-    const [activeTab, setActiveTab] = useState("contacts");
+    const [activeTab, setActiveTab] = useState("exclusive_data"); // Default to new tab to see it immediately
     const [isToolsOpen, setIsToolsOpen] = useState(false);
+
+    // Exclusive Data State
+    const [exclusiveData, setExclusiveData] = useState<any[]>([]);
     const [isTechPostsOpen, setIsTechPostsOpen] = useState(false);
     const [techPostCategory, setTechPostCategory] = useState("Python");
 
@@ -495,17 +498,52 @@ const AdminPanel = () => {
     const handleDownloadMarketingCSV = () => {
         if (marketingApplications.length === 0) return toast.error("No data to download");
 
-        const headers = ["Date", "Business", "Contact", "Email", "Phone", "Service", "Details"];
-
+        const headers = ["Date", "Name", "Email", "Company", "Service", "Budget", "Message"];
         const rows = marketingApplications.map(app => {
             return [
                 new Date(app.submittedAt).toLocaleDateString(),
-                app.clientDetails?.businessName,
-                app.clientDetails?.fullName,
-                app.clientDetails?.email,
-                app.clientDetails?.phone,
-                app.clientDetails?.selectedService,
-                JSON.stringify(app.digitalMarketingRequirements).replace(/"/g, "'")
+                app.name,
+                app.email,
+                app.companyName,
+                app.serviceType,
+                app.budget,
+                app.message
+            ].map(f => `"${f || ''}"`).join(",");
+        });
+        const csv = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
+        const encodedUri = encodeURI(csv);
+        const link = document.createElement("a");
+        link.href = encodedUri;
+        link.download = `marketing_leads_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+    };
+
+
+    // --- Exclusive Data Handlers ---
+    const fetchExclusiveData = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/exclusive-data`);
+            const data = await response.json();
+            if (data.success) setExclusiveData(data.data);
+        } catch (error) {
+            console.error("Error fetching exclusive data");
+        }
+    };
+
+    const handleDownloadExclusiveCSV = () => {
+        if (exclusiveData.length === 0) return toast.error("No data to download");
+
+        const headers = ["Date", "Full Name", "WhatsApp", "Business Name", "Location", "Start Date", "Maps Link", "Message"];
+        const rows = exclusiveData.map(item => {
+            return [
+                new Date(item.submittedAt).toLocaleDateString(),
+                item.fullName,
+                item.whatsappNumber,
+                item.businessName,
+                item.location,
+                item.startDate,
+                item.mapsLink,
+                item.message
             ].map(f => `"${f || ''}"`).join(",");
         });
 
@@ -513,7 +551,7 @@ const AdminPanel = () => {
         const encodedUri = encodeURI(csv);
         const link = document.createElement("a");
         link.href = encodedUri;
-        link.download = `marketing_leads_${new Date().toISOString().split('T')[0]}.csv`;
+        link.download = `exclusive_data_${new Date().toISOString().split('T')[0]}.csv`;
         link.click();
     };
 
@@ -1054,6 +1092,14 @@ const AdminPanel = () => {
                         Contacts
                     </Button>
                     <Button
+                        variant={activeTab === "exclusive_data" ? "secondary" : "ghost"}
+                        className="w-full justify-start"
+                        onClick={() => onTabChange("exclusive_data")}
+                    >
+                        <Lock className="w-4 h-4 mr-2" />
+                        Exclusive Data
+                    </Button>
+                    <Button
                         variant={activeTab === "hackathons" ? "secondary" : "ghost"}
                         className="w-full justify-start"
                         onClick={() => onTabChange("hackathons")}
@@ -1227,47 +1273,96 @@ const AdminPanel = () => {
                         {/* CONTACTS TAB */}
                         <TabsContent value="contacts" className="mt-0">
                             <Card>
-                                <CardHeader className="flex flex-row items-center justify-between">
-                                    <CardTitle>Received Messages</CardTitle>
-                                    <Button variant="outline" size="sm" onClick={fetchContacts} disabled={loading}>
-                                        Refresh
-                                    </Button>
+                                <CardHeader>
+                                    <CardTitle>Contact Inquiries</CardTitle>
+                                    <CardDescription>
+                                        Manage messages from the contact form.
+                                    </CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    {loading && contacts.length === 0 ? (
-                                        <div className="text-center py-8">Loading...</div>
+                                    {contacts.length === 0 ? (
+                                        <div className="text-center py-8 text-black">No contacts yet.</div>
                                     ) : (
-                                        <div className="rounded-md border border-border">
+                                        <div className="overflow-x-auto">
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
                                                         <TableHead>Date</TableHead>
                                                         <TableHead>Name</TableHead>
                                                         <TableHead>Email</TableHead>
-                                                        <TableHead>Service</TableHead>
+                                                        <TableHead>Subject</TableHead>
                                                         <TableHead>Message</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {contacts.map((contact) => (
+                                                        <TableRow key={contact._id}>
+                                                            <TableCell>{new Date(contact.submittedAt).toLocaleDateString()}</TableCell>
+                                                            <TableCell className="font-medium">{contact.firstName} {contact.lastName}</TableCell>
+                                                            <TableCell>{contact.email}</TableCell>
+                                                            <TableCell>{contact.subject}</TableCell>
+                                                            <TableCell className="max-w-xs truncate" title={contact.message}>{contact.message}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        {/* EXCLUSIVE DATA TAB (Google Reviews Marketing) */}
+                        <TabsContent value="exclusive_data" className="mt-0">
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <CardTitle>Exclusive Data (Google Reviews Leads)</CardTitle>
+                                    <div className="flex gap-2">
+                                        <Button variant="outline" size="sm" onClick={handleDownloadExclusiveCSV} className="text-green-600 border-green-200">
+                                            <Download className="w-4 h-4 mr-2" />
+                                            Download CSV
+                                        </Button>
+                                        <Button variant="outline" size="sm" onClick={fetchExclusiveData}>
+                                            <RefreshCw className="w-4 h-4 mr-2" />
+                                            Refresh
+                                        </Button>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    {exclusiveData.length === 0 ? (
+                                        <div className="text-center py-8 text-muted-foreground">No data found.</div>
+                                    ) : (
+                                        <div className="overflow-x-auto">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Date</TableHead>
+                                                        <TableHead>Full Name</TableHead>
+                                                        <TableHead>WhatsApp</TableHead>
+                                                        <TableHead>Business Name</TableHead>
+                                                        <TableHead>Location</TableHead>
+                                                        <TableHead>Start Date</TableHead>
+                                                        <TableHead>Maps Link</TableHead>
                                                         <TableHead>Actions</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
-                                                    {contacts.map((contact, index) => (
-                                                        <TableRow key={index}>
-                                                            <TableCell className="text-xs text-muted-foreground">
-                                                                {new Date(contact.submittedAt).toLocaleDateString()}
+                                                    {exclusiveData.map((item) => (
+                                                        <TableRow key={item._id}>
+                                                            <TableCell>{new Date(item.submittedAt).toLocaleDateString()}</TableCell>
+                                                            <TableCell className="font-medium">{item.fullName}</TableCell>
+                                                            <TableCell>{item.whatsappNumber}</TableCell>
+                                                            <TableCell>{item.businessName}</TableCell>
+                                                            <TableCell>{item.location}</TableCell>
+                                                            <TableCell>{item.startDate}</TableCell>
+                                                            <TableCell>
+                                                                <a href={item.mapsLink} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline flex items-center gap-1">
+                                                                    View <ExternalLink className="w-3 h-3" />
+                                                                </a>
                                                             </TableCell>
-                                                            <TableCell>{contact.name}</TableCell>
-                                                            <TableCell>{contact.email}</TableCell>
-                                                            <TableCell>{contact.service}</TableCell>
-                                                            <TableCell className="max-w-xs truncate">{contact.message}</TableCell>
                                                             <TableCell>
                                                                 <div className="flex gap-2">
-                                                                    <Button variant="ghost" size="icon" onClick={() => openEmailModal(contact.email, `Re: ${contact.service} Enquiry`)}>
-                                                                        <Mail className="w-4 h-4 text-blue-500" />
-                                                                    </Button>
-                                                                    <Button variant="ghost" size="icon" title="Re-trigger Email" disabled={resendingId === contact._id} onClick={() => handleResendEmail('contacts', contact._id)}>
-                                                                        <RefreshCw className={`w-4 h-4 text-orange-500 ${resendingId === contact._id ? 'animate-spin' : ''}`} />
-                                                                    </Button>
-                                                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteRecord('contacts', contact._id, fetchContacts)}>
+                                                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteRecord('exclusive-data', item._id, fetchExclusiveData)}>
                                                                         <Trash2 className="w-4 h-4 text-red-500" />
                                                                     </Button>
                                                                 </div>

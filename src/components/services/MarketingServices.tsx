@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { API_BASE_URL } from "@/config";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -275,6 +276,25 @@ const MarketingServices = ({ layout = "grid" }: MarketingServicesProps) => {
     return (
         <>
             <div className={layout === "grid" ? "grid md:grid-cols-2 lg:grid-cols-3 gap-8" : "flex overflow-x-auto gap-6 pb-6 snap-x"}>
+                {/* Custom Card for Google Reviews Marketing - First Position */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className={`group bg-card border border-border rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${layout === "carousel" ? "min-w-[300px] md:min-w-[350px] snap-center" : ""}`}
+                >
+                    <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6 bg-blue-500/10 text-blue-500">
+                        <TrendingUp className="w-7 h-7" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3">Google Reviews Marketing</h3>
+                    <p className="text-muted-foreground mb-6 line-clamp-3">
+                        Get Genuine Google Reviews. We help businesses receive real and genuine Google reviews to improve ranking.
+                    </p>
+                    <Link to="/google-reviews-marketing">
+                        <Button className="w-full bg-[#2463eb] hover:bg-[#2463eb] text-white">View Complete</Button>
+                    </Link>
+                </motion.div>
+
                 {services.map((service, index) => (
                     <motion.div
                         key={service.title}

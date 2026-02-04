@@ -24,6 +24,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import LinkedinBenefits from "./pages/LinkedinBenefits";
 import TrainingDiscovery from "./pages/TrainingDiscovery"; // NEW
+import GoogleReviewsMarketing from "./pages/GoogleReviewsMarketing"; // NEW
 
 import TrainingListing from "./pages/TrainingListing"; // NEW
 import SocialPosts from "./pages/SocialPosts"; // NEW
@@ -68,6 +69,7 @@ const App = () => (
           <Route path="/webinars" element={<Webinars />} /> {/* NEW */}
 
           <Route path="/training-discovery" element={<TrainingDiscovery />} /> {/* NEW */}
+          <Route path="/google-reviews-marketing" element={<GoogleReviewsMarketing />} /> {/* NEW */}
           <Route path="/trainings/:topic" element={<TrainingListing />} /> {/* NEW */}
           <Route path="/events" element={<Events />} />
 
