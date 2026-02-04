@@ -23,7 +23,7 @@ const navLinks = [
     children: [
       { label: "Social Feed", href: "/social-posts" },
       { label: "AI Goals", href: "/ai-posts" },
-    ]
+    ],
   },
   {
     label: "Tech Posts",
@@ -34,7 +34,7 @@ const navLinks = [
       { label: "SQL Server DBA", href: "/tech-posts?category=SQL%20SERVER%20DBA" },
       { label: "MySQL", href: "/tech-posts?category=MY%20SQL" },
       { label: "PostgreSQL", href: "/tech-posts?category=POSTGRESS" },
-    ]
+    ],
   },
   { label: "Contact", href: "/contact" },
 ];
@@ -43,12 +43,12 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileDropdown, setMobileDropdown] = useState<string | null>(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -58,26 +58,23 @@ const Navbar = () => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled || isMobileMenuOpen
-        ? "bg-background/95 backdrop-blur-md shadow-md py-3"
-        : "bg-transparent py-5"
-        }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled || isMobileMenuOpen
+          ? "bg-background/95 backdrop-blur-md shadow-md py-3"
+          : "bg-transparent py-5"
+      }`}
     >
       <div className="container px-4">
         <nav className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <img
-              src="/N logo .png"
-              alt="NexByte Logo"
-              className="w-10 h-10 object-contain"
-            />
+            <img src="/N logo .png" alt="NexByte Logo" className="w-10 h-10" />
             <span className="text-xl font-bold">Nexbyteind</span>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
+            {navLinks.map((link) =>
               link.children ? (
                 <div
                   key={link.label}
@@ -86,16 +83,15 @@ const Navbar = () => {
                 >
                   <DropdownMenu open={openDropdown === link.label} modal={false}>
                     <DropdownMenuTrigger asChild>
-                      <button className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-primary transition-colors focus:outline-none py-2">
-                        {link.label} <ChevronDown className="w-3 h-3" />
+                      <button className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-primary">
+                        {link.label}
+                        <ChevronDown className="w-3 h-3" />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
                       {link.children.map((child) => (
                         <DropdownMenuItem key={child.label} asChild>
-                          <Link to={child.href} className="w-full cursor-pointer">
-                            {child.label}
-                          </Link>
+                          <Link to={child.href}>{child.label}</Link>
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
@@ -105,63 +101,87 @@ const Navbar = () => {
                 <Link
                   key={link.label}
                   to={link.href}
-                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                  className="text-sm font-medium text-muted-foreground hover:text-primary"
                 >
                   {link.label}
                 </Link>
               )
-            ))}
+            )}
           </div>
 
-          {/* Desktop CTA Button */}
+          {/* Desktop CTA */}
           <div className="hidden md:block">
-            <Button
-              variant="success"
-              size="default"
-              onClick={() => navigate("/services")}
-            >
+            <Button variant="success" onClick={() => navigate("/services")}>
               Get Started
             </Button>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Toggle */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-secondary transition-colors"
+            className="md:hidden p-2"
           >
-            {isMobileMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
+            {isMobileMenuOpen ? <X /> : <Menu />}
           </button>
         </nav>
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden mt-4 pb-4 bg-background px-4 rounded-b-2xl shadow-xl border-t border-border/50"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            className="md:hidden mt-4 bg-background rounded-xl shadow-lg p-4"
           >
-            <div className="flex flex-col gap-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.label}
-                  to={link.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors py-2"
-                >
-                  {link.label}
-                </Link>
-              ))}
+            <div className="flex flex-col gap-2">
+              {navLinks.map((link) =>
+                link.children ? (
+                  <div key={link.label}>
+                    <button
+                      onClick={() =>
+                        setMobileDropdown(
+                          mobileDropdown === link.label ? null : link.label
+                        )
+                      }
+                      className="flex w-full items-center justify-between py-2 text-sm font-medium text-muted-foreground"
+                    >
+                      {link.label}
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${
+                          mobileDropdown === link.label ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
 
-              {/* Mobile CTA */}
+                    {mobileDropdown === link.label && (
+                      <div className="ml-4 flex flex-col gap-2">
+                        {link.children.map((child) => (
+                          <Link
+                            key={child.label}
+                            to={child.href}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="text-sm text-muted-foreground hover:text-primary"
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    key={link.label}
+                    to={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="py-2 text-sm font-medium text-muted-foreground hover:text-primary"
+                  >
+                    {link.label}
+                  </Link>
+                )
+              )}
+
               <Button
                 variant="success"
-                size="default"
-                className="mt-2"
+                className="mt-4"
                 onClick={() => {
                   setIsMobileMenuOpen(false);
                   navigate("/services");
