@@ -1,8 +1,14 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navLinks = [
   { label: "Services", href: "/services" },
@@ -11,15 +17,33 @@ const navLinks = [
   { label: "Analytics", href: "/analytics" },
   { label: "About", href: "/about" },
   { label: "LinkedIn Benefits", href: "/linkedin-benefits" },
-  { label: "AI Goals", href: "/ai-posts" }, // NEW
-  // { label: "Testimonials", href: "/testimonials" },
+  {
+    label: "Social Posts",
+    href: "#",
+    children: [
+      { label: "Social Feed", href: "/social-posts" },
+      { label: "AI Goals", href: "/ai-posts" },
+    ]
+  },
+  {
+    label: "Tech Posts",
+    href: "#",
+    children: [
+      { label: "Python", href: "/tech-posts?category=Python" },
+      { label: "Oracle DBA", href: "/tech-posts?category=ORACLE%20DBA" },
+      { label: "SQL Server DBA", href: "/tech-posts?category=SQL%20SERVER%20DBA" },
+      { label: "MySQL", href: "/tech-posts?category=MY%20SQL" },
+      { label: "PostgreSQL", href: "/tech-posts?category=POSTGRESS" },
+    ]
+  },
   { label: "Contact", href: "/contact" },
 ];
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const navigate = useNavigate(); // ✅ FIX
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,13 +78,38 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                to={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-              >
-                {link.label}
-              </Link>
+              link.children ? (
+                <div
+                  key={link.label}
+                  onMouseEnter={() => setOpenDropdown(link.label)}
+                  onMouseLeave={() => setOpenDropdown(null)}
+                >
+                  <DropdownMenu open={openDropdown === link.label} modal={false}>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-primary transition-colors focus:outline-none py-2">
+                        {link.label} <ChevronDown className="w-3 h-3" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      {link.children.map((child) => (
+                        <DropdownMenuItem key={child.label} asChild>
+                          <Link to={child.href} className="w-full cursor-pointer">
+                            {child.label}
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ) : (
+                <Link
+                  key={link.label}
+                  to={link.href}
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {link.label}
+                </Link>
+              )
             ))}
           </div>
 

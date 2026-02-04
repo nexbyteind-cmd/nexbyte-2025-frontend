@@ -4,13 +4,14 @@ import { API_BASE_URL } from "@/config";
 import { IKContext, IKImage } from "imagekitio-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, Share2, MessageCircle, Send, ArrowLeft, Loader2, MessageSquareOff, Calendar } from "lucide-react";
+import { ThumbsUp, Share2, MessageCircle, Send, ArrowLeft, Loader2, MessageSquareOff, Calendar, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FaShareAlt, FaLightbulb, FaHandshake, FaGlobe } from "react-icons/fa";
+import { FaPython, FaDatabase } from "react-icons/fa";
+import { SiOracle, SiMysql, SiPostgresql } from "react-icons/si";
 
 const IK_PUBLIC_KEY = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY;
 const IK_URL_ENDPOINT = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
@@ -25,43 +26,50 @@ interface CategoryTheme {
 
 const CATEGORY_THEMES: Record<string, CategoryTheme> = {
     "All": {
-        icon: FaGlobe,
-        gradient: "from-teal-900 via-emerald-900 to-teal-900",
-        tagline: "Connecting minds, sharing knowledge across the globe",
-        textColor: "text-emerald-400",
-        accentColor: "bg-emerald-500"
-    },
-    "Information": {
-        icon: FaLightbulb,
-        gradient: "from-blue-900 via-cyan-900 to-blue-900",
-        tagline: "Insights and information that empower",
-        textColor: "text-cyan-400",
-        accentColor: "bg-cyan-500"
-    },
-    "Community": {
-        icon: FaHandshake,
-        gradient: "from-indigo-900 via-purple-900 to-indigo-900",
-        tagline: "Building bridges within the tech community",
+        icon: Sparkles,
+        gradient: "from-slate-900 via-purple-900 to-slate-900",
+        tagline: "Explore the latest in technology and database management",
         textColor: "text-purple-400",
         accentColor: "bg-purple-500"
     },
-    "Events": {
-        icon: Calendar,
-        gradient: "from-orange-900 via-red-900 to-orange-900",
-        tagline: "Upcoming meetups, webinars, and conferences",
+    "Python": {
+        icon: FaPython,
+        gradient: "from-blue-900 via-yellow-900 to-blue-900",
+        tagline: "Master the language of data and possibilities",
+        textColor: "text-yellow-400",
+        accentColor: "bg-yellow-500"
+    },
+    "ORACLE DBA": {
+        icon: SiOracle,
+        gradient: "from-red-900 via-orange-900 to-red-900",
+        tagline: "High-performance enterprise database solutions",
         textColor: "text-orange-400",
         accentColor: "bg-orange-500"
     },
-    "Share": {
-        icon: FaShareAlt,
-        gradient: "from-gray-900 via-slate-800 to-gray-900",
-        tagline: "Sharing valuable resources and updates",
-        textColor: "text-gray-400",
-        accentColor: "bg-gray-500"
+    "SQL SERVER DBA": {
+        icon: FaDatabase,
+        gradient: "from-slate-900 via-red-900 to-slate-900",
+        tagline: "Powering mission-critical applications",
+        textColor: "text-red-400",
+        accentColor: "bg-red-500"
+    },
+    "MY SQL": {
+        icon: SiMysql,
+        gradient: "from-blue-900 via-cyan-900 to-blue-900",
+        tagline: "The world's most popular open-source database",
+        textColor: "text-cyan-400",
+        accentColor: "bg-cyan-500"
+    },
+    "POSTGRESS": {
+        icon: SiPostgresql,
+        gradient: "from-slate-900 via-blue-900 to-slate-900",
+        tagline: "The world's most advanced open source relational database",
+        textColor: "text-blue-400",
+        accentColor: "bg-blue-500"
     }
 };
 
-const PostDetail = () => {
+const TechPostDetail = () => {
     const { id } = useParams();
     const [post, setPost] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -73,7 +81,7 @@ const PostDetail = () => {
 
     const fetchPost = async (postId: string) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/social-posts/${postId}`);
+            const response = await fetch(`${API_BASE_URL}/api/tech-posts/${postId}`);
             const data = await response.json();
             if (data.success) {
                 setPost(data.data);
@@ -81,7 +89,7 @@ const PostDetail = () => {
                 toast.error("Post not found");
             }
         } catch (error) {
-            console.error("Error fetching post:", error);
+            console.error("Error fetching tech post:", error);
             toast.error("Error loading post");
         } finally {
             setLoading(false);
@@ -92,7 +100,7 @@ const PostDetail = () => {
         if (!post) return;
         setPost({ ...post, likes: (post.likes || 0) + 1 });
         try {
-            await fetch(`${API_BASE_URL}/api/social-posts/${post._id}`, {
+            await fetch(`${API_BASE_URL}/api/tech-posts/${post._id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ type: "like" })
@@ -106,7 +114,7 @@ const PostDetail = () => {
         if (!post) return;
         setPost({ ...post, shares: (post.shares || 0) + 1 });
         try {
-            await fetch(`${API_BASE_URL}/api/social-posts/${post._id}`, {
+            await fetch(`${API_BASE_URL}/api/tech-posts/${post._id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ type: "share" })
@@ -124,7 +132,7 @@ const PostDetail = () => {
         setPost({ ...post, comments: [...(post.comments || []), newComment] });
         setCommentText("");
         try {
-            await fetch(`${API_BASE_URL}/api/social-posts/${post._id}`, {
+            await fetch(`${API_BASE_URL}/api/tech-posts/${post._id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ type: "comment", payload: newComment })
@@ -152,7 +160,7 @@ const PostDetail = () => {
                 <Navbar />
                 <div className="flex-1 flex flex-col items-center justify-center space-y-4">
                     <p className="text-xl text-gray-500">Post not found</p>
-                    <Link to="/social-posts">
+                    <Link to="/tech-posts">
                         <Button variant="outline">Back to Feed</Button>
                     </Link>
                 </div>
@@ -161,7 +169,6 @@ const PostDetail = () => {
         );
     }
 
-    // Determine Theme based on Category (Fallback to All)
     const currentTheme = CATEGORY_THEMES[post.category] || CATEGORY_THEMES["All"];
     const CurrentIcon = currentTheme.icon;
 
@@ -172,6 +179,7 @@ const PostDetail = () => {
 
                 {/* Dynamic Banner Section */}
                 <div className={`mt-16 relative overflow-hidden bg-gradient-to-r ${currentTheme.gradient} text-white transition-all duration-700`}>
+                    {/* Floating Icons Background */}
                     <div className="absolute inset-0 overflow-hidden opacity-10 pointer-events-none">
                         {[...Array(10)].map((_, i) => (
                             <CurrentIcon
@@ -189,7 +197,7 @@ const PostDetail = () => {
                     </div>
 
                     <div className="container mx-auto px-4 py-8 relative z-10 flex flex-col items-center text-center">
-                        <Link to="/social-posts" className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur-sm transition-all text-white/80 hover:text-white">
+                        <Link to="/tech-posts" className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur-sm transition-all text-white/80 hover:text-white">
                             <ArrowLeft className="w-5 h-5" />
                         </Link>
 
@@ -197,7 +205,7 @@ const PostDetail = () => {
                             <CurrentIcon className="w-6 h-6" />
                         </div>
                         <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
-                            {post.category || "Social Post"}
+                            {post.category || "Tech Post"}
                         </h1>
                         <p className="text-sm md:text-base font-light opacity-80 max-w-xl mx-auto">
                             {currentTheme.tagline}
@@ -227,7 +235,7 @@ const PostDetail = () => {
                             <div className="px-6 md:px-8 pb-4">
                                 <div className="flex items-center gap-2 mb-4 text-xs font-medium text-gray-400">
                                     <span className={`px-2 py-0.5 rounded-full ${currentTheme.accentColor} text-white`}>
-                                        {post.category || "General"}
+                                        {post.category}
                                     </span>
                                     <span>•</span>
                                     <span className="flex items-center gap-1">
@@ -265,7 +273,7 @@ const PostDetail = () => {
 
                             {!post.commentsHidden && (
                                 <div className="bg-white p-6 border-t border-gray-100">
-                                    <h3 className="text-sm font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">Conversation</h3>
+                                    <h3 className="text-sm font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">Discussion</h3>
 
                                     <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100 shadow-inner">
                                         <div className="flex gap-3">
@@ -275,7 +283,7 @@ const PostDetail = () => {
                                             <div className="flex-1 relative">
                                                 <Input
                                                     id="comment-input"
-                                                    placeholder="Add a comment..."
+                                                    placeholder="Add a thought..."
                                                     className="min-h-[44px] py-2.5 pr-10 bg-white border-gray-200 rounded-lg focus-visible:ring-2 focus-visible:ring-blue-100 focus-visible:border-blue-300 transition-all font-light"
                                                     value={commentText}
                                                     onChange={(e) => setCommentText(e.target.value)}
@@ -291,7 +299,7 @@ const PostDetail = () => {
                                     <div className="space-y-4">
                                         {post.comments?.length === 0 ? (
                                             <div className="text-center py-6 text-gray-400 text-sm italic">
-                                                No comments yet. Share your thoughts!
+                                                No comments yet. Be the first to share your thoughts!
                                             </div>
                                         ) : (
                                             post.comments?.map((comment: any, idx: number) => (
@@ -338,4 +346,4 @@ const PostDetail = () => {
     );
 };
 
-export default PostDetail;
+export default TechPostDetail;

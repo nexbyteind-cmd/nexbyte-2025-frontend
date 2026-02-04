@@ -26,7 +26,7 @@ const Index = () => {
           <SocialGoalsSection /> {/* NEW */}
         </section>
         <section id="ai-goals">
-          <AIGoalsSection /> {/* NEW */}
+          {/* <AIGoalsSection />  */}
         </section>
         <section id="services">
           <ServicesSection />

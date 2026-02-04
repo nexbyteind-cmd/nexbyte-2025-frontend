@@ -10,7 +10,8 @@ import Footer from "@/components/Footer";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { useSearchParams } from "react-router-dom";
-import { FaShareAlt, FaLightbulb, FaHandshake, FaGlobe } from "react-icons/fa";
+import { FaPython, FaDatabase } from "react-icons/fa";
+import { SiOracle, SiMysql, SiPostgresql } from "react-icons/si";
 
 // ImageKit Config
 const IK_PUBLIC_KEY = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY;
@@ -24,55 +25,54 @@ interface CategoryTheme {
     accentColor: string;
 }
 
-// Themes for Social Posts (Knowledge/Info/Community)
 const CATEGORY_THEMES: Record<string, CategoryTheme> = {
     "All": {
-        icon: FaGlobe,
-        gradient: "from-teal-900 via-emerald-900 to-teal-900",
-        tagline: "Connecting minds, sharing knowledge across the globe",
-        textColor: "text-emerald-400",
-        accentColor: "bg-emerald-500"
-    },
-    // Adding generic fallbacks or specific known categories if any. 
-    // Since categories come from API, we'll use a default fallback or map specific ones if known.
-    // For now, mapping some likely generic keys or default.
-    "Information": {
-        icon: FaLightbulb,
-        gradient: "from-blue-900 via-cyan-900 to-blue-900",
-        tagline: "Insights and information that empower",
-        textColor: "text-cyan-400",
-        accentColor: "bg-cyan-500"
-    },
-    "Community": {
-        icon: FaHandshake,
-        gradient: "from-indigo-900 via-purple-900 to-indigo-900",
-        tagline: "Building bridges within the tech community",
+        icon: Sparkles,
+        gradient: "from-slate-900 via-purple-900 to-slate-900",
+        tagline: "Explore the latest in technology and database management",
         textColor: "text-purple-400",
         accentColor: "bg-purple-500"
     },
-    "Events": {
-        icon: Calendar,
-        gradient: "from-orange-900 via-red-900 to-orange-900",
-        tagline: "Upcoming meetups, webinars, and conferences",
+    "Python": {
+        icon: FaPython,
+        gradient: "from-blue-900 via-yellow-900 to-blue-900",
+        tagline: "Master the language of data and possibilities",
+        textColor: "text-yellow-400",
+        accentColor: "bg-yellow-500"
+    },
+    "ORACLE DBA": {
+        icon: SiOracle,
+        gradient: "from-red-900 via-orange-900 to-red-900",
+        tagline: "High-performance enterprise database solutions",
         textColor: "text-orange-400",
         accentColor: "bg-orange-500"
     },
-    "Share": {
-        icon: FaShareAlt,
-        gradient: "from-gray-900 via-slate-800 to-gray-900",
-        tagline: "Sharing valuable resources and updates",
-        textColor: "text-gray-400",
-        accentColor: "bg-gray-500"
+    "SQL SERVER DBA": {
+        icon: FaDatabase,
+        gradient: "from-slate-900 via-red-900 to-slate-900",
+        tagline: "Powering mission-critical applications",
+        textColor: "text-red-400",
+        accentColor: "bg-red-500"
+    },
+    "MY SQL": {
+        icon: SiMysql,
+        gradient: "from-blue-900 via-cyan-900 to-blue-900",
+        tagline: "The world's most popular open-source database",
+        textColor: "text-cyan-400",
+        accentColor: "bg-cyan-500"
+    },
+    "POSTGRESS": {
+        icon: SiPostgresql,
+        gradient: "from-slate-900 via-blue-900 to-slate-900",
+        tagline: "The world's most advanced open source relational database",
+        textColor: "text-blue-400",
+        accentColor: "bg-blue-500"
     }
 };
 
-const SocialPosts = () => {
-    const [searchParams] = useSearchParams(); // Added to match pattern if needed, though previously locally managed
-
-    // We can stick to local state if preferred, but URL params are better for sharing. 
-    // The previous SocialPosts used local state. I'll switch to URL params for consistency with TechPosts if feasible, 
-    // but to be safe and "same like above", I'll use local state initialized from URL if present.
-    const initialCategory = "All";
+const TechPosts = () => {
+    const [searchParams] = useSearchParams();
+    const initialCategory = searchParams.get("category") || "All";
 
     const [posts, setPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -81,25 +81,21 @@ const SocialPosts = () => {
     const [expandedPosts, setExpandedPosts] = useState<Record<string, boolean>>({});
     const [commentInput, setCommentInput] = useState<Record<string, string>>({});
     const [commentValues, setCommentValues] = useState<Record<string, string>>({});
-    const [categories, setCategories] = useState<any[]>([]);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
 
-    const fetchCategories = async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/categories`);
-            const data = await response.json();
-            if (data.success) {
-                setCategories(data.data);
-            }
-        } catch (error) {
-            console.error("Error fetching categories:", error);
-        }
-    };
+    useEffect(() => {
+        const cat = searchParams.get("category");
+        if (cat) setSelectedCategory(cat);
+    }, [searchParams]);
+
+    useEffect(() => {
+        fetchPosts();
+    }, [sortBy, selectedCategory, date]);
 
     const fetchPosts = async () => {
         setLoading(true);
         try {
-            let url = `${API_BASE_URL}/api/social-posts?sort=${sortBy}`;
+            let url = `${API_BASE_URL}/api/tech-posts?sort=${sortBy}`;
             if (selectedCategory && selectedCategory !== "All") {
                 url += `&category=${encodeURIComponent(selectedCategory)}`;
             }
@@ -118,18 +114,10 @@ const SocialPosts = () => {
         }
     };
 
-    useEffect(() => {
-        fetchCategories();
-    }, []);
-
-    useEffect(() => {
-        fetchPosts();
-    }, [sortBy, selectedCategory, date]);
-
     const handleLike = async (id: string) => {
         setPosts(posts.map(p => p._id === id ? { ...p, likes: (p.likes || 0) + 1 } : p));
         try {
-            await fetch(`${API_BASE_URL}/api/social-posts/${id}`, {
+            await fetch(`${API_BASE_URL}/api/tech-posts/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ type: "like" })
@@ -139,11 +127,11 @@ const SocialPosts = () => {
 
     const handleShare = async (id: string) => {
         setPosts(posts.map(p => p._id === id ? { ...p, shares: (p.shares || 0) + 1 } : p));
-        const shareUrl = `${window.location.origin}/social-posts/${id}`;
+        const shareUrl = `${window.location.origin}/tech-posts/${id}`;
         navigator.clipboard.writeText(shareUrl);
         toast.success("Link copied to clipboard!");
         try {
-            await fetch(`${API_BASE_URL}/api/social-posts/${id}`, {
+            await fetch(`${API_BASE_URL}/api/tech-posts/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ type: "share" })
@@ -162,7 +150,7 @@ const SocialPosts = () => {
         setCommentInput({ ...commentInput, [id]: "" });
         setCommentValues(prev => ({ ...prev, [id]: "" }));
         try {
-            await fetch(`${API_BASE_URL}/api/social-posts/${id}`, {
+            await fetch(`${API_BASE_URL}/api/tech-posts/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ type: "comment", payload: newComment })
@@ -176,13 +164,7 @@ const SocialPosts = () => {
         setExpandedPosts(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
-    // Helper to get theme
-    const getTheme = (catName: string) => {
-        // Try exact match, or "Information" if uncategorized, or default
-        return CATEGORY_THEMES[catName] || CATEGORY_THEMES["All"];
-    };
-
-    const currentTheme = getTheme(selectedCategory);
+    const currentTheme = CATEGORY_THEMES[selectedCategory] || CATEGORY_THEMES["All"];
     const CurrentIcon = currentTheme.icon;
 
     return (
@@ -192,8 +174,9 @@ const SocialPosts = () => {
 
                 {/* Dynamic Banner Section */}
                 <div className={`mt-16 relative overflow-hidden bg-gradient-to-r ${currentTheme.gradient} text-white transition-all duration-700`}>
+                    {/* Floating Icons Background */}
                     <div className="absolute inset-0 overflow-hidden opacity-10 pointer-events-none">
-                        {[...Array(10)].map((_, i) => (
+                        {[...Array(12)].map((_, i) => (
                             <CurrentIcon
                                 key={i}
                                 className="absolute animate-float"
@@ -213,7 +196,7 @@ const SocialPosts = () => {
                             <CurrentIcon className="w-8 h-8" />
                         </div>
                         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3">
-                            {selectedCategory === "All" ? "Social Feed" : selectedCategory}
+                            {selectedCategory === "All" ? "Tech Insight Hub" : selectedCategory}
                         </h1>
                         <p className="text-lg md:text-xl font-light opacity-90 max-w-2xl mx-auto">
                             {currentTheme.tagline}
@@ -226,34 +209,27 @@ const SocialPosts = () => {
                         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                             {/* Category Filter Pills */}
                             <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                                <button
-                                    onClick={() => setSelectedCategory("All")}
-                                    className={`
-                                        flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-all duration-300
-                                        ${selectedCategory === "All"
-                                            ? "bg-emerald-500 text-white shadow-md transform scale-105"
-                                            : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
-                                        }
-                                    `}
-                                >
-                                    <FaGlobe className={`w-3.5 h-3.5 ${selectedCategory === "All" ? "text-white" : "text-emerald-500"}`} />
-                                    All Posts
-                                </button>
-                                {categories.map((cat) => (
-                                    <button
-                                        key={cat._id}
-                                        onClick={() => setSelectedCategory(cat.name)}
-                                        className={`
-                                            flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-all duration-300
-                                            ${selectedCategory === cat.name
-                                                ? "bg-black text-white shadow-md transform scale-105"
-                                                : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
-                                            }
-                                        `}
-                                    >
-                                        {cat.name}
-                                    </button>
-                                ))}
+                                {Object.entries(CATEGORY_THEMES).map(([cat, theme]) => {
+                                    const Icon = theme.icon;
+                                    const isSelected = selectedCategory === cat;
+
+                                    return (
+                                        <button
+                                            key={cat}
+                                            onClick={() => setSelectedCategory(cat)}
+                                            className={`
+                                                flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-all duration-300
+                                                ${isSelected
+                                                    ? `${theme.accentColor} text-white shadow-md transform scale-105`
+                                                    : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
+                                                }
+                                            `}
+                                        >
+                                            <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-white" : theme.textColor}`} />
+                                            {cat === "All" ? "All Posts" : cat}
+                                        </button>
+                                    );
+                                })}
                             </div>
 
                             {/* Filters & Sorting */}
@@ -336,8 +312,13 @@ const SocialPosts = () => {
                                                 />
                                                 <div className="absolute top-3 left-3 z-20">
                                                     <span className="bg-white/90 backdrop-blur text-xs font-bold px-2 py-1 rounded-md shadow-sm border border-white/50 flex items-center gap-1.5 text-gray-800">
-                                                        <FaShareAlt className="w-3 h-3 text-emerald-600" />
-                                                        {post.category || "Social"}
+                                                        {CATEGORY_THEMES[post.category] && (
+                                                            (() => {
+                                                                const CatIcon = CATEGORY_THEMES[post.category].icon;
+                                                                return <CatIcon className={`w-3 h-3 ${CATEGORY_THEMES[post.category].textColor}`} />;
+                                                            })()
+                                                        )}
+                                                        {post.category}
                                                     </span>
                                                 </div>
                                             </div>
@@ -428,4 +409,4 @@ const SocialPosts = () => {
     );
 };
 
-export default SocialPosts;
+export default TechPosts;

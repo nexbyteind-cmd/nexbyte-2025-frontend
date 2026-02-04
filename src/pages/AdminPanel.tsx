@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Lock, User, LogOut, MessageSquare, Trophy, Plus, Save, ChevronDown, ChevronUp, ExternalLink, Download, Eye, EyeOff, Trash2, GraduationCap, Monitor, Briefcase, TrendingUp, Megaphone, Quote, Mail, RefreshCw, PenTool, ClipboardList, StickyNote } from "lucide-react";
+import { Lock, User, LogOut, MessageSquare, Trophy, Plus, Save, ChevronDown, ChevronUp, ExternalLink, Download, Eye, EyeOff, Trash2, GraduationCap, Monitor, Briefcase, TrendingUp, Megaphone, Quote, Mail, RefreshCw, PenTool, ClipboardList, StickyNote, Code } from "lucide-react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 
@@ -25,6 +25,13 @@ import AIPostManager from '@/components/AIPostManager'; // NEW
 import NewsAdminPanel from './NewsAdminPanel';
 import NotesTool from '@/components/NotesTool';
 import TodoTool from '@/components/TodoTool';
+import TechPostManager from "@/components/TechPostManager";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion";
 
 
 
@@ -33,7 +40,9 @@ const AdminPanel = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState("");
     const [activeTab, setActiveTab] = useState("contacts");
-    const [isToolsOpen, setIsToolsOpen] = useState(true); // Default open or closed? User said "first item", maybe open by default or let user toggle. Let's start true or false. User said "when clicking on Tools, it expands". So start false usually, but "first item" implies importance. Let's start false.
+    const [isToolsOpen, setIsToolsOpen] = useState(false);
+    const [isTechPostsOpen, setIsTechPostsOpen] = useState(false);
+    const [techPostCategory, setTechPostCategory] = useState("Python");
 
 
     // Data States
@@ -994,7 +1003,7 @@ const AdminPanel = () => {
                     <div>
                         <Button
                             variant="ghost"
-                            className="w-full justify-between hover:bg-muted/50"
+                            className="w-full justify-between"
                             onClick={() => setIsToolsOpen(!isToolsOpen)}
                         >
                             <div className="flex items-center">
@@ -1122,6 +1131,55 @@ const AdminPanel = () => {
                         <Megaphone className="w-4 h-4 mr-2" />
                         Ads Manager
                     </Button>
+
+
+                    {/* TECH POSTS DROPDOWN */}
+                    <div>
+                        <Button
+                            variant="ghost"
+                            className="w-full justify-between"
+                            onClick={() => setIsTechPostsOpen(!isTechPostsOpen)}
+                        >
+                            <div className="flex items-center">
+                                <Code className="w-4 h-4 mr-2" />
+                                Tech Posts
+                            </div>
+                            {isTechPostsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </Button>
+
+                        <AnimatePresence>
+                            {isTechPostsOpen && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: "auto", opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden ml-4 pl-2 border-l border-border/50 space-y-1 mt-1"
+                                >
+                                    {[
+                                        { label: "Python", value: "Python" },
+                                        { label: "Oracle DBA", value: "ORACLE DBA" },
+                                        { label: "SQL Server DBA", value: "SQL SERVER DBA" },
+                                        { label: "MySQL", value: "MY SQL" },
+                                        { label: "PostgreSQL", value: "POSTGRESS" }
+                                    ].map((cat) => (
+                                        <Button
+                                            key={cat.value}
+                                            variant={activeTab === "tech-posts" && techPostCategory === cat.value ? "secondary" : "ghost"}
+                                            size="sm"
+                                            className="w-full justify-start h-8"
+                                            onClick={() => {
+                                                setActiveTab("tech-posts");
+                                                setTechPostCategory(cat.value);
+                                            }}
+                                        >
+                                            <Code className="w-3 h-3 mr-2" />
+                                            {cat.label}
+                                        </Button>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </nav>
 
                 <div className="mt-auto pt-6 border-t border-border">
@@ -1589,6 +1647,26 @@ const AdminPanel = () => {
                                     </CardContent>
                                 </Card>
                             </div>
+                        </TabsContent>
+
+                        {/* TECH POSTS TAB */}
+                        <TabsContent value="tech-posts" className="mt-0">
+                            <Card>
+                                <CardHeader>
+                                    <div className="flex items-center gap-2">
+                                        <Code className="w-5 h-5 text-primary" />
+                                        <div>
+                                            <CardTitle>Tech Posts - {techPostCategory}</CardTitle>
+                                            <CardDescription>
+                                                Manage {techPostCategory} articles and posts.
+                                            </CardDescription>
+                                        </div>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <TechPostManager fixedCategory={techPostCategory} />
+                                </CardContent>
+                            </Card>
                         </TabsContent>
 
                         {/* PROGRAMS TAB (Training & Internships) */}

@@ -33,6 +33,9 @@ import AdsListing from "./pages/AdsListing"; // NEW
 import AdDetail from "./pages/AdDetail"; // NEW
 import AIPostDetail from "./pages/AIPostDetail"; // NEW - AI Goals
 
+import TechPosts from "./pages/TechPosts"; // NEW
+import TechPostDetail from "./pages/TechPostDetail"; // NEW
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -58,6 +61,10 @@ const App = () => (
           <Route path="/social-posts/:id" element={<PostDetail />} /> {/* NEW */}
           <Route path="/ai-posts" element={<AIPosts />} /> {/* NEW */}
           <Route path="/ai-posts/:id" element={<AIPostDetail />} /> {/* NEW */}
+
+          <Route path="/tech-posts" element={<TechPosts />} /> {/* NEW */}
+          <Route path="/tech-posts/:id" element={<TechPostDetail />} /> {/* NEW */}
+
           <Route path="/training-discovery" element={<TrainingDiscovery />} /> {/* NEW */}
           <Route path="/trainings/:topic" element={<TrainingListing />} /> {/* NEW */}
           <Route path="/events" element={<Events />} />
