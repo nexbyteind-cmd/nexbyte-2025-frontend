@@ -18,11 +18,12 @@ const IK_PUBLIC_KEY = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY;
 const IK_URL_ENDPOINT = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
 
 const TECH_CATEGORIES = [
-    "Python",
-    "ORACLE DBA",
-    "SQL SERVER DBA",
-    "MY SQL",
-    "POSTGRESS"
+    { label: "Python", value: "Python" },
+    { label: "Oracle DBA", value: "ORACLE DBA" },
+    { label: "MSSQL", value: "SQL SERVER DBA" },
+    { label: "MySQL", value: "MY SQL" },
+    { label: "PostgreSQL", value: "POSTGRESS" },
+    { label: "MongoDB", value: "MongoDB" }
 ];
 
 interface TechPostManagerProps {
@@ -59,7 +60,8 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
         content: "",
         image: null as string | null,
         category: fixedCategory || "",
-        subcategory: ""
+        subcategory: "",
+        actionLink: ""
     });
     const [uploading, setUploading] = useState(false);
     const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -216,7 +218,8 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
                     content: "",
                     image: null,
                     category: fixedCategory || "",
-                    subcategory: ""
+                    subcategory: "",
+                    actionLink: ""
                 });
                 fetchPosts();
             } else {
@@ -232,7 +235,8 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
             content: post.content || "",
             image: post.image || null,
             category: post.category || "",
-            subcategory: post.subcategory || ""
+            subcategory: post.subcategory || "",
+            actionLink: post.actionLink || ""
         });
         setEditingPostId(post._id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -243,7 +247,8 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
             content: "",
             image: null,
             category: fixedCategory || "",
-            subcategory: ""
+            subcategory: "",
+            actionLink: ""
         });
         setEditingPostId(null);
     };
@@ -354,8 +359,8 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
                                         </SelectTrigger>
                                         <SelectContent>
                                             {TECH_CATEGORIES.map((cat) => (
-                                                <SelectItem key={cat} value={cat}>
-                                                    {cat}
+                                                <SelectItem key={cat.value} value={cat.value}>
+                                                    {cat.label}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -431,6 +436,15 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
                             </div>
 
                             <div className="space-y-2">
+                                <Label>Action Link (Optional)</Label>
+                                <Input
+                                    placeholder="https://example.com"
+                                    value={newPost.actionLink || ""}
+                                    onChange={(e) => setNewPost({ ...newPost, actionLink: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
                                 <Label>Post Content</Label>
                                 <Textarea
                                     placeholder={`What's new in ${newPost.category || 'Tech'}?`}
@@ -490,8 +504,8 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
                                         <SelectContent>
                                             <SelectItem value="All">All Categories</SelectItem>
                                             {TECH_CATEGORIES.map((cat) => (
-                                                <SelectItem key={cat} value={cat}>
-                                                    {cat}
+                                                <SelectItem key={cat.value} value={cat.value}>
+                                                    {cat.label}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -568,7 +582,7 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
                                             {post.isHidden && <span className="text-[10px] uppercase font-bold text-gray-500 border border-gray-300 px-1 rounded">Hidden</span>}
                                             {post.category && (
                                                 <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium border border-blue-100">
-                                                    {post.category}
+                                                    {TECH_CATEGORIES.find(c => c.value === post.category)?.label || post.category}
                                                 </span>
                                             )}
                                             {post.subcategory && (

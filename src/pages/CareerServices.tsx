@@ -24,6 +24,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 
 // --- TYPES ---
 interface CareerRole {
@@ -107,7 +108,7 @@ const CareerServices = () => {
     const { toast } = useToast();
     const [selectedTechId, setSelectedTechId] = useState<string | null>(null);
     const [enquiryForm, setEnquiryForm] = useState({
-        name: "", email: "", phone: "", status: "Fresher", role: "Aspiring Developer", timeSlot: "", notes: ""
+        name: "", email: "", phone: "", status: "Fresher", role: "Aspiring Developer", timeSlot: "", notes: "", profileLink: ""
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -164,7 +165,8 @@ const CareerServices = () => {
             const result = await response.json();
             if (result.success) {
                 toast({ title: "Success", description: "Your enquiry has been submitted successfully!" });
-                setEnquiryForm({ name: "", email: "", phone: "", status: "Fresher", role: "", timeSlot: "", notes: "" });
+                toast({ title: "Success", description: "Your enquiry has been submitted successfully!" });
+                setEnquiryForm({ name: "", email: "", phone: "", status: "Fresher", role: "", timeSlot: "", notes: "", profileLink: "" });
                 setIsModalOpen(false);
             } else {
                 toast({ title: "Error", description: "Failed to submit enquiry.", variant: "destructive" });
@@ -382,6 +384,19 @@ const CareerServices = () => {
                                                                         <option value="Fresher">Fresher / Student</option>
                                                                         <option value="Experienced">Experienced</option>
                                                                     </select>
+                                                                </div>
+                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                                    <div className="space-y-1.5">
+                                                                        <Label htmlFor="profileLink">LinkedIn / Resume Link</Label>
+                                                                        <Input id="profileLink" placeholder="https://linkedin.com/in/..." className="bg-slate-50" value={enquiryForm.profileLink} onChange={(e) => setEnquiryForm({ ...enquiryForm, profileLink: e.target.value })} />
+                                                                    </div>
+                                                                    <div className="space-y-1.5">
+                                                                        <Label>Preferred Booking Time</Label>
+                                                                        <DateTimePicker
+                                                                            date={enquiryForm.timeSlot ? new Date(enquiryForm.timeSlot) : undefined}
+                                                                            setDate={(date) => setEnquiryForm({ ...enquiryForm, timeSlot: date ? date.toISOString() : "" })}
+                                                                        />
+                                                                    </div>
                                                                 </div>
                                                                 <div className="space-y-1.5">
                                                                     <Label htmlFor="notes">Message (Optional)</Label>

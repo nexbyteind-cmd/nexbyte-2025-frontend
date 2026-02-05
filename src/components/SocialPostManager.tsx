@@ -47,6 +47,7 @@ const SocialPostManager = () => {
         content: "",
         image: null as string | null,
         category: "",
+        actionLink: ""
     });
     const [uploading, setUploading] = useState(false);
     const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -62,13 +63,21 @@ const SocialPostManager = () => {
     }, [sortBy, adminSelectedCategory]);
 
     useEffect(() => {
-        if (!date) {
-            setFilteredPosts(posts);
-        } else {
-            const selectedDateStr = date.toDateString();
-            setFilteredPosts(posts.filter(p => new Date(p.createdAt).toDateString() === selectedDateStr));
+        let result = posts;
+
+        // Filter by Category
+        if (adminSelectedCategory && adminSelectedCategory !== "All") {
+            result = result.filter(p => p.category === adminSelectedCategory);
         }
-    }, [date, posts]);
+
+        // Filter by Date
+        if (date) {
+            const selectedDateStr = date.toDateString();
+            result = result.filter(p => new Date(p.createdAt).toDateString() === selectedDateStr);
+        }
+
+        setFilteredPosts(result);
+    }, [date, posts, adminSelectedCategory]);
 
     const fetchPosts = async () => {
         setLoading(true);
@@ -192,7 +201,7 @@ const SocialPostManager = () => {
 
             if (data.success) {
                 toast.success("Post created successfully!");
-                setNewPost({ content: "", image: null, category: "" });
+                setNewPost({ content: "", image: null, category: "", actionLink: "" });
                 fetchPosts();
             } else {
                 toast.error("Failed to create post");
@@ -206,14 +215,15 @@ const SocialPostManager = () => {
         setNewPost({
             content: post.content || "",
             image: post.image || null,
-            category: post.category || ""
+            category: post.category || "",
+            actionLink: post.actionLink || ""
         });
         setEditingPostId(post._id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleCancelEdit = () => {
-        setNewPost({ content: "", image: null, category: "" });
+        setNewPost({ content: "", image: null, category: "", actionLink: "" });
         setEditingPostId(null);
     };
 
@@ -368,6 +378,15 @@ const SocialPostManager = () => {
                                     value={newPost.content}
                                     onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
                                     className="min-h-[100px]"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Action Link (Optional)</Label>
+                                <Input
+                                    placeholder="https://example.com"
+                                    value={newPost.actionLink || ""}
+                                    onChange={(e) => setNewPost({ ...newPost, actionLink: e.target.value })}
                                 />
                             </div>
 

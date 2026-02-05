@@ -1224,7 +1224,8 @@ const AdminPanel = () => {
                                         { label: "Oracle DBA", value: "ORACLE DBA" },
                                         { label: "SQL Server DBA", value: "SQL SERVER DBA" },
                                         { label: "MySQL", value: "MY SQL" },
-                                        { label: "PostgreSQL", value: "POSTGRESS" }
+                                        { label: "PostgreSQL", value: "POSTGRESS" },
+                                        { label: "MongoDB", value: "MongoDB" }
                                     ].map((cat) => (
                                         <Button
                                             key={cat.value}

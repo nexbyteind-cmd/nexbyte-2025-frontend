@@ -16,13 +16,13 @@ const navLinks = [
   // { label: "Platforms", href: "/platforms" },
   { label: "Analytics", href: "/analytics" },
   { label: "About", href: "/about" },
-  { label: "LinkedIn Benefits", href: "/linkedin-benefits" },
+  // { label: "LinkedIn Benefits", href: "/linkedin-benefits" },
   { label: "Webinars", href: "/webinars" },
   {
     label: "Career Guidance",
     href: "#",
     children: [
-      { label: "Career Tips", href: "/social-posts" },
+      { label: "Career Tips", href: "/linkedin-benefits" },
       { label: "Career Services", href: "/services/career-services" }
 
     ],
@@ -34,9 +34,10 @@ const navLinks = [
       { label: "AI Goals", href: "/ai-posts" },
       { label: "Python", href: "/tech-posts?category=Python" },
       { label: "Oracle DBA", href: "/tech-posts?category=ORACLE%20DBA" },
-      { label: "SQL Server DBA", href: "/tech-posts?category=SQL%20SERVER%20DBA" },
+      { label: "MSSQL", href: "/tech-posts?category=SQL%20SERVER%20DBA" },
       { label: "MySQL", href: "/tech-posts?category=MY%20SQL" },
       { label: "PostgreSQL", href: "/tech-posts?category=POSTGRESS" },
+      { label: "MongoDB", href: "/tech-posts?category=MongoDB" },
     ],
   },
   { label: "Contact", href: "/contact" },

@@ -19,7 +19,7 @@ const Webinars = () => {
     // Filters
     const [search, setSearch] = useState("");
     const [category, setCategory] = useState("All");
-    const [filterType, setFilterType] = useState("upcoming"); // upcoming, past
+    const [filterType, setFilterType] = useState("past"); // upcoming, past
 
     useEffect(() => {
         fetchCategories();
@@ -125,16 +125,16 @@ const Webinars = () => {
                             {/* Type Toggle */}
                             <div className="flex bg-gray-100/80 p-1 rounded-lg">
                                 <button
-                                    onClick={() => setFilterType("upcoming")}
-                                    className={`px-6 py-2 rounded-md text-sm font-semibold transition-all duration-300 ${filterType === "upcoming" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
-                                >
-                                    Upcoming
-                                </button>
-                                <button
                                     onClick={() => setFilterType("past")}
                                     className={`px-6 py-2 rounded-md text-sm font-semibold transition-all duration-300 ${filterType === "past" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
                                 >
                                     Past Sessions
+                                </button>
+                                <button
+                                    onClick={() => setFilterType("upcoming")}
+                                    className={`px-6 py-2 rounded-md text-sm font-semibold transition-all duration-300 ${filterType === "upcoming" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
+                                >
+                                    Upcoming
                                 </button>
                             </div>
 

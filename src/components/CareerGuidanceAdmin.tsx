@@ -64,6 +64,7 @@ interface Enquiry {
     role: string;
     technology: string;
     timeSlot: string;
+    profileLink?: string;
     notes: string;
     submittedAt: string;
 }
@@ -458,7 +459,26 @@ const CheckEnquiries = ({ onBack }: { onBack: () => void }) => {
                             : enquiries?.map((e) => (
                                 <TableRow key={e._id}>
                                     <TableCell>{new Date(e.submittedAt).toLocaleDateString()}</TableCell>
-                                    <TableCell>{e.name}</TableCell><TableCell>{e.email}</TableCell><TableCell>{e.phone}</TableCell><TableCell>{e.technology}</TableCell><TableCell>{e.status}</TableCell><TableCell>{e.role}</TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col">
+                                            <span>{e.name}</span>
+                                            {e.profileLink && (
+                                                <a href={e.profileLink} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline">
+                                                    View Profile
+                                                </a>
+                                            )}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>{e.email}</TableCell>
+                                    <TableCell>{e.phone}</TableCell>
+                                    <TableCell>{e.technology}</TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col">
+                                            <span>{e.status}</span>
+                                            {e.timeSlot && <span className="text-xs text-slate-500 font-medium">{new Date(e.timeSlot).toLocaleString()}</span>}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>{e.role}</TableCell>
                                 </TableRow>
                             ))}
                     </TableBody>

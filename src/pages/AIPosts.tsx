@@ -360,6 +360,18 @@ const AIPosts = () => {
                                                 )}
                                             </div>
 
+                                            {post.actionLink && (
+                                                <div className="mb-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        className="w-full h-8 text-xs border-violet-200 text-violet-600 hover:bg-violet-50 hover:text-violet-700 flex items-center justify-center gap-1.5 transition-colors"
+                                                        onClick={() => window.open(post.actionLink, '_blank', 'noopener,noreferrer')}
+                                                    >
+                                                        More Info <span className="text-[10px]">↗</span>
+                                                    </Button>
+                                                </div>
+                                            )}
+
                                             <div className="flex items-center justify-between text-xs text-gray-400 border-t border-gray-50 pt-4 mt-auto">
                                                 <div className="flex items-center gap-1.5">
                                                     <Calendar className="w-3 h-3" />
