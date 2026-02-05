@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "@/config";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -70,7 +71,7 @@ const CareerServices = () => {
     const { data: technologies, isLoading: techsLoading } = useQuery({
         queryKey: ["career-technologies"],
         queryFn: async () => {
-            const res = await fetch("http://localhost:5000/api/career/technologies");
+            const res = await fetch(`${API_BASE_URL}/api/career/technologies`);
             const json = await res.json();
             return json.data as Technology[];
         },
@@ -81,7 +82,7 @@ const CareerServices = () => {
         queryKey: ["career-technology", selectedTechId],
         queryFn: async () => {
             if (!selectedTechId) return null;
-            const res = await fetch(`http://localhost:5000/api/career/technologies/${selectedTechId}`);
+            const res = await fetch(`${API_BASE_URL}/api/career/technologies/${selectedTechId}`);
             const json = await res.json();
             return json.data as Technology;
         },
@@ -100,7 +101,7 @@ const CareerServices = () => {
 
         setIsSubmitting(true);
         try {
-            const response = await fetch("http://localhost:5000/api/career/enquiry", {
+            const response = await fetch(`${API_BASE_URL}/api/career/enquiry`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ ...enquiryForm, technology: selectedTech.name }),

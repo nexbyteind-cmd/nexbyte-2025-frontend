@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { API_BASE_URL } from "@/config";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -124,7 +125,7 @@ const ManageCareers = ({ onBack }: { onBack: () => void }) => {
     const { data: technologies, isLoading } = useQuery({
         queryKey: ["admin-technologies"],
         queryFn: async () => {
-            const res = await fetch("http://localhost:5000/api/career/technologies");
+            const res = await fetch(`${API_BASE_URL}/api/career/technologies`);
             return (await res.json()).data as Technology[];
         }
     });
@@ -155,8 +156,8 @@ const ManageCareers = ({ onBack }: { onBack: () => void }) => {
     const saveTechMutation = useMutation({
         mutationFn: async () => {
             const url = isEditing
-                ? `http://localhost:5000/api/career/technologies/${selectedTech?._id}`
-                : "http://localhost:5000/api/career/technologies";
+                ? `${API_BASE_URL}/api/career/technologies/${selectedTech?._id}`
+                : `${API_BASE_URL}/api/career/technologies`;
             const method = isEditing ? "PUT" : "POST";
 
             const res = await fetch(url, {
@@ -176,7 +177,7 @@ const ManageCareers = ({ onBack }: { onBack: () => void }) => {
     // Delete Mutation
     const deleteTechMutation = useMutation({
         mutationFn: async (id: string) => {
-            await fetch(`http://localhost:5000/api/career/technologies/${id}`, { method: "DELETE" });
+            await fetch(`${API_BASE_URL}/api/career/technologies/${id}`, { method: "DELETE" });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["admin-technologies"] });
@@ -425,7 +426,7 @@ const CheckEnquiries = ({ onBack }: { onBack: () => void }) => {
     const { data: enquiries, isLoading } = useQuery({
         queryKey: ["career-enquiries"],
         queryFn: async () => {
-            const res = await fetch("http://localhost:5000/api/career/enquiries");
+            const res = await fetch(`${API_BASE_URL}/api/career/enquiries`);
             return (await res.json()).data as Enquiry[];
         }
     });
