@@ -1018,7 +1018,17 @@ const AdminPanel = () => {
                             )}
                         </AnimatePresence>
                     </div>
-
+    {/* PASSWORDS SECTION - Only in main admin */}
+                    {!isSharedAdminMode && (
+                        <Button
+                            variant={activeTab === "passwords" ? "secondary" : "ghost"}
+                            className="w-full justify-start"
+                            onClick={() => setActiveTab("passwords")}
+                        >
+                            <Key className="w-4 h-4 mr-2" />
+                            Passwords
+                        </Button>
+                    )}
                     {/* ALL REQUESTS DROPDOWN */}
                     <div>
                         <Button
@@ -1156,17 +1166,7 @@ const AdminPanel = () => {
                         Career Guidance
                     </Button>
 
-                    {/* PASSWORDS SECTION - Only in main admin */}
-                    {!isSharedAdminMode && (
-                        <Button
-                            variant={activeTab === "passwords" ? "secondary" : "ghost"}
-                            className="w-full justify-start"
-                            onClick={() => setActiveTab("passwords")}
-                        >
-                            <Key className="w-4 h-4 mr-2" />
-                            Passwords
-                        </Button>
-                    )}
+                
 
                     {/* TECH POSTS DROPDOWN */}
                     <div>
