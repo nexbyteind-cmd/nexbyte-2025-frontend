@@ -859,7 +859,7 @@ const AdminPanel = () => {
                                 <Lock className="w-8 h-8 text-white" />
                             </div>
                             <CardTitle className="text-3xl font-bold">
-                                Welcome to <span className="text-blue-600">NextbyteInd</span>
+                                Welcome to <span className="text-blue-600">NexbyteInd</span>
                             </CardTitle>
                             <CardDescription className="text-base">
                                 Come create and develop something cool
