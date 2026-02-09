@@ -12,5 +12,12 @@ export const SECTION_PASSWORDS = {
     ads: "Ads#4Ky",
     webinars: "WebN@8Hs",
     career_guidance: "CrGd^6Lm",
-    tools: "ToolZ$3Qa"
+    tools: "ToolZ$3Qa",
+    // Tech Post Subcategories
+    tech_python: "PyTh@7Xm",
+    tech_oracle: "OrcL!9Db",
+    tech_mssql: "MsSq#5Lv",
+    tech_mysql: "MySq$8Rk",
+    tech_postgresql: "PgSq^6Wn",
+    tech_mongodb: "MonG@4Db"
 };

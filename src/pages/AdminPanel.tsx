@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Lock, User, LogOut, MessageSquare, Trophy, Plus, Save, ChevronDown, ChevronUp, ExternalLink, Download, Eye, EyeOff, Trash2, GraduationCap, Monitor, Briefcase, TrendingUp, Megaphone, Quote, Mail, RefreshCw, PenTool, ClipboardList, StickyNote, Code, Video, Map, Compass, Sparkles } from "lucide-react";
+import { Lock, User, LogOut, MessageSquare, Trophy, Plus, Save, ChevronDown, ChevronUp, ExternalLink, Download, Eye, EyeOff, Trash2, GraduationCap, Monitor, Briefcase, TrendingUp, Megaphone, Quote, Mail, RefreshCw, PenTool, ClipboardList, StickyNote, Code, Video, Map, Compass, Sparkles, Key, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 
@@ -75,7 +75,26 @@ const AdminPanel = () => {
     const handlePasswordSubmit = () => {
         if (pendingSection && passwordInput === SECTION_PASSWORDS[pendingSection as keyof typeof SECTION_PASSWORDS]) {
             setUnlockedSections(prev => new Set([...prev, pendingSection]));
-            setActiveTab(pendingSection);
+
+            // Handle tech subcategories - set the category and open tech-posts
+            if (pendingSection.startsWith('tech_')) {
+                const techCategoryMap: Record<string, string> = {
+                    'tech_python': 'Python',
+                    'tech_oracle': 'ORACLE DBA',
+                    'tech_mssql': 'SQL SERVER DBA',
+                    'tech_mysql': 'MY SQL',
+                    'tech_postgresql': 'POSTGRESS',
+                    'tech_mongodb': 'MongoDB'
+                };
+                const category = techCategoryMap[pendingSection];
+                if (category) {
+                    setTechPostCategory(category);
+                    setActiveTab('tech-posts');
+                    setIsTechPostsOpen(true); // Ensure dropdown is open
+                }
+            } else {
+                setActiveTab(pendingSection);
+            }
 
             // Fetch data immediately after unlocking
             fetchDataForSection(pendingSection);
@@ -1137,6 +1156,17 @@ const AdminPanel = () => {
                         Career Guidance
                     </Button>
 
+                    {/* PASSWORDS SECTION - Only in main admin */}
+                    {!isSharedAdminMode && (
+                        <Button
+                            variant={activeTab === "passwords" ? "secondary" : "ghost"}
+                            className="w-full justify-start"
+                            onClick={() => setActiveTab("passwords")}
+                        >
+                            <Key className="w-4 h-4 mr-2" />
+                            Passwords
+                        </Button>
+                    )}
 
                     {/* TECH POSTS DROPDOWN */}
                     <div>
@@ -1167,21 +1197,41 @@ const AdminPanel = () => {
                                         { label: "MySQL", value: "MY SQL" },
                                         { label: "PostgreSQL", value: "POSTGRESS" },
                                         { label: "MongoDB", value: "MongoDB" }
-                                    ].map((cat) => (
-                                        <Button
-                                            key={cat.value}
-                                            variant={activeTab === "tech-posts" && techPostCategory === cat.value ? "secondary" : "ghost"}
-                                            size="sm"
-                                            className="w-full justify-start h-8"
-                                            onClick={() => {
-                                                setActiveTab("tech-posts");
-                                                setTechPostCategory(cat.value);
-                                            }}
-                                        >
-                                            <Code className="w-3 h-3 mr-2" />
-                                            {cat.label}
-                                        </Button>
-                                    ))}
+                                    ].map((cat) => {
+                                        // Map category values to section names for password protection
+                                        const sectionMap: Record<string, string> = {
+                                            "Python": "tech_python",
+                                            "ORACLE DBA": "tech_oracle",
+                                            "SQL SERVER DBA": "tech_mssql",
+                                            "MY SQL": "tech_mysql",
+                                            "POSTGRESS": "tech_postgresql",
+                                            "MongoDB": "tech_mongodb"
+                                        };
+                                        const sectionName = sectionMap[cat.value];
+
+                                        return (
+                                            <Button
+                                                key={cat.value}
+                                                variant={activeTab === "tech-posts" && techPostCategory === cat.value ? "secondary" : "ghost"}
+                                                size="sm"
+                                                className="w-full justify-start h-8"
+                                                onClick={() => {
+                                                    if (isSharedAdminMode && sectionName) {
+                                                        // Check if section is unlocked
+                                                        if (!unlockedSections.has(sectionName)) {
+                                                            setPendingSection(sectionName);
+                                                            return;
+                                                        }
+                                                    }
+                                                    setActiveTab("tech-posts");
+                                                    setTechPostCategory(cat.value);
+                                                }}
+                                            >
+                                                <Code className="w-3 h-3 mr-2" />
+                                                {cat.label}
+                                            </Button>
+                                        );
+                                    })}
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -1197,7 +1247,7 @@ const AdminPanel = () => {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col h-screen overflow-hidden">
+            <div className="flex-1 flex flex-col">
                 <header className="p-6 border-b flex items-center justify-between bg-card/50 backdrop-blur">
                     <div>
                         <h1 className="font-semibold text-lg capitalize">
@@ -1308,7 +1358,7 @@ const AdminPanel = () => {
                                     </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <TechPostManager fixedCategory={techPostCategory} />
+                                    <TechPostManager fixedCategory={techPostCategory} showControls={!isSharedAdminMode} />
                                 </CardContent>
                             </Card>
                         </TabsContent>
@@ -1422,6 +1472,48 @@ const AdminPanel = () => {
                         {/* CAREER GUIDANCE TAB */}
                         <TabsContent value="career_guidance" className="mt-0">
                             <CareerGuidanceAdmin showControls={!isSharedAdminMode} />
+                        </TabsContent>
+
+                        {/* PASSWORDS SECTION - Only in main admin */}
+                        <TabsContent value="passwords" className="mt-0">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Section Passwords</CardTitle>
+                                    <CardDescription>
+                                        All passwords for shared-admin sections. Click to copy.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        {Object.entries(SECTION_PASSWORDS).map(([section, password]) => {
+                                            // Format section name for display
+                                            const displayName = section
+                                                .replace(/_/g, ' ')
+                                                .replace(/-/g, ' ')
+                                                .split(' ')
+                                                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                                .join(' ');
+
+                                            return (
+                                                <div
+                                                    key={section}
+                                                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group"
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(password);
+                                                        toast.success(`Copied password for ${displayName}`);
+                                                    }}
+                                                >
+                                                    <div className="flex-1">
+                                                        <div className="font-medium text-sm">{displayName}</div>
+                                                        <div className="text-xs text-gray-500 font-mono mt-1">{password}</div>
+                                                    </div>
+                                                    <Copy className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </TabsContent>
 
                     </Tabs>
