@@ -17,7 +17,7 @@ import { Plus, X, Tag, Pencil } from "lucide-react";
 const IK_PUBLIC_KEY = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY;
 const IK_URL_ENDPOINT = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
 
-const SocialPostManager = () => {
+const SocialPostManager = ({ showControls = true }: { showControls?: boolean }) => {
     const authenticator = async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/api/imagekit-auth`);
@@ -343,9 +343,11 @@ const SocialPostManager = () => {
                                         <div key={cat._id} className={`text-xs bg-white border px-2 py-1 rounded flex items-center gap-2 group ${cat.isHidden ? 'opacity-60 border-dashed border-gray-400' : ''}`}>
                                             {cat.name}
                                             <div className="flex gap-1 items-center ml-2 border-l pl-2 border-gray-200">
-                                                <button onClick={() => toggleCategoryVisibility(cat._id, cat.isHidden)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded" title={cat.isHidden ? "Unhide Category" : "Hide Category"}>
-                                                    {cat.isHidden ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                                </button>
+                                                {showControls && (
+                                                    <button onClick={() => toggleCategoryVisibility(cat._id, cat.isHidden)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded" title={cat.isHidden ? "Unhide Category" : "Hide Category"}>
+                                                        {cat.isHidden ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                                    </button>
+                                                )}
                                                 <button onClick={() => handleDeleteCategory(cat._id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded" title="Delete Category">
                                                     <X className="w-5 h-5" />
                                                 </button>
@@ -573,15 +575,17 @@ const SocialPostManager = () => {
                                         {/* Action Buttons Row */}
                                         <div className="grid grid-cols-4 gap-1">
                                             {/* Toggle HIDE */}
-                                            <Button
-                                                variant="outline"
-                                                size="icon"
-                                                className="h-7 w-full"
-                                                title={post.isHidden ? "Show Post" : "Hide Post"}
-                                                onClick={() => toggleVisibility(post._id, post.isHidden)}
-                                            >
-                                                {post.isHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                                            </Button>
+                                            {showControls && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    className="h-7 w-full"
+                                                    title={post.isHidden ? "Show Post" : "Hide Post"}
+                                                    onClick={() => toggleVisibility(post._id, post.isHidden)}
+                                                >
+                                                    {post.isHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                                                </Button>
+                                            )}
 
                                             {/* Toggle Comments */}
                                             <Button

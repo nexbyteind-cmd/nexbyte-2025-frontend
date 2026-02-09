@@ -53,6 +53,7 @@ const App = () => (
           <Route path="/ads-listing" element={<AdsListing />} /> {/* NEW */}
           <Route path="/ads-page/:slug" element={<AdDetail />} /> {/* NEW */}
           <Route path="/admin-panel" element={<AdminPanel />} /> {/* Add Admin Route */}
+          <Route path="/shared-admin" element={<AdminPanel />} /> {/* Shared Admin Route */}
           <Route path="/services" element={<Services />} />
           <Route path="/services/marketing" element={<Marketing />} />
           <Route path="/services/technology" element={<Technology />} />

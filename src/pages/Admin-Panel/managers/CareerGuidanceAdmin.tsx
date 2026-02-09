@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Plus, Trash2, ChevronRight, ArrowLeft, Save, Eye, EyeOff } from "lucide-react";
+import { Loader2, Plus, Trash2, ChevronRight, ArrowLeft, Save, Eye, EyeOff, ChevronUp, ChevronDown } from "lucide-react";
 import * as XLSX from "xlsx";
 
 // --- TYPES ---
@@ -70,7 +70,12 @@ interface Enquiry {
     submittedAt: string;
 }
 
-const CareerGuidanceAdmin = () => {
+interface CareerGuidanceAdminProps {
+    onBack?: () => void;
+    showControls?: boolean;
+}
+
+const CareerGuidanceAdmin = ({ onBack = () => { }, showControls = true }: CareerGuidanceAdminProps) => {
     const [view, setView] = useState<"home" | "add-careers" | "check-enquiries">("home");
 
     return (
@@ -98,14 +103,14 @@ const CareerGuidanceAdmin = () => {
                 </div>
             )}
 
-            {view === "add-careers" && <ManageCareers onBack={() => setView("home")} />}
+            {view === "add-careers" && <ManageCareers onBack={() => setView("home")} showControls={showControls} />}
             {view === "check-enquiries" && <CheckEnquiries onBack={() => setView("home")} />}
         </div>
     );
 };
 
 // --- SUB-COMPONENT: Manage Careers ---
-const ManageCareers = ({ onBack }: { onBack: () => void }) => {
+const ManageCareers = ({ onBack, showControls = true }: { onBack: () => void; showControls?: boolean }) => {
     const { toast } = useToast();
     const queryClient = useQueryClient();
     const [selectedTech, setSelectedTech] = useState<Technology | null>(null);
@@ -174,7 +179,13 @@ const ManageCareers = ({ onBack }: { onBack: () => void }) => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["admin-technologies"] });
             toast({ title: "Success", description: "Career page saved successfully." });
-            if (!isEditing) handleCreateNew();
+            if (!isEditing) {
+                handleCreateNew();
+            } else {
+                // If editing, force UI to show it as hidden (since backend enforces it)
+                setFormData(prev => ({ ...prev, isVisible: false }));
+                if (selectedTech) setSelectedTech({ ...selectedTech, isVisible: false }); // Update selectedTech too
+            }
         }
     });
 
@@ -187,6 +198,29 @@ const ManageCareers = ({ onBack }: { onBack: () => void }) => {
             queryClient.invalidateQueries({ queryKey: ["admin-technologies"] });
             toast({ title: "Deleted", description: "Career page deleted." });
             handleCreateNew();
+        }
+    });
+
+    // Toggle Visibility Mutation (Independent trigger)
+    const toggleVisibilityMutation = useMutation({
+        mutationFn: async ({ id, isVisible }: { id: string, isVisible: boolean }) => {
+            const res = await fetch(`${API_BASE_URL}/api/career/technologies/${id}/visibility`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ isVisible })
+            });
+            if (!res.ok) throw new Error("Failed to update visibility");
+            return res.json();
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["admin-technologies"] });
+            toast({ title: "Updated", description: variables.isVisible ? "Page is now Visible" : "Page is now Hidden" });
+            // Update local state to match
+            setFormData(prev => ({ ...prev, isVisible: variables.isVisible }));
+            if (selectedTech) setSelectedTech({ ...selectedTech, isVisible: variables.isVisible });
+        },
+        onError: () => {
+            toast({ title: "Error", description: "Failed to update visibility", variant: "destructive" });
         }
     });
 
@@ -214,18 +248,59 @@ const ManageCareers = ({ onBack }: { onBack: () => void }) => {
         }));
     };
 
+    // Handle Reorder
+    const handleReorder = async (tech: Technology, direction: 'up' | 'down') => {
+        if (!technologies) return;
+
+        const currentIndex = technologies.findIndex(t => t._id === tech._id);
+        if (currentIndex === -1) return;
+
+        // Calculate swap index
+        const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+
+        // Prevent moving beyond bounds
+        if (swapIndex < 0 || swapIndex >= technologies.length) return;
+
+        // Create a copy and swap items
+        const items = [...technologies];
+        const itemToMove = items[currentIndex];
+        items.splice(currentIndex, 1);
+        items.splice(swapIndex, 0, itemToMove);
+
+        // Reassign orders based on new positions
+        const updatedItems = items.map((tech, idx) => ({ _id: tech._id, order: idx }));
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/career/technologies/reorder`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ technologies: updatedItems })
+            });
+
+            if (!res.ok) throw new Error('Failed to reorder');
+
+            // Refresh data from server
+            queryClient.invalidateQueries({ queryKey: ["admin-technologies"] });
+            toast({ title: "Success", description: "Order updated successfully" });
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to update order", variant: "destructive" });
+        }
+    };
+
     const VisibilityToggle = ({ section, label }: { section: keyof SectionVisibility, label: string }) => (
         <div className="flex items-center gap-2">
             <span className="font-semibold text-lg">{label}</span>
-            <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleVisibility(section)}
-                className={formData.sectionVisibility?.[section] !== false ? "text-green-600 hover:text-green-700" : "text-neutral-400 hover:text-neutral-500"}
-                title={formData.sectionVisibility?.[section] !== false ? "Visible" : "Hidden"}
-            >
-                {formData.sectionVisibility?.[section] !== false ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-            </Button>
+            {showControls && (
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleVisibility(section)}
+                    className={formData.sectionVisibility?.[section] !== false ? "text-green-600 hover:text-green-700" : "text-neutral-400 hover:text-neutral-500"}
+                    title={formData.sectionVisibility?.[section] !== false ? "Visible" : "Hidden"}
+                >
+                    {formData.sectionVisibility?.[section] !== false ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                </Button>
+            )}
         </div>
     );
 
@@ -241,13 +316,47 @@ const ManageCareers = ({ onBack }: { onBack: () => void }) => {
                     <Button size="icon" className="h-6 w-6" onClick={handleCreateNew}><Plus className="w-3 h-3" /></Button>
                 </div>
                 <div className="space-y-1 overflow-y-auto flex-1">
-                    {technologies?.map(tech => (
+                    {technologies?.map((tech, index) => (
                         <div key={tech._id}
-                            className={`p-2 rounded-md border cursor-pointer hover:bg-neutral-50 flex justify-between items-center text-xs ${selectedTech?._id === tech._id ? 'bg-blue-50 border-blue-500' : 'border-neutral-200'}`}
-                            onClick={() => handleSelectTech(tech)}
+                            className={`p-2 rounded-md border hover:bg-neutral-50 text-xs ${selectedTech?._id === tech._id ? 'bg-blue-50 border-blue-500' : 'border-neutral-200'
+                                }`}
                         >
-                            <span className="font-medium truncate">{tech.name}</span>
-                            {selectedTech?._id === tech._id && <ChevronRight className="w-3 h-3 text-blue-500" />}
+                            <div className="flex items-center justify-between gap-1">
+                                <span
+                                    className="font-medium truncate cursor-pointer flex-1"
+                                    onClick={() => handleSelectTech(tech)}
+                                >
+                                    {tech.name}
+                                </span>
+                                <div className="flex gap-0.5 shrink-0">
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-5 w-5 hover:bg-blue-100"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleReorder(tech, 'up');
+                                        }}
+                                        disabled={index === 0}
+                                        title="Move up"
+                                    >
+                                        <ChevronUp className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-5 w-5 hover:bg-blue-100"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleReorder(tech, 'down');
+                                        }}
+                                        disabled={index === technologies.length - 1}
+                                        title="Move down"
+                                    >
+                                        <ChevronDown className="w-3 h-3" />
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -259,15 +368,16 @@ const ManageCareers = ({ onBack }: { onBack: () => void }) => {
                     <h2 className="text-2xl font-bold">{isEditing ? `Edit: ${formData.name}` : "Create New Page"}</h2>
                     <div className="flex gap-2 items-center">
                         {/* Toggle Visibility - Only show when Editing */}
-                        {isEditing && (
+                        {isEditing && showControls && (
                             <Button
                                 variant="outline"
                                 size="sm" /* Changed to sm for text fit */
-                                onClick={() => setFormData({ ...formData, isVisible: !formData.isVisible })}
+                                onClick={() => toggleVisibilityMutation.mutate({ id: selectedTech!._id, isVisible: !formData.isVisible })}
+                                disabled={toggleVisibilityMutation.isPending}
                                 className={formData.isVisible ? "text-green-600 border-green-200 bg-green-50 flex gap-2 items-center" : "text-neutral-400 flex gap-2 items-center"}
                                 title={formData.isVisible ? "Visible to Public" : "Hidden (Draft)"}
                             >
-                                {formData.isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                                {toggleVisibilityMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (formData.isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />)}
                                 <span className="text-sm font-medium">{formData.isVisible ? "Visible" : "Hidden"}</span>
                             </Button>
                         )}

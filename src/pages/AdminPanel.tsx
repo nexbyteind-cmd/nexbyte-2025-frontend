@@ -20,14 +20,22 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
-import SocialPostManager from "@/components/SocialPostManager";
-import AIPostManager from '@/components/AIPostManager'; // NEW
-import NewsAdminPanel from './NewsAdminPanel';
-import NotesTool from '@/components/NotesTool';
-import TodoTool from '@/components/TodoTool';
-import TechPostManager from "@/components/TechPostManager";
-import WebinarManager from "@/components/WebinarManager"; // NEW
-import CareerGuidanceAdmin from "@/components/CareerGuidanceAdmin"; // NEW
+import SocialPostManager from "@/pages/Admin-Panel/managers/SocialPostManager";
+import AIPostManager from "@/pages/Admin-Panel/managers/AIPostManager";
+import NewsAdminPanel from "@/pages/Admin-Panel/managers/NewsAdminPanel";
+import NotesTool from "@/pages/Admin-Panel/managers/NotesTool";
+import TodoTool from "@/pages/Admin-Panel/managers/TodoTool";
+import TechPostManager from "@/pages/Admin-Panel/managers/TechPostManager";
+import WebinarManager from "@/pages/Admin-Panel/managers/WebinarManager";
+import CareerGuidanceAdmin from "@/pages/Admin-Panel/managers/CareerGuidanceAdmin";
+import ContactsSection from "./Admin-Panel/components/ContactsSection";
+import HackathonsSection from "./Admin-Panel/components/HackathonsSection";
+import ProgramsSection from "./Admin-Panel/components/ProgramsSection";
+import TechApplicationsSection from "./Admin-Panel/components/TechApplicationsSection";
+import MarketingApplicationsSection from "./Admin-Panel/components/MarketingApplicationsSection";
+import StaffingApplicationsSection from "./Admin-Panel/components/StaffingApplicationsSection";
+import ExclusiveDataSection from "./Admin-Panel/components/ExclusiveDataSection";
+import TestimonialsSection from "./Admin-Panel/components/TestimonialsSection";
 import {
     Accordion,
     AccordionContent,
@@ -38,12 +46,47 @@ import {
 
 
 
+import { useLocation } from "react-router-dom";
+import { SECTION_PASSWORDS } from "./Admin-Panel/passwords";
+
 const AdminPanel = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const location = useLocation();
+    const isSharedAdminMode = location.pathname === '/shared-admin';
+    const [isAuthenticated, setIsAuthenticated] = useState(isSharedAdminMode ? true : false);
     const [password, setPassword] = useState("");
-    const [activeTab, setActiveTab] = useState("exclusive_data"); // Default to new tab to see it immediately
+    const [activeTab, setActiveTab] = useState(isSharedAdminMode ? "" : "exclusive_data"); // Empty in shared mode to force password
     const [isToolsOpen, setIsToolsOpen] = useState(false);
     const [isAllRequestsOpen, setIsAllRequestsOpen] = useState(false);
+
+    // Shared Admin Password Protection
+    const [unlockedSections, setUnlockedSections] = useState<Set<string>>(new Set());
+    const [pendingSection, setPendingSection] = useState<string | null>(null);
+    const [passwordInput, setPasswordInput] = useState("");
+
+    const handleTabChange = (newTab: string) => {
+        if (isSharedAdminMode && !unlockedSections.has(newTab)) {
+            setPendingSection(newTab);
+            return;
+        }
+        setActiveTab(newTab);
+    };
+
+    const handlePasswordSubmit = () => {
+        if (pendingSection && passwordInput === SECTION_PASSWORDS[pendingSection as keyof typeof SECTION_PASSWORDS]) {
+            setUnlockedSections(prev => new Set([...prev, pendingSection]));
+            setActiveTab(pendingSection);
+
+            // Fetch data immediately after unlocking
+            fetchDataForSection(pendingSection);
+
+            setPendingSection(null);
+            setPasswordInput("");
+            toast.success("Section unlocked");
+        } else {
+            toast.error("Incorrect password");
+            setPasswordInput("");
+        }
+    };
 
     // Exclusive Data State
     const [exclusiveData, setExclusiveData] = useState<any[]>([]);
@@ -144,80 +187,7 @@ const AdminPanel = () => {
         rounds: [] as { name: string, startDate: string, endDate: string }[]
     });
 
-    // --- Trainings State ---
-    const [trainings, setTrainings] = useState<any[]>([]);
-    const [trainingApplications, setTrainingApplications] = useState<any[]>([]);
-    const [editingTrainingId, setEditingTrainingId] = useState<string | null>(null);
-    const [newTraining, setNewTraining] = useState({
-        name: "",
-        category: "Full Stack Software Development",
-        topics: "", // Comma separated
-        duration: "",
-        mode: "Online",
-        description: "",
-        syllabusLink: "",
-        status: "Active",
-        formFields: [] as { label: string, type: string, required: boolean, options: string, isHidden?: boolean }[],
-        startDate: "",
-        endDate: "",
-        applyBy: "",
-        timing: "", // NEW
-        note: "",   // NEW
-        emailSubject: "", // NEW
-        emailBody: "",    // NEW
-        emailLinks: [] as { label: string, url: string, isButton: boolean }[], // NEW
-        hiddenFields: [] as string[], // NEW: For visibility toggles
-        communityLink: "" // NEW
-    });
 
-    // Helper functions for Email Links in Training
-    const addTrainingEmailLink = () => {
-        setNewTraining({
-            ...newTraining,
-            emailLinks: [...(newTraining.emailLinks || []), { label: "", url: "", isButton: false }]
-        });
-    };
-
-    const removeTrainingEmailLink = (index: number) => {
-        const updated = [...(newTraining.emailLinks || [])];
-        updated.splice(index, 1);
-        setNewTraining({ ...newTraining, emailLinks: updated });
-    };
-
-    const updateTrainingEmailLink = (index: number, field: string, value: any) => {
-        const updated = [...(newTraining.emailLinks || [])];
-        updated[index] = { ...updated[index], [field]: value };
-        setNewTraining({ ...newTraining, emailLinks: updated });
-    };
-
-    // Helper to add a new custom field to the training form
-    const addFormField = () => {
-        setNewTraining({
-            ...newTraining,
-            formFields: [...(newTraining.formFields || []), { label: "", type: "text", required: false, options: "" }]
-        });
-    };
-
-    // Helper to remove a field
-    const removeFormField = (index: number) => {
-        const updated = [...(newTraining.formFields || [])];
-        updated.splice(index, 1);
-        setNewTraining({ ...newTraining, formFields: updated });
-    };
-
-    // Helper to update a field
-    const updateFormField = (index: number, field: string, value: any) => {
-        const updated = [...(newTraining.formFields || [])];
-        updated[index] = { ...updated[index], [field]: value };
-        setNewTraining({ ...newTraining, formFields: updated });
-    };
-
-    // Training Filter State
-    const [trainingTopicFilter, setTrainingTopicFilter] = useState("All");
-
-    // --- NEW: Training Application Filters ---
-    const [trainingAppCategory, setTrainingAppCategory] = useState("All");
-    const [trainingAppName, setTrainingAppName] = useState("All");
 
     // --- NEW: Email Modal State ---
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -316,11 +286,11 @@ const AdminPanel = () => {
         }
     };
 
-    const ADMIN_PASSWORD = "652487";
+    const VALID_PASSWORDS = ["652487", "1112473"];
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
-        if (password === ADMIN_PASSWORD) {
+        if (VALID_PASSWORDS.includes(password)) {
             setIsAuthenticated(true);
             toast.success("Login successful");
             fetchContacts();
@@ -838,192 +808,41 @@ const AdminPanel = () => {
     };
 
     // --- Trainings Handlers ---
-    const fetchTrainings = async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/trainings`);
-            const data = await response.json();
-            if (data.success) setTrainings(data.data);
-        } catch (error) { console.error("Error fetching trainings"); }
-    };
 
-    const fetchTrainingApplications = async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/training-applications`);
-            const data = await response.json();
-            if (data.success) setTrainingApplications(data.data);
-        } catch (error) { console.error("Error fetching training applications"); }
-    };
-
-    const handleDownloadTrainingApplicationsCSV = () => {
-        // Filter based on current selection
-        let dataToExport = trainingApplications;
-
-        if (trainingAppName !== "All") {
-            dataToExport = dataToExport.filter(app => app.trainingName === trainingAppName);
-        } else if (trainingAppCategory !== "All") {
-            // Find all trainings in this category
-            const trainingNamesInCategory = trainings
-                .filter(t => t.category === trainingAppCategory)
-                .map(t => t.name);
-            dataToExport = dataToExport.filter(app => trainingNamesInCategory.includes(app.trainingName));
-        }
-
-        if (dataToExport.length === 0) return toast.error("No data to download");
-
-        if (dataToExport.length === 0) return toast.error("No data to download");
-
-        // Collect all dynamic keys from the dataset
-        const allDynamicKeys = Array.from(new Set(dataToExport.flatMap(app => Object.keys(app.dynamicData || {}))));
-
-        const headers = ["Date", "Name", "Training", "Email", "Phone", "LinkedIn", "Status", ...allDynamicKeys];
-
-        const rows = dataToExport.map(app => {
-            const baseValues = [
-                new Date(app.submittedAt).toLocaleDateString(),
-                app.name,
-                app.trainingName,
-                app.email,
-                app.phone || (app.dynamicData && (app.dynamicData["Phone Number"] || app.dynamicData["Contact"] || "")), // Fallback to dynamic data
-                app.linkedinProfile || (app.dynamicData && app.dynamicData["Linkdin Profile"]) || "",
-                app.status
-            ];
-
-            // Add dynamic data values matching the headers
-            const dynamicValues = allDynamicKeys.map(key => {
-                // Check both direct dynamicData and flattened structure if needed
-                return (app.dynamicData && app.dynamicData[key]) || "";
-            });
-
-            return [...baseValues, ...dynamicValues].map(f => `"${f || ''}"`).join(",");
-        });
-
-        const csv = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
-        const encodedUri = encodeURI(csv);
-        const link = document.createElement("a");
-        link.href = encodedUri;
-        link.download = `training_applications_${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
-    };
-
-    const handleCreateTraining = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            const payload = {
-                ...newTraining,
-                topics: newTraining.topics.split(',').map(t => t.trim()),
-                // Map formFields if select types need options parsed
-                formFields: (newTraining.formFields || []).map(f => ({
-                    ...f,
-                    options: f.type === 'select' && typeof f.options === 'string' ? f.options.split(',').map(o => o.trim()) : f.options
-                }))
-            };
-            const isEditing = editingTrainingId !== null;
-            const url = isEditing ? `${API_BASE_URL}/api/trainings/${editingTrainingId}` : `${API_BASE_URL}/api/trainings`;
-            const method = isEditing ? "PUT" : "POST";
-
-            const response = await fetch(url, {
-                method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
-            });
-            const data = await response.json();
-            if (data.success) {
-                toast.success(isEditing ? "Training Updated" : "Training Created");
-                fetchTrainings();
-                setEditingTrainingId(null);
-                setNewTraining({ name: "", category: "Full Stack Software Development", topics: "", duration: "", mode: "Online", description: "", syllabusLink: "", status: "Active", formFields: [], startDate: "", endDate: "", applyBy: "", timing: "", note: "", emailSubject: "", emailBody: "", emailLinks: [], hiddenFields: [], communityLink: "" });
-            } else { toast.error("Operation failed"); }
-        } catch (error) { toast.error("Error saving training"); }
-    };
-
-    const handleDeleteTraining = async (id: string) => {
-        if (!confirm("Delete training?")) return;
-        try {
-            await fetch(`${API_BASE_URL}/api/trainings/${id}`, { method: "DELETE" });
-            fetchTrainings();
-            toast.success("Training Deleted");
-        } catch (e) { toast.error("Error deleting"); }
-    };
-
-    // NEW: Handle Training CSV Download
-    const handleToggleTrainingVisibility = async (id: string, currentStatus: boolean, name: string) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/trainings/${id}/visibility`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ isHidden: !currentStatus })
-            });
-            const data = await response.json();
-            if (data.success) {
-                toast.success(currentStatus ? `${name} Now Visible` : `${name} Hidden`);
-                fetchTrainings();
-            } else {
-                toast.error("Failed to update visibility");
-            }
-        } catch (error) {
-            toast.error("Error updating visibility");
-        }
-    };
-
-    const handleDownloadTrainingCSV = (trainingName: string) => {
-        // Filter applications for this training
-        const relevantApps = trainingApplications.filter(app => app.trainingName === trainingName);
-
-        if (relevantApps.length === 0) return toast.error("No applications found for this training.");
-
-        const headers = ["Date", "Applicant Name", "Email", "Status", "Custom Fields"];
-
-        const rows = relevantApps.map(app => {
-            const date = new Date(app.submittedAt).toLocaleDateString();
-            // Flatten dynamic data for viewing
-            const dynamicDetails = app.dynamicData ? JSON.stringify(app.dynamicData).replace(/"/g, "'") : "";
-
-            return [
-                date,
-                app.applicantName,
-                app.email,
-                app.status,
-                dynamicDetails
-            ].map(f => `"${f || ''}"`).join(",");
-        });
-
-        const csv = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
-        const encodedUri = encodeURI(csv);
-        const link = document.createElement("a");
-        link.href = encodedUri;
-        link.download = `training_${trainingName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
-    };
 
     // Trigger data fetch on tab change
-    const onTabChange = (value: string) => {
-        setActiveTab(value);
-        if (value === 'contacts') fetchContacts();
-        if (value === 'hackathons') {
+    // Centralized data fetching function for all sections
+    const fetchDataForSection = (section: string) => {
+        if (section === 'contacts') fetchContacts();
+        if (section === 'hackathons') {
             fetchHackathons();
             fetchApplications();
         }
-        if (value === 'programs') {
+        if (section === 'programs') {
             fetchPrograms();
             fetchProgramApplications();
         }
-        if (value === 'tech_apps') {
+        if (section === 'tech_apps') {
             fetchTechApplications();
         }
-        if (value === 'staffing') {
+        if (section === 'staffing') {
             fetchStaffingApplications();
         }
-        if (value === 'marketing') {
+        if (section === 'marketing') {
             fetchMarketingApplications();
         }
-        if (value === 'content') {
+        if (section === 'content') {
             fetchTestimonials();
         }
-        if (value === 'trainings') {
-            fetchTrainings();
-            fetchTrainingApplications(); // FIX: Fetch applications to show count
-        }
-        if (value === 'training_apps') {
-            fetchTrainings(); // FIX: Ensure trainings are loaded for the dropdown filter
-            fetchTrainingApplications();
+    };
+
+    const onTabChange = (value: string) => {
+        // First check password protection
+        handleTabChange(value);
+
+        // Only fetch data if password check passed (not in shared mode or section is unlocked)
+        if (!isSharedAdminMode || unlockedSections.has(value)) {
+            fetchDataForSection(value);
         }
     };
 
@@ -1104,7 +923,7 @@ const AdminPanel = () => {
                                         variant={activeTab === "notes" ? "secondary" : "ghost"}
                                         size="sm"
                                         className="w-full justify-start h-8"
-                                        onClick={() => setActiveTab("notes")}
+                                        onClick={() => handleTabChange("notes")}
                                     >
                                         <StickyNote className="w-3 h-3 mr-2" />
                                         Notes
@@ -1113,7 +932,7 @@ const AdminPanel = () => {
                                         variant={activeTab === "todo" ? "secondary" : "ghost"}
                                         size="sm"
                                         className="w-full justify-start h-8"
-                                        onClick={() => setActiveTab("todo")}
+                                        onClick={() => handleTabChange("todo")}
                                     >
                                         <ClipboardList className="w-3 h-3 mr-2" />
                                         Todo
@@ -1181,15 +1000,6 @@ const AdminPanel = () => {
                                         <Megaphone className="w-3 h-3 mr-2" />
                                         Marketing
                                     </Button>
-                                    <Button
-                                        variant={activeTab === "training_apps" ? "secondary" : "ghost"}
-                                        size="sm"
-                                        className="w-full justify-start h-8"
-                                        onClick={() => onTabChange("training_apps")}
-                                    >
-                                        <User className="w-3 h-3 mr-2" />
-                                        Training Apps
-                                    </Button>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -1218,9 +1028,6 @@ const AdminPanel = () => {
                     >
                         <GraduationCap className="w-4 h-4 mr-2" />
                         Programs
-                    </Button>
-                    <Button variant={activeTab === "trainings" ? "secondary" : "ghost"} className="w-full justify-start" onClick={() => onTabChange("trainings")}>
-                        <GraduationCap className="w-4 h-4 mr-2" /> Trainings
                     </Button>
 
                     <Button
@@ -1333,8 +1140,17 @@ const AdminPanel = () => {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
-                <header className="border-b border-border h-16 flex items-center justify-between px-6 bg-card/50 backdrop-blur">
-                    <h1 className="font-semibold text-lg capitalize">{activeTab}</h1>
+                <header className="p-6 border-b flex items-center justify-between bg-card/50 backdrop-blur">
+                    <div>
+                        <h1 className="font-semibold text-lg capitalize">
+                            {activeTab ? activeTab.replace(/_/g, ' ') : (isSharedAdminMode ? 'Select a Section' : 'Dashboard')}
+                        </h1>
+                        {isSharedAdminMode && (
+                            <div className="mt-1 px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full inline-block font-medium">
+                                Intern View
+                            </div>
+                        )}
+                    </div>
                     <div className="flex items-center gap-4">
                         <span className="text-sm text-muted-foreground">Admin User</span>
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -1344,7 +1160,26 @@ const AdminPanel = () => {
                 </header>
 
                 <main className="flex-1 overflow-auto p-6">
-                    <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+                    <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+
+                        {/* WELCOME SCREEN FOR SHARED ADMIN */}
+                        {isSharedAdminMode && activeTab === "" && (
+                            <div className="flex items-center justify-center h-full">
+                                <Card className="max-w-md">
+                                    <CardHeader>
+                                        <CardTitle className="text-center">Welcome to Intern View</CardTitle>
+                                        <CardDescription className="text-center">
+                                            Select a section from the sidebar to get started. You'll need to enter a password to access each section.
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-sm text-muted-foreground text-center">
+                                            Click on any section in the left sidebar to begin.
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        )}
 
                         {/* NOTES TAB */}
                         <TabsContent value="notes" className="mt-0">
@@ -1358,109 +1193,17 @@ const AdminPanel = () => {
 
                         {/* CONTACTS TAB */}
                         <TabsContent value="contacts" className="mt-0">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Contact Inquiries</CardTitle>
-                                    <CardDescription>
-                                        Manage messages from the contact form.
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    {contacts.length === 0 ? (
-                                        <div className="text-center py-8 text-black">No contacts yet.</div>
-                                    ) : (
-                                        <div className="overflow-x-auto">
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Date</TableHead>
-                                                        <TableHead>Name</TableHead>
-                                                        <TableHead>Email</TableHead>
-                                                        <TableHead>Subject</TableHead>
-                                                        <TableHead>Message</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {contacts.map((contact) => (
-                                                        <TableRow key={contact._id}>
-                                                            <TableCell>{new Date(contact.submittedAt).toLocaleDateString()}</TableCell>
-                                                            <TableCell className="font-medium">{contact.firstName} {contact.lastName}</TableCell>
-                                                            <TableCell>{contact.email}</TableCell>
-                                                            <TableCell>{contact.subject}</TableCell>
-                                                            <TableCell className="max-w-xs truncate" title={contact.message}>{contact.message}</TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
+                            <ContactsSection contacts={contacts} showControls={!isSharedAdminMode} />
                         </TabsContent>
 
                         {/* EXCLUSIVE DATA TAB (Google Reviews Marketing) */}
                         <TabsContent value="exclusive_data" className="mt-0">
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between">
-                                    <CardTitle>Exclusive Data (Google Reviews Leads)</CardTitle>
-                                    <div className="flex gap-2">
-                                        <Button variant="outline" size="sm" onClick={handleDownloadExclusiveCSV} className="text-green-600 border-green-200">
-                                            <Download className="w-4 h-4 mr-2" />
-                                            Download CSV
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={fetchExclusiveData}>
-                                            <RefreshCw className="w-4 h-4 mr-2" />
-                                            Refresh
-                                        </Button>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    {exclusiveData.length === 0 ? (
-                                        <div className="text-center py-8 text-muted-foreground">No data found.</div>
-                                    ) : (
-                                        <div className="overflow-x-auto">
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Date</TableHead>
-                                                        <TableHead>Full Name</TableHead>
-                                                        <TableHead>WhatsApp</TableHead>
-                                                        <TableHead>Business Name</TableHead>
-                                                        <TableHead>Location</TableHead>
-                                                        <TableHead>Start Date</TableHead>
-                                                        <TableHead>Maps Link</TableHead>
-                                                        <TableHead>Actions</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {exclusiveData.map((item) => (
-                                                        <TableRow key={item._id}>
-                                                            <TableCell>{new Date(item.submittedAt).toLocaleDateString()}</TableCell>
-                                                            <TableCell className="font-medium">{item.fullName}</TableCell>
-                                                            <TableCell>{item.whatsappNumber}</TableCell>
-                                                            <TableCell>{item.businessName}</TableCell>
-                                                            <TableCell>{item.location}</TableCell>
-                                                            <TableCell>{item.startDate}</TableCell>
-                                                            <TableCell>
-                                                                <a href={item.mapsLink} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline flex items-center gap-1">
-                                                                    View <ExternalLink className="w-3 h-3" />
-                                                                </a>
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <div className="flex gap-2">
-                                                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteRecord('exclusive-data', item._id, fetchExclusiveData)}>
-                                                                        <Trash2 className="w-4 h-4 text-red-500" />
-                                                                    </Button>
-                                                                </div>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
+                            <ExclusiveDataSection
+                                exclusiveData={exclusiveData}
+                                fetchExclusiveData={fetchExclusiveData}
+                                handleDeleteRecord={handleDeleteRecord}
+                                showControls={!isSharedAdminMode}
+                            />
                         </TabsContent>
 
                         {/* CAREER GUIDANCE TAB */}
@@ -1470,378 +1213,26 @@ const AdminPanel = () => {
 
                         {/* HACKATHONS TAB */}
                         <TabsContent value="hackathons" className="mt-0">
-                            <div className="grid lg:grid-cols-2 gap-6">
-                                {/* Create Hackathon Form */}
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>{editingHackathonId ? "Edit Hackathon" : "Create New Hackathon"}</CardTitle>
-                                        <CardDescription>
-                                            {editingHackathonId ? "Update the hackathon details below." : "Fill in the details to publish a new event."}
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <form onSubmit={handleCreateHackathon} className="space-y-4">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label>Hackathon Name <span className="text-red-500">*</span></Label>
-                                                    <Input
-                                                        placeholder="e.g. CodeSprint 2025"
-                                                        value={newHackathon.name}
-                                                        onChange={(e) => setNewHackathon({ ...newHackathon, name: e.target.value })}
-                                                        required
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>Mode</Label>
-                                                    <select
-                                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                                        value={newHackathon.mode}
-                                                        onChange={(e) => setNewHackathon({ ...newHackathon, mode: e.target.value })}
-                                                    >
-                                                        <option value="Online">Online</option>
-                                                        <option value="Offline">Offline</option>
-                                                        <option value="Hybrid">Hybrid</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label>Description <span className="text-red-500">*</span></Label>
-                                                <textarea
-                                                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                                    placeholder="Describe the hackathon goal, themes, and details..."
-                                                    value={newHackathon.description}
-                                                    onChange={(e) => setNewHackathon({ ...newHackathon, description: e.target.value })}
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label>Start Date <span className="text-red-500">*</span></Label>
-                                                    <Input type="date"
-                                                        value={newHackathon.startDate}
-                                                        onChange={(e) => setNewHackathon({ ...newHackathon, startDate: e.target.value })}
-                                                        required
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>End Date <span className="text-red-500">*</span></Label>
-                                                    <Input type="date"
-                                                        value={newHackathon.endDate}
-                                                        onChange={(e) => setNewHackathon({ ...newHackathon, endDate: e.target.value })}
-                                                        required
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label>Registration Deadline <span className="text-red-500">*</span></Label>
-                                                    <Input type="date"
-                                                        value={newHackathon.registrationDeadline}
-                                                        onChange={(e) => setNewHackathon({ ...newHackathon, registrationDeadline: e.target.value })}
-                                                        required
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>Helpline Number <span className="text-red-500">*</span></Label>
-                                                    <Input type="tel"
-                                                        placeholder="+91 99999 99999"
-                                                        value={newHackathon.helplineNumber}
-                                                        onChange={(e) => setNewHackathon({ ...newHackathon, helplineNumber: e.target.value })}
-                                                        required
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label>Min Team Size <span className="text-red-500">*</span></Label>
-                                                    <Input type="number" min="1"
-                                                        value={newHackathon.teamSizeMin}
-                                                        onChange={(e) => setNewHackathon({ ...newHackathon, teamSizeMin: parseInt(e.target.value) })}
-                                                        required
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>Max Team Size <span className="text-red-500">*</span></Label>
-                                                    <Input type="number" min="1"
-                                                        value={newHackathon.teamSizeMax}
-                                                        onChange={(e) => setNewHackathon({ ...newHackathon, teamSizeMax: parseInt(e.target.value) })}
-                                                        required
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label>Tech Stack <span className="text-red-500">*</span></Label>
-                                                <Input
-                                                    placeholder="e.g. Web, AI/ML, Blockchain"
-                                                    value={newHackathon.techStack}
-                                                    onChange={(e) => setNewHackathon({ ...newHackathon, techStack: e.target.value })}
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label>Organizer Contact Email <span className="text-red-500">*</span></Label>
-                                                <Input type="email"
-                                                    placeholder="organizer@example.com"
-                                                    value={newHackathon.organizerContact}
-                                                    onChange={(e) => setNewHackathon({ ...newHackathon, organizerContact: e.target.value })}
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label>WhatsApp Group Link <span className="text-red-500">*</span></Label>
-                                                <Input type="url"
-                                                    placeholder="https://chat.whatsapp.com/..."
-                                                    value={newHackathon.whatsappGroupLink}
-                                                    onChange={(e) => setNewHackathon({ ...newHackathon, whatsappGroupLink: e.target.value })}
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label>Prize Money (e.g., ₹50,000 or $500) <span className="text-red-500">*</span></Label>
-                                                <Input
-                                                    placeholder="₹50,000 Cash Prize"
-                                                    value={newHackathon.prizeMoney}
-                                                    onChange={(e) => setNewHackathon({ ...newHackathon, prizeMoney: e.target.value })}
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label>Benefits (What participants will get) <span className="text-red-500">*</span></Label>
-                                                <textarea
-                                                    className="w-full border rounded-md p-2 min-h-[80px]"
-                                                    placeholder="Certificates, mentorship, internship opportunities, swag kits, etc."
-                                                    value={newHackathon.benefits}
-                                                    onChange={(e) => setNewHackathon({ ...newHackathon, benefits: e.target.value })}
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div className="flex gap-2">
-                                                <Button type="submit" className="flex-1">
-                                                    <Save className="w-4 h-4 mr-2" />
-                                                    {editingHackathonId ? "Update Hackathon (Hidden by Default)" : "Publish Hackathon (Hidden by Default)"}
-                                                </Button>
-                                                {editingHackathonId && (
-                                                    <Button type="button" variant="outline" onClick={handleCancelEditHackathon}>
-                                                        Cancel
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </form>
-                                    </CardContent>
-                                </Card>
-
-                                {/* Existing Hackathons List */}
-                                <Card className="lg:col-span-1 h-fit">
-                                    <CardHeader>
-                                        <CardTitle>Existing Hackathons</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-4">
-                                            {hackathons.length === 0 ? (
-                                                <p className="text-muted-foreground text-sm">No hackathons created yet.</p>
-                                            ) : (
-                                                hackathons.map((h, i) => {
-                                                    // Calculate applications for this hackathon
-                                                    const hackathonApps = applications.filter(app => app.hackathonId === h._id);
-                                                    const isExpanded = expandedHackathonId === h._id;
-
-                                                    const handleDownloadCSV = () => {
-                                                        if (hackathonApps.length === 0) {
-                                                            toast.error("No data to download");
-                                                            return;
-                                                        }
-
-                                                        const headers = ["Type", "Name/Team Name", "Email/Leader Email", "Phone", "Organization", "GitHub", "Team Members"];
-                                                        const rows = hackathonApps.map(app => {
-                                                            const type = app.participantType;
-                                                            const name = type === 'Team' ? app.teamName : app.fullName;
-                                                            const email = type === 'Team' ? app.leader?.email : app.email;
-                                                            const phone = type === 'Team' ? app.leader?.phone : app.phone;
-                                                            const org = type === 'Team' ? app.leader?.organization : app.organization;
-                                                            const github = type === 'Team' ? app.leader?.github : app.github;
-                                                            const members = type === 'Team'
-                                                                ? app.teamMembers?.map((m: any) => `${m.fullName} (${m.email})`).join("; ")
-                                                                : "N/A";
-
-                                                            return [type, name, email, phone, org, github, members].map(field => `"${field || ''}"`).join(",");
-                                                        });
-
-                                                        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
-                                                        const encodedUri = encodeURI(csvContent);
-                                                        const link = document.createElement("a");
-                                                        link.setAttribute("href", encodedUri);
-                                                        link.setAttribute("download", `${h.name.replace(/\s+/g, '_')}_applicants.csv`);
-                                                        document.body.appendChild(link);
-                                                        link.click();
-                                                        document.body.removeChild(link);
-                                                    };
-
-                                                    return (
-                                                        <div key={i} className="rounded-lg border border-border bg-card overflow-hidden">
-                                                            <div className="p-4 flex flex-col gap-2">
-                                                                <div className="flex justify-between items-start">
-                                                                    <div>
-                                                                        <h4 className="font-semibold">{h.name}</h4>
-                                                                        <p className="text-xs text-muted-foreground">{h.mode} • {h.startDate}</p>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <div className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                                                                            {h.status}
-                                                                        </div>
-                                                                        {h.isHidden && <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Hidden</span>}
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
-                                                                    <span className="text-sm font-medium text-muted-foreground">
-                                                                        {hackathonApps.length} Applicants
-                                                                    </span>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            className="h-8 gap-1 text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
-                                                                            onClick={handleDownloadCSV}
-                                                                        >
-                                                                            <Download className="w-3 h-3" />
-                                                                            CSV
-                                                                        </Button>
-
-                                                                        {/* Edit Button */}
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            onClick={() => handleEditHackathon(h)}
-                                                                            className="h-8 gap-1 text-blue-600 border-blue-200 hover:bg-blue-50"
-                                                                            title="Edit Hackathon"
-                                                                        >
-                                                                            Edit
-                                                                        </Button>
-
-                                                                        {/* Toggle Visibility */}
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            onClick={() => handleToggleVisibility(h._id, h.isHidden)}
-                                                                            className={`h-8 w-8 p-0 ${h.isHidden ? "text-gray-500" : "text-blue-600"}`}
-                                                                            title={h.isHidden ? "Show Hackathon" : "Hide Hackathon"}
-                                                                        >
-                                                                            {h.isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                                        </Button>
-
-                                                                        {/* Delete Hackathon */}
-                                                                        <Button
-                                                                            variant="destructive"
-                                                                            size="sm"
-                                                                            onClick={() => handleDeleteHackathon(h._id)}
-                                                                            className="h-8 w-8 p-0"
-                                                                            title="Delete Hackathon"
-                                                                        >
-                                                                            <Trash2 className="w-4 h-4" />
-                                                                        </Button>
-
-                                                                        <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => setExpandedHackathonId(isExpanded ? null : h._id)}>
-                                                                            {isExpanded ? (
-                                                                                <>Hide <ChevronUp className="w-3 h-3" /></>
-                                                                            ) : (
-                                                                                <>View <ChevronDown className="w-3 h-3" /></>
-                                                                            )}
-                                                                        </Button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            {isExpanded && (
-                                                                <div className="bg-secondary/10 p-4 border-t border-border">
-                                                                    {hackathonApps.length === 0 ? (
-                                                                        <p className="text-xs text-muted-foreground text-center">No applications yet.</p>
-                                                                    ) : (
-                                                                        <div className="overflow-x-auto">
-                                                                            <Table>
-                                                                                <TableHeader>
-                                                                                    <TableRow>
-                                                                                        <TableHead className="text-xs">Type</TableHead>
-                                                                                        <TableHead className="text-xs">Name / Team</TableHead>
-                                                                                        <TableHead className="text-xs">Contact</TableHead>
-                                                                                        <TableHead className="text-xs">GitHub</TableHead>
-                                                                                        <TableHead className="text-xs">Actions</TableHead>
-                                                                                    </TableRow>
-                                                                                </TableHeader>
-                                                                                <TableBody>
-                                                                                    {hackathonApps.map((app, j) => (
-                                                                                        <TableRow key={j}>
-                                                                                            <TableCell className="text-xs font-medium">
-                                                                                                {app.participantType}
-                                                                                            </TableCell>
-                                                                                            <TableCell className="text-xs">
-                                                                                                {app.participantType === 'Team' ? (
-                                                                                                    <div>
-                                                                                                        <span className="font-bold">{app.teamName}</span>
-                                                                                                        <div className="text-[10px] text-muted-foreground">Lead: {app.leader?.fullName}</div>
-                                                                                                    </div>
-                                                                                                ) : (
-                                                                                                    app.fullName
-                                                                                                )}
-                                                                                            </TableCell>
-                                                                                            <TableCell className="text-xs">
-                                                                                                <div className="truncate max-w-[100px]">
-                                                                                                    {app.participantType === 'Team' ? app.leader?.email : app.email}
-                                                                                                </div>
-                                                                                            </TableCell>
-                                                                                            <TableCell className="text-xs">
-                                                                                                {(app.participantType === 'Team' ? app.leader.github : app.github) && (
-                                                                                                    <a
-                                                                                                        href={app.participantType === 'Team' ? app.leader.github : app.github}
-                                                                                                        target="_blank"
-                                                                                                        rel="noreferrer"
-                                                                                                        className="text-primary hover:underline flex items-center gap-1"
-                                                                                                    >
-                                                                                                        Link <ExternalLink className="w-2 h-2" />
-                                                                                                    </a>
-                                                                                                )}
-                                                                                            </TableCell>
-                                                                                            <TableCell>
-                                                                                                <div className="flex gap-2">
-                                                                                                    <Button variant="ghost" size="icon" title="Email Leader" onClick={() => openEmailModal(
-                                                                                                        app.participantType === 'Team' ? app.leader?.email : app.email,
-                                                                                                        `Hackathon Update: ${h.name}`
-                                                                                                    )}>
-                                                                                                        <Mail className="w-4 h-4 text-blue-500" />
-                                                                                                    </Button>
-                                                                                                    <Button variant="ghost" size="icon" title="Re-trigger Email" disabled={resendingId === app._id} onClick={() => handleResendEmail('applications', app._id)}>
-                                                                                                        <RefreshCw className={`w-4 h-4 text-orange-500 ${resendingId === app._id ? 'animate-spin' : ''}`} />
-                                                                                                    </Button>
-                                                                                                    <Button variant="ghost" size="icon" title="Delete Application" onClick={() => handleDeleteRecord('applications', app._id, fetchApplications)}>
-                                                                                                        <Trash2 className="w-4 h-4 text-red-500" />
-                                                                                                    </Button>
-                                                                                                </div>
-                                                                                            </TableCell>
-                                                                                        </TableRow>
-                                                                                    ))}
-                                                                                </TableBody>
-                                                                            </Table>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </div>
+                            <HackathonsSection
+                                hackathons={hackathons}
+                                applications={applications}
+                                expandedHackathonId={expandedHackathonId}
+                                setExpandedHackathonId={setExpandedHackathonId}
+                                newHackathon={newHackathon}
+                                setNewHackathon={setNewHackathon}
+                                editingHackathonId={editingHackathonId}
+                                handleCreateHackathon={handleCreateHackathon}
+                                handleEditHackathon={handleEditHackathon}
+                                handleCancelEditHackathon={handleCancelEditHackathon}
+                                handleDeleteHackathon={handleDeleteHackathon}
+                                handleToggleVisibility={handleToggleVisibility}
+                                fetchApplications={fetchApplications}
+                                resendingId={resendingId}
+                                handleResendEmail={handleResendEmail}
+                                openEmailModal={openEmailModal}
+                                handleDeleteRecord={handleDeleteRecord}
+                                showControls={!isSharedAdminMode}
+                            />
                         </TabsContent>
 
                         {/* TECH POSTS TAB */}
@@ -1869,1180 +1260,110 @@ const AdminPanel = () => {
                             <WebinarManager />
                         </TabsContent>
 
-                        {/* CAREER GUIDANCE TAB */}
-                        <TabsContent value="career_guidance" className="mt-0">
-                            <CareerGuidanceAdmin />
-                        </TabsContent>
 
-                        {/* PROGRAMS TAB (Training & Internships) */}
+
+                        {/* PROGRAMS TAB */}
                         <TabsContent value="programs" className="mt-0">
-                            <div className="grid lg:grid-cols-2 gap-6">
-                                {/* Create Program Form */}
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>{editingProgramId ? "Edit Program" : "Create Programme (Training / Internship)"}</CardTitle>
-                                        <CardDescription>
-                                            {editingProgramId ? "Update the program details below." : "Create a new training or internship program."}
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <form onSubmit={handleCreateProgram} className="space-y-4">
-                                            <div className="space-y-2">
-                                                <Label>Program Type <span className="text-red-500">*</span></Label>
-                                                <select
-                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                                    value={newProgram.type}
-                                                    onChange={(e) => setNewProgram({ ...newProgram, type: e.target.value })}
-                                                    required
-                                                >
-                                                    <option value="Training">Training</option>
-                                                    <option value="Internship">Internship</option>
-                                                </select>
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label>Title <span className="text-red-500">*</span></Label>
-                                                <Input value={newProgram.title} onChange={(e) => setNewProgram({ ...newProgram, title: e.target.value })} placeholder="e.g. Web Development Bootcamp" required />
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label>Description <span className="text-red-500">*</span></Label>
-                                                <textarea className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm border-gray-200" value={newProgram.description} onChange={(e) => setNewProgram({ ...newProgram, description: e.target.value })} required />
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label>Mode <span className="text-red-500">*</span></Label>
-                                                    <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={newProgram.mode} onChange={(e) => setNewProgram({ ...newProgram, mode: e.target.value })} required>
-                                                        <option value="Online">Online</option>
-                                                        <option value="Offline">Offline</option>
-                                                        <option value="Hybrid">Hybrid</option>
-                                                        <option value="Remote">Remote</option>
-                                                    </select>
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>Duration <span className="text-red-500">*</span></Label>
-                                                    <Input value={newProgram.duration} onChange={(e) => setNewProgram({ ...newProgram, duration: e.target.value })} placeholder="e.g. 6 Weeks / 3 Months" required />
-                                                </div>
-                                            </div>
-
-                                            {newProgram.type === "Training" ? (
-                                                <>
-                                                    <div className="space-y-2">
-                                                        <Label>Fee (₹) <span className="text-red-500">*</span></Label>
-                                                        <Input type="number" value={newProgram.fee} onChange={(e) => setNewProgram({ ...newProgram, fee: parseInt(e.target.value) })} required />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label>Skills Covered <span className="text-red-500">*</span></Label>
-                                                        <Input value={newProgram.skillsCovered} onChange={(e) => setNewProgram({ ...newProgram, skillsCovered: e.target.value })} placeholder="HTML, CSS, React..." required />
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <div className="space-y-2">
-                                                        <Label>Stipend (₹) <span className="text-red-500">*</span></Label>
-                                                        <Input type="number" value={newProgram.stipend} onChange={(e) => setNewProgram({ ...newProgram, stipend: parseInt(e.target.value) })} required />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label>Required Skills <span className="text-red-500">*</span></Label>
-                                                        <Input value={newProgram.requiredSkills} onChange={(e) => setNewProgram({ ...newProgram, requiredSkills: e.target.value })} placeholder="Basic JavaScript Knowledge..." required />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label>Openings <span className="text-red-500">*</span></Label>
-                                                        <Input type="number" value={newProgram.openings} onChange={(e) => setNewProgram({ ...newProgram, openings: parseInt(e.target.value) })} required />
-                                                    </div>
-                                                </>
-                                            )}
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label>Start Date <span className="text-red-500">*</span></Label>
-                                                    <Input type="date" value={newProgram.startDate} onChange={(e) => setNewProgram({ ...newProgram, startDate: e.target.value })} required />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>End Date <span className="text-red-500">*</span></Label>
-                                                    <Input type="date" value={newProgram.endDate} onChange={(e) => setNewProgram({ ...newProgram, endDate: e.target.value })} required />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label>Registration Deadline <span className="text-red-500">*</span></Label>
-                                                    <Input type="date" value={newProgram.registrationDeadline} onChange={(e) => setNewProgram({ ...newProgram, registrationDeadline: e.target.value })} required />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>Helpline Number <span className="text-red-500">*</span></Label>
-                                                    <Input type="tel" value={newProgram.helplineNumber} onChange={(e) => setNewProgram({ ...newProgram, helplineNumber: e.target.value })} required />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label>Organizer Email <span className="text-red-500">*</span></Label>
-                                                    <Input type="email" placeholder="organizer@example.com" value={newProgram.organizerEmail} onChange={(e) => setNewProgram({ ...newProgram, organizerEmail: e.target.value })} required />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>WhatsApp Group Link <span className="text-red-500">*</span></Label>
-                                                    <Input type="url" placeholder="https://chat.whatsapp.com/..." value={newProgram.whatsappGroupLink} onChange={(e) => setNewProgram({ ...newProgram, whatsappGroupLink: e.target.value })} required />
-                                                </div>
-                                            </div>
-
-                                            {/* Selection Rounds - Internship Only */}
-                                            {newProgram.type === "Internship" && (
-                                                <div className="space-y-4 border p-4 rounded-lg bg-secondary/10">
-                                                    <div className="flex justify-between items-center">
-                                                        <Label className="text-base font-semibold">Selection Rounds</Label>
-                                                        <Button type="button" size="sm" variant="outline" onClick={() => setNewProgram({ ...newProgram, rounds: [...newProgram.rounds, { name: "", startDate: "", endDate: "" }] })}>
-                                                            + Add Round
-                                                        </Button>
-                                                    </div>
-                                                    {newProgram.rounds.map((round, index) => (
-                                                        <div key={index} className="grid grid-cols-7 gap-2 items-end">
-                                                            <div className="col-span-3 space-y-1">
-                                                                <Label className="text-xs">Round Name</Label>
-                                                                <Input
-                                                                    placeholder="e.g. Assessment"
-                                                                    value={round.name}
-                                                                    onChange={(e) => {
-                                                                        const updatedRounds = [...newProgram.rounds];
-                                                                        updatedRounds[index].name = e.target.value;
-                                                                        setNewProgram({ ...newProgram, rounds: updatedRounds });
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                            <div className="col-span-3 space-y-1">
-                                                                <Label className="text-xs">Date</Label>
-                                                                <Input
-                                                                    type="date"
-                                                                    value={round.startDate}
-                                                                    onChange={(e) => {
-                                                                        const updatedRounds = [...newProgram.rounds];
-                                                                        updatedRounds[index].startDate = e.target.value;
-                                                                        setNewProgram({ ...newProgram, rounds: updatedRounds });
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                            <div className="col-span-1">
-                                                                <Button type="button" variant="destructive" size="icon" onClick={() => {
-                                                                    const updatedRounds = newProgram.rounds.filter((_, i) => i !== index);
-                                                                    setNewProgram({ ...newProgram, rounds: updatedRounds });
-                                                                }}>
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                </Button>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-
-                                            <div className="flex gap-2">
-                                                <Button type="submit" className="flex-1">
-                                                    {editingProgramId ? `Update ${newProgram.type} (Hidden by Default)` : `Create ${newProgram.type} (Hidden by Default)`}
-                                                </Button>
-                                                {editingProgramId && (
-                                                    <Button type="button" variant="outline" onClick={handleCancelEditProgram}>
-                                                        Cancel
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </form>
-                                    </CardContent>
-                                </Card>
-
-                                {/* List Programs */}
-                                <Card className="lg:col-span-1 h-fit">
-                                    <CardHeader>
-                                        <CardTitle>Active Programs</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-4">
-                                            {programs.length === 0 ? <p className="text-muted-foreground text-sm">No programs yet.</p> : programs.map((program) => {
-                                                const apps = programApplications.filter(a => (program.type === "Training" ? a.trainingId : a.internshipId) === program._id);
-                                                return (
-                                                    <div key={program._id} className="border p-4 rounded-lg bg-card">
-                                                        <div className="flex justify-between items-start">
-                                                            <div>
-                                                                <div className="flex items-center gap-2 mb-1">
-                                                                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${program.type === 'Training' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
-                                                                        {program.type}
-                                                                    </span>
-                                                                    <span className="text-xs text-muted-foreground">{program.mode}</span>
-                                                                </div>
-                                                                <h4 className="font-bold">{program.title}</h4>
-                                                                <p className="text-xs text-muted-foreground mt-1">
-                                                                    {program.duration} • {program.startDate} to {program.endDate}
-                                                                </p>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-xs text-muted-foreground">{apps.length} Applications</span>
-                                                                <div className="flex gap-2">
-                                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setExpandedPrograms(prev => ({ ...prev, [program._id]: !prev[program._id] }))}>
-                                                                        {expandedPrograms[program._id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                                                    </Button>
-                                                                    {/* CSV Download for Program Applicants - Placeholder Logic */}
-                                                                    <Button variant="outline" size="sm" className="h-8 gap-1 text-green-600 border-green-200 hover:bg-green-50" onClick={() => {
-                                                                        if (apps.length === 0) return toast.error("No applicants");
-                                                                        const headers = ["Name", "Email", "Phone", "Age", "College", "Type", "Resume Link", "Portfolio Link"];
-                                                                        const rows = apps.map(a => [a.fullName, a.email, a.phone, a.age, a.collegeName, program.type, a.resumeLink, a.portfolioLink].map(f => `"${f || ''}"`).join(","));
-                                                                        const csv = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
-                                                                        const link = document.createElement("a");
-                                                                        link.href = encodeURI(csv);
-                                                                        link.download = `${program.title}_applicants.csv`;
-                                                                        link.click();
-                                                                    }}>
-                                                                        <Download className="w-3 h-3" />
-                                                                    </Button>
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        className={`h-8 gap-1 ${program.isHidden ? 'text-gray-500 border-gray-200' : 'text-green-600 border-green-200'}`}
-                                                                        onClick={() => handleToggleProgramVisibility(program._id, program.isHidden, program.type)}
-                                                                        title={program.isHidden ? "Click to Unhide" : "Click to Hide"}
-                                                                    >
-                                                                        {program.isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                                        {program.isHidden ? "Hidden" : "Visible"}
-                                                                    </Button>
-                                                                    <Button variant="outline" size="sm" className="h-8 gap-1 text-blue-600 border-blue-200 hover:bg-blue-50" onClick={() => handleEditProgram(program)}>
-                                                                        Edit
-                                                                    </Button>
-                                                                    <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => handleDeleteProgram(program._id)}>
-                                                                        <Trash2 className="w-4 h-4" />
-                                                                    </Button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        {apps.length > 0 && expandedPrograms[program._id] && (
-                                                            <div className="mt-4 bg-secondary/10 p-3 rounded-md">
-                                                                <h5 className="font-semibold text-sm mb-2">Applicants:</h5>
-                                                                <div className="overflow-x-auto">
-                                                                    <Table>
-                                                                        <TableHeader>
-                                                                            <TableRow>
-                                                                                <TableHead className="text-xs">Name</TableHead>
-                                                                                <TableHead className="text-xs">Email</TableHead>
-                                                                                <TableHead className="text-xs">Phone</TableHead>
-                                                                                <TableHead className="text-xs">College</TableHead>
-                                                                                <TableHead className="text-xs">Resume</TableHead>
-                                                                                <TableHead className="text-xs">Portfolio</TableHead>
-                                                                                <TableHead className="text-xs">Actions</TableHead>
-                                                                            </TableRow>
-                                                                        </TableHeader>
-                                                                        <TableBody>
-                                                                            {apps.map((app, appIndex) => (
-                                                                                <TableRow key={appIndex}>
-                                                                                    <TableCell className="text-xs">{app.fullName}</TableCell>
-                                                                                    <TableCell className="text-xs">{app.email}</TableCell>
-                                                                                    <TableCell className="text-xs">{app.phone}</TableCell>
-                                                                                    <TableCell className="text-xs">{app.collegeName}</TableCell>
-                                                                                    <TableCell className="text-xs">
-                                                                                        {app.resumeLink ? (
-                                                                                            <a href={app.resumeLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
-                                                                                                View <ExternalLink className="w-3 h-3" />
-                                                                                            </a>
-                                                                                        ) : <span className="text-muted-foreground">-</span>}
-                                                                                    </TableCell>
-                                                                                    <TableCell className="text-xs">
-                                                                                        {app.portfolioLink ? (
-                                                                                            <a href={app.portfolioLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
-                                                                                                View <ExternalLink className="w-3 h-3" />
-                                                                                            </a>
-                                                                                        ) : <span className="text-muted-foreground">-</span>}
-                                                                                    </TableCell>
-                                                                                    <TableCell>
-                                                                                        <div className="flex gap-2">
-                                                                                            <Button variant="ghost" size="icon" onClick={() => openEmailModal(app.email, `Regarding your application for ${program.title}`)}>
-                                                                                                <Mail className="w-4 h-4 text-blue-500" />
-                                                                                            </Button>
-                                                                                            <Button variant="ghost" size="icon" title="Re-trigger Email" disabled={resendingId === app._id} onClick={() => handleResendEmail('program-applications', app._id)}>
-                                                                                                <RefreshCw className={`w-4 h-4 text-orange-500 ${resendingId === app._id ? 'animate-spin' : ''}`} />
-                                                                                            </Button>
-                                                                                            <Button variant="ghost" size="icon" onClick={() => handleDeleteRecord('program-applications', app._id, fetchProgramApplications)}>
-                                                                                                <Trash2 className="w-4 h-4 text-red-500" />
-                                                                                            </Button>
-                                                                                        </div>
-                                                                                    </TableCell>
-                                                                                </TableRow>
-                                                                            ))}
-                                                                        </TableBody>
-                                                                    </Table>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </div>
+                            <ProgramsSection
+                                programs={programs}
+                                programApplications={programApplications}
+                                expandedPrograms={expandedPrograms}
+                                setExpandedPrograms={setExpandedPrograms}
+                                newProgram={newProgram}
+                                setNewProgram={setNewProgram}
+                                editingProgramId={editingProgramId}
+                                handleCreateProgram={handleCreateProgram}
+                                handleEditProgram={handleEditProgram}
+                                handleCancelEditProgram={handleCancelEditProgram}
+                                handleDeleteProgram={handleDeleteProgram}
+                                handleToggleProgramVisibility={handleToggleProgramVisibility}
+                                fetchProgramApplications={fetchProgramApplications}
+                                resendingId={resendingId}
+                                handleResendEmail={handleResendEmail}
+                                openEmailModal={openEmailModal}
+                                handleDeleteRecord={handleDeleteRecord}
+                                showControls={!isSharedAdminMode}
+                            />
                         </TabsContent>
 
                         {/* TECH APPLICATIONS TAB */}
                         <TabsContent value="tech_apps" className="mt-0">
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between">
-                                    <CardTitle>Technology Inquiries</CardTitle>
-                                    <div className="flex gap-2">
-                                        <Button variant="outline" size="sm" onClick={handleDownloadTechCSV} className="text-green-600 border-green-200">
-                                            <Download className="w-4 h-4 mr-2" />
-                                            Download CSV
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={fetchTechApplications}>
-                                            Refresh
-                                        </Button>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    {techApplications.length === 0 ? (
-                                        <div className="text-center py-8 text-black">No inquiries yet.</div>
-                                    ) : (
-                                        <div className="rounded-md border border-border">
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Date</TableHead>
-                                                        <TableHead>Category</TableHead>
-                                                        <TableHead>Client</TableHead>
-                                                        <TableHead>Company</TableHead>
-                                                        <TableHead>Budget</TableHead>
-                                                        <TableHead>Status</TableHead>
-                                                        <TableHead>Actions</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {techApplications.map((app, index) => (
-                                                        <TableRow key={index}>
-                                                            <TableCell className="text-xs text-muted-foreground">
-                                                                {new Date(app.submittedAt).toLocaleDateString()}
-                                                            </TableCell>
-                                                            <TableCell><span className="font-semibold text-primary">{app.serviceCategory}</span></TableCell>
-                                                            <TableCell>
-                                                                <div className="flex flex-col">
-                                                                    <span className="font-medium">{app.commonDetails?.fullName}</span>
-                                                                    <span className="text-xs text-muted-foreground">{app.commonDetails?.email}</span>
-                                                                </div>
-                                                            </TableCell>
-                                                            <TableCell>{app.commonDetails?.companyName || "-"}</TableCell>
-                                                            <TableCell>{app.commonDetails?.budgetRange || "-"}</TableCell>
-                                                            <TableCell>
-                                                                <span className="px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs font-bold">New</span>
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <div className="flex gap-2">
-                                                                    <Button size="icon" variant="ghost" onClick={() => {
-                                                                        alert(JSON.stringify(app.serviceDetails, null, 2));
-                                                                    }}>
-                                                                        <Eye className="w-4 h-4 text-gray-500" />
-                                                                    </Button>
-                                                                    <Button variant="ghost" size="icon" onClick={() => openEmailModal(app.commonDetails?.email, `Re: ${app.serviceCategory} Inquiry`)}>
-                                                                        <Mail className="w-4 h-4 text-blue-500" />
-                                                                    </Button>
-                                                                    <Button variant="ghost" size="icon" title="Re-trigger Email" disabled={resendingId === app._id} onClick={() => handleResendEmail('technology-applications', app._id)}>
-                                                                        <RefreshCw className={`w-4 h-4 text-orange-500 ${resendingId === app._id ? 'animate-spin' : ''}`} />
-                                                                    </Button>
-                                                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteRecord('technology-applications', app._id, fetchTechApplications)}>
-                                                                        <Trash2 className="w-4 h-4 text-red-500" />
-                                                                    </Button>
-                                                                </div>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
+                            <TechApplicationsSection
+                                techApplications={techApplications}
+                                fetchTechApplications={fetchTechApplications}
+                                resendingId={resendingId}
+                                handleResendEmail={handleResendEmail}
+                                openEmailModal={openEmailModal}
+                                handleDeleteRecord={handleDeleteRecord}
+                                showControls={!isSharedAdminMode}
+                            />
                         </TabsContent>
 
                         {/* STAFFING APPLICATIONS TAB */}
                         <TabsContent value="staffing" className="mt-0">
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between">
-                                    <CardTitle>Staffing Requests</CardTitle>
-                                    <div className="flex gap-2">
-                                        <Button variant="outline" size="sm" onClick={handleDownloadStaffingCSV} className="text-green-600 border-green-200">
-                                            <Download className="w-4 h-4 mr-2" />
-                                            Download CSV
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={fetchStaffingApplications}>
-                                            Refresh
-                                        </Button>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    {staffingApplications.length === 0 ? (
-                                        <div className="text-center py-8 text-black">No staffing requests yet.</div>
-                                    ) : (
-                                        <div className="rounded-md border border-border">
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Date</TableHead>
-                                                        <TableHead>Category</TableHead>
-                                                        <TableHead>Company</TableHead>
-                                                        <TableHead>Contact</TableHead>
-                                                        <TableHead>Phone</TableHead>
-                                                        <TableHead>Action</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {staffingApplications.map((app, index) => (
-                                                        <TableRow key={index}>
-                                                            <TableCell className="text-xs text-muted-foreground">
-                                                                {new Date(app.submittedAt).toLocaleDateString()}
-                                                            </TableCell>
-                                                            <TableCell><span className="font-semibold text-primary">{app.serviceCategory}</span></TableCell>
-                                                            <TableCell>{app.companyDetails?.companyName}</TableCell>
-                                                            <TableCell>
-                                                                <div className="flex flex-col">
-                                                                    <span className="font-medium">{app.companyDetails?.contactPerson}</span>
-                                                                    <span className="text-xs text-muted-foreground">{app.companyDetails?.email}</span>
-                                                                </div>
-                                                            </TableCell>
-                                                            <TableCell>{app.companyDetails?.phone}</TableCell>
-                                                            <TableCell>
-                                                                <div className="flex gap-2">
-                                                                    <Button size="icon" variant="ghost" onClick={() => {
-                                                                        alert(JSON.stringify(app.staffingRequirements, null, 2));
-                                                                    }}>
-                                                                        <Eye className="w-4 h-4 text-gray-500" />
-                                                                    </Button>
-                                                                    <Button variant="ghost" size="icon" onClick={() => openEmailModal(app.companyDetails?.email, `Re: ${app.serviceCategory} Request`)}>
-                                                                        <Mail className="w-4 h-4 text-blue-500" />
-                                                                    </Button>
-                                                                    <Button variant="ghost" size="icon" title="Re-trigger Email" disabled={resendingId === app._id} onClick={() => handleResendEmail('staffing-applications', app._id)}>
-                                                                        <RefreshCw className={`w-4 h-4 text-orange-500 ${resendingId === app._id ? 'animate-spin' : ''}`} />
-                                                                    </Button>
-                                                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteRecord('staffing-applications', app._id, fetchStaffingApplications)}>
-                                                                        <Trash2 className="w-4 h-4 text-red-500" />
-                                                                    </Button>
-                                                                </div>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
+                            <StaffingApplicationsSection
+                                staffingApplications={staffingApplications}
+                                fetchStaffingApplications={fetchStaffingApplications}
+                                resendingId={resendingId}
+                                handleResendEmail={handleResendEmail}
+                                openEmailModal={openEmailModal}
+                                handleDeleteRecord={handleDeleteRecord}
+                                showControls={!isSharedAdminMode}
+                            />
                         </TabsContent>
 
                         {/* MARKETING TAB */}
                         <TabsContent value="marketing" className="mt-0">
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between">
-                                    <CardTitle>Marketing Leads</CardTitle>
-                                    <div className="flex gap-2">
-                                        <Button variant="outline" size="sm" onClick={handleDownloadMarketingCSV} className="text-green-600 border-green-200">
-                                            <Download className="w-4 h-4 mr-2" />
-                                            CSV
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={fetchMarketingApplications}>
-                                            Refresh
-                                        </Button>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    {marketingApplications.length === 0 ? <p className="text-center py-8">No marketing leads found.</p> : (
-                                        <div className="rounded-md border border-border">
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Date</TableHead>
-                                                        <TableHead>Business</TableHead>
-                                                        <TableHead>Contact</TableHead>
-                                                        <TableHead>Service</TableHead>
-                                                        <TableHead>Budget</TableHead>
-                                                        <TableHead>Action</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {marketingApplications.map((app, i) => (
-                                                        <TableRow key={i}>
-                                                            <TableCell className="text-xs text-muted-foreground">{new Date(app.submittedAt).toLocaleDateString()}</TableCell>
-                                                            <TableCell>{app.clientDetails.businessName}</TableCell>
-                                                            <TableCell>
-                                                                <div className="flex flex-col">
-                                                                    <span>{app.clientDetails.fullName}</span>
-                                                                    <span className="text-xs text-muted-foreground">{app.clientDetails.email}</span>
-                                                                </div>
-                                                            </TableCell>
-                                                            <TableCell><span className="text-primary font-medium">{app.clientDetails.selectedService}</span></TableCell>
-                                                            <TableCell>{app.clientDetails.monthlyBudgetRange}</TableCell>
-                                                            <TableCell>
-                                                                <div className="flex gap-2">
-                                                                    <Button size="icon" variant="ghost" onClick={() => alert(JSON.stringify(app.digitalMarketingRequirements, null, 2))}>
-                                                                        <Eye className="w-4 h-4 text-gray-500" />
-                                                                    </Button>
-                                                                    <Button variant="ghost" size="icon" onClick={() => openEmailModal(app.clientDetails?.email, `Re: ${app.clientDetails?.selectedService} Strategy`)}>
-                                                                        <Mail className="w-4 h-4 text-blue-500" />
-                                                                    </Button>
-                                                                    <Button variant="ghost" size="icon" title="Re-trigger Email" disabled={resendingId === app._id} onClick={() => handleResendEmail('marketing-applications', app._id)}>
-                                                                        <RefreshCw className={`w-4 h-4 text-orange-500 ${resendingId === app._id ? 'animate-spin' : ''}`} />
-                                                                    </Button>
-                                                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteRecord('marketing-applications', app._id, fetchMarketingApplications)}>
-                                                                        <Trash2 className="w-4 h-4 text-red-500" />
-                                                                    </Button>
-                                                                </div>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
+                            <MarketingApplicationsSection
+                                marketingApplications={marketingApplications}
+                                fetchMarketingApplications={fetchMarketingApplications}
+                                resendingId={resendingId}
+                                handleResendEmail={handleResendEmail}
+                                openEmailModal={openEmailModal}
+                                handleDeleteRecord={handleDeleteRecord}
+                                showControls={!isSharedAdminMode}
+                            />
                         </TabsContent>
 
                         {/* CONTENT MANAGER TAB */}
                         <TabsContent value="content" className="mt-0">
-                            <div className="grid lg:grid-cols-2 gap-6">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>{editingContentId ? "Edit Content" : "Add New Content"}</CardTitle>
-                                        <CardDescription>Create Testimonials or Case Studies</CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <form onSubmit={handleSaveContent} className="space-y-4">
-                                            <div className="flex gap-4">
-                                                <div className="w-1/2">
-                                                    <Label>Type <span className="text-red-500">*</span></Label>
-                                                    <select
-                                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                                        value={newContent.type}
-                                                        onChange={(e) => setNewContent({ ...newContent, type: e.target.value })}
-                                                        required
-                                                    >
-                                                        <option value="testimonial">Testimonial</option>
-                                                        <option value="caseStudy">Case Study</option>
-                                                    </select>
-                                                </div>
-                                                <div className="w-1/2">
-                                                    <Label>Order Priority <span className="text-red-500">*</span></Label>
-                                                    <Input type="number" value={newContent.order} onChange={(e) => setNewContent({ ...newContent, order: parseInt(e.target.value) })} required />
-                                                </div>
-                                            </div>
-
-                                            {newContent.type === 'testimonial' ? (
-                                                <div className="space-y-4 border p-4 rounded-md bg-secondary/10">
-                                                    <h4 className="font-semibold text-sm">Testimonial Details</h4>
-                                                    <Label>Quote <span className="text-red-500">*</span></Label>
-                                                    <textarea className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={newContent.quote} onChange={(e) => setNewContent({ ...newContent, quote: e.target.value })} required={newContent.type === 'testimonial'} />
-
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        <Input placeholder="Client Name *" value={newContent.client.name} onChange={(e) => setNewContent({ ...newContent, client: { ...newContent.client, name: e.target.value } })} required={newContent.type === 'testimonial'} />
-                                                        <Input placeholder="Initials (Avatar)" value={newContent.client.initials} onChange={(e) => setNewContent({ ...newContent, client: { ...newContent.client, initials: e.target.value } })} />
-                                                        <Input placeholder="Designation *" value={newContent.client.designation} onChange={(e) => setNewContent({ ...newContent, client: { ...newContent.client, designation: e.target.value } })} required={newContent.type === 'testimonial'} />
-                                                        <Input placeholder="Company *" value={newContent.client.company} onChange={(e) => setNewContent({ ...newContent, client: { ...newContent.client, company: e.target.value } })} required={newContent.type === 'testimonial'} />
-                                                    </div>
-
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        <Input placeholder="Metric Value (e.g. 340%) *" value={newContent.highlightMetric.value} onChange={(e) => setNewContent({ ...newContent, highlightMetric: { ...newContent.highlightMetric, value: e.target.value } })} required={newContent.type === 'testimonial'} />
-                                                        <Input placeholder="Metric Label (e.g. Growth) *" value={newContent.highlightMetric.label} onChange={(e) => setNewContent({ ...newContent, highlightMetric: { ...newContent.highlightMetric, label: e.target.value } })} required={newContent.type === 'testimonial'} />
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="space-y-4 border p-4 rounded-md bg-secondary/10">
-                                                    <h4 className="font-semibold text-sm">Case Study Details</h4>
-                                                    <Input placeholder="Title *" value={newContent.title} onChange={(e) => setNewContent({ ...newContent, title: e.target.value })} required={newContent.type === 'caseStudy'} />
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        <Input placeholder="Industry *" value={newContent.industry} onChange={(e) => setNewContent({ ...newContent, industry: e.target.value })} required={newContent.type === 'caseStudy'} />
-                                                        <Input placeholder="Duration *" value={newContent.duration} onChange={(e) => setNewContent({ ...newContent, duration: e.target.value })} required={newContent.type === 'caseStudy'} />
-                                                    </div>
-
-                                                    <div className="space-y-2">
-                                                        <Label>Platforms (Comma separated) <span className="text-red-500">*</span></Label>
-                                                        <Input placeholder="Instagram, Facebook..." value={newContent.platforms?.join(', ')} onChange={(e) => setNewContent({ ...newContent, platforms: e.target.value.split(',').map(s => s.trim()) })} required={newContent.type === 'caseStudy'} />
-                                                    </div>
-
-                                                    <Label>Challenge <span className="text-red-500">*</span></Label>
-                                                    <textarea className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={newContent.challenge} onChange={(e) => setNewContent({ ...newContent, challenge: e.target.value })} required={newContent.type === 'caseStudy'} />
-
-                                                    <Label>Solution <span className="text-red-500">*</span></Label>
-                                                    <textarea className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={newContent.solution} onChange={(e) => setNewContent({ ...newContent, solution: e.target.value })} required={newContent.type === 'caseStudy'} />
-
-                                                    <div className="space-y-2">
-                                                        <Label>Results (JSON Format for now) <span className="text-red-500">*</span></Label>
-                                                        <p className="text-xs text-muted-foreground">{'Example: [{"label": "Growth", "value": "200%"}]'}</p>
-                                                        <textarea
-                                                            className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
-                                                            value={JSON.stringify(newContent.results)}
-                                                            onChange={(e) => {
-                                                                try { setNewContent({ ...newContent, results: JSON.parse(e.target.value) }) } catch (err) { }
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            <Button type="submit" className="w-full">
-                                                <Save className="w-4 h-4 mr-2" />
-                                                {editingContentId ? "Update Content (Hidden by Default)" : "Save Content (Hidden by Default)"}
-                                            </Button>
-                                            {editingContentId && (
-                                                <Button type="button" variant="outline" className="w-full mt-2" onClick={() => {
-                                                    setEditingContentId(null);
-                                                    setNewContent({
-                                                        type: "testimonial",
-                                                        isActive: false,
-                                                        order: 1,
-                                                        quote: "",
-                                                        client: { initials: "", name: "", designation: "", company: "" },
-                                                        highlightMetric: { label: "", value: "" },
-                                                        industry: "", duration: "", platforms: [], title: "", challenge: "", solution: "", results: []
-                                                    });
-                                                }}>
-                                                    Cancel Edit
-                                                </Button>
-                                            )}
-                                        </form>
-                                    </CardContent>
-                                </Card>
-
-                                <Card>
-                                    <CardHeader><CardTitle>Existing Content</CardTitle></CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-4">
-                                            {testimonials.length === 0 ? <p className="text-muted-foreground">No content found.</p> : (
-                                                testimonials.map((item, i) => (
-                                                    <div key={i} className="flex flex-col p-4 border rounded-lg bg-card gap-2">
-                                                        <div className="flex justify-between items-start">
-                                                            <div className="flex gap-2 items-center">
-                                                                <span className={`px-2 py-1 rounded text-xs text-white ${item.type === 'testimonial' ? 'bg-blue-500' : 'bg-purple-500'}`}>
-                                                                    {item.type === 'testimonial' ? 'Testimonial' : 'Case Study'}
-                                                                </span>
-                                                                {item.isActive ? <span className="text-green-600 text-xs font-bold">Active</span> : <span className="text-red-500 text-xs">Inactive</span>}
-                                                            </div>
-                                                            <div className="flex gap-1">
-                                                                <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => {
-                                                                    setNewContent(item);
-                                                                    setEditingContentId(item._id);
-                                                                }}>
-                                                                    <Monitor className="w-4 h-4" />
-                                                                </Button>
-                                                                <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-red-500" onClick={() => handleDeleteContent(item._id)}>
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                </Button>
-                                                                <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => toggleContentStatus(item._id, item.isActive)}>
-                                                                    {item.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                                                                </Button>
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            {item.type === 'testimonial' ? (
-                                                                <>
-                                                                    <p className="font-semibold">{item.client?.name}</p>
-                                                                    <p className="text-xs text-muted-foreground line-clamp-2">"{item.quote}"</p>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <p className="font-semibold">{item.title}</p>
-                                                                    <p className="text-xs text-muted-foreground">{item.industry} • {item.duration}</p>
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </div>
+                            <TestimonialsSection
+                                testimonials={testimonials}
+                                newContent={newContent}
+                                setNewContent={setNewContent}
+                                editingContentId={editingContentId}
+                                setEditingContentId={setEditingContentId}
+                                handleSaveContent={handleSaveContent}
+                                handleDeleteContent={handleDeleteContent}
+                                toggleContentStatus={toggleContentStatus}
+                                showControls={!isSharedAdminMode}
+                            />
                         </TabsContent>
-
-                        {/* TRAININGS TAB */}
-                        <TabsContent value="trainings" className="mt-0">
-                            <div className="grid lg:grid-cols-2 gap-6">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>{editingTrainingId ? "Edit Training" : "Add Training"}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <form onSubmit={handleCreateTraining} className="space-y-4">
-                                            <Input placeholder="Training Name *" value={newTraining.name} onChange={e => setNewTraining({ ...newTraining, name: e.target.value })} required />
-
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={newTraining.category} onChange={e => setNewTraining({ ...newTraining, category: e.target.value })}>
-                                                    <option>Full Stack Software Development</option>
-                                                    <option>Artificial Intelligence & Generative AI</option>
-                                                    <option>Database Technologies</option>
-                                                    <option>Machine Learning & Data Science</option>
-                                                    <option>Cloud Computing</option>
-                                                    <option>DevOps & Platform Engineering</option>
-                                                    <option>Cybersecurity</option>
-                                                    <option>Data Engineering & Analytics</option>
-                                                    <option>AI Tools & Automation</option>
-                                                    <option>Edge Computing & IoT</option>
-                                                    <option>Blockchain & Web3</option>
-                                                    <option>AR / VR / XR</option>
-                                                    <option>Quantum Computing</option>
-                                                </select>
-                                                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={newTraining.mode} onChange={e => setNewTraining({ ...newTraining, mode: e.target.value })}>
-                                                    <option>Online</option>
-                                                    <option>Offline</option>
-                                                    <option>Hybrid</option>
-                                                </select>
-                                            </div>
-
-                                            <Input placeholder="Topics (Comma separated) *" value={newTraining.topics} onChange={e => setNewTraining({ ...newTraining, topics: e.target.value })} required />
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div className="relative">
-                                                    <Input placeholder="Duration (e.g. 3 Months) *" value={newTraining.duration} onChange={e => setNewTraining({ ...newTraining, duration: e.target.value })} required />
-                                                    <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1 h-8 w-8 text-gray-400" onClick={() => {
-                                                        const isHidden = newTraining.hiddenFields?.includes('duration');
-                                                        const updated = isHidden ? newTraining.hiddenFields.filter(f => f !== 'duration') : [...(newTraining.hiddenFields || []), 'duration'];
-                                                        setNewTraining({ ...newTraining, hiddenFields: updated });
-                                                    }}>
-                                                        {newTraining.hiddenFields?.includes('duration') ? <EyeOff className="w-4 h-4 text-red-400" /> : <Eye className="w-4 h-4" />}
-                                                    </Button>
-                                                </div>
-                                                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={newTraining.status} onChange={e => setNewTraining({ ...newTraining, status: e.target.value })}>
-                                                    <option>Active</option>
-                                                    <option>Inactive</option>
-                                                </select>
-                                            </div>
-
-                                            <div className="grid grid-cols-3 gap-4">
-                                                <div className="relative space-y-2">
-                                                    <Label>Start Date</Label>
-                                                    <Input type="date" placeholder="Start Date" value={newTraining.startDate} onChange={e => setNewTraining({ ...newTraining, startDate: e.target.value })} />
-                                                    <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-6 h-8 w-8 text-gray-400" onClick={() => {
-                                                        const isHidden = newTraining.hiddenFields?.includes('startDate');
-                                                        const updated = isHidden ? newTraining.hiddenFields.filter(f => f !== 'startDate') : [...(newTraining.hiddenFields || []), 'startDate'];
-                                                        setNewTraining({ ...newTraining, hiddenFields: updated });
-                                                    }}>
-                                                        {newTraining.hiddenFields?.includes('startDate') ? <EyeOff className="w-3 h-3 text-red-400" /> : <Eye className="w-3 h-3" />}
-                                                    </Button>
-                                                </div>
-                                                <div className="relative space-y-2">
-                                                    <Label>End Date</Label>
-                                                    <Input type="date" placeholder="End Date" value={newTraining.endDate} onChange={e => setNewTraining({ ...newTraining, endDate: e.target.value })} />
-                                                    <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-6 h-8 w-8 text-gray-400" onClick={() => {
-                                                        const isHidden = newTraining.hiddenFields?.includes('endDate');
-                                                        const updated = isHidden ? newTraining.hiddenFields.filter(f => f !== 'endDate') : [...(newTraining.hiddenFields || []), 'endDate'];
-                                                        setNewTraining({ ...newTraining, hiddenFields: updated });
-                                                    }}>
-                                                        {newTraining.hiddenFields?.includes('endDate') ? <EyeOff className="w-3 h-3 text-red-400" /> : <Eye className="w-3 h-3" />}
-                                                    </Button>
-                                                </div>
-                                                <div className="relative space-y-2">
-                                                    <div className="flex items-center justify-between">
-                                                        <Label>Apply Before</Label>
-                                                    </div>
-                                                    <Input type="date" value={newTraining.applyBy} onChange={e => setNewTraining({ ...newTraining, applyBy: e.target.value })} />
-                                                    <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-6 h-8 w-8 text-gray-400" onClick={() => {
-                                                        const isHidden = newTraining.hiddenFields?.includes('applyBy');
-                                                        const updated = isHidden ? newTraining.hiddenFields.filter(f => f !== 'applyBy') : [...(newTraining.hiddenFields || []), 'applyBy'];
-                                                        setNewTraining({ ...newTraining, hiddenFields: updated });
-                                                    }}>
-                                                        {newTraining.hiddenFields?.includes('applyBy') ? <EyeOff className="w-3 h-3 text-red-400" /> : <Eye className="w-3 h-3" />}
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div className="relative">
-                                                    <Input placeholder="Timing (e.g. 10:00 AM - 12:00 PM)" value={newTraining.timing || ""} onChange={e => setNewTraining({ ...newTraining, timing: e.target.value })} />
-                                                    <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1 h-8 w-8 text-gray-400" onClick={() => {
-                                                        const isHidden = newTraining.hiddenFields?.includes('timing');
-                                                        const updated = isHidden ? newTraining.hiddenFields.filter(f => f !== 'timing') : [...(newTraining.hiddenFields || []), 'timing'];
-                                                        setNewTraining({ ...newTraining, hiddenFields: updated });
-                                                    }}>
-                                                        {newTraining.hiddenFields?.includes('timing') ? <EyeOff className="w-4 h-4 text-red-400" /> : <Eye className="w-4 h-4" />}
-                                                    </Button>
-                                                </div>
-                                                <div className="relative">
-                                                    <Input placeholder="Note (One line context)" value={newTraining.note || ""} onChange={e => setNewTraining({ ...newTraining, note: e.target.value })} />
-                                                    <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1 h-8 w-8 text-gray-400" onClick={() => {
-                                                        const isHidden = newTraining.hiddenFields?.includes('note');
-                                                        const updated = isHidden ? newTraining.hiddenFields.filter(f => f !== 'note') : [...(newTraining.hiddenFields || []), 'note'];
-                                                        setNewTraining({ ...newTraining, hiddenFields: updated });
-                                                    }}>
-                                                        {newTraining.hiddenFields?.includes('note') ? <EyeOff className="w-4 h-4 text-red-400" /> : <Eye className="w-4 h-4" />}
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <Input placeholder="Syllabus Link (URL)" value={newTraining.syllabusLink} onChange={e => setNewTraining({ ...newTraining, syllabusLink: e.target.value })} />
-                                                <div className="relative">
-                                                    <Input placeholder="Community Link (WhatsApp/Discord)" value={newTraining.communityLink} onChange={e => setNewTraining({ ...newTraining, communityLink: e.target.value })} />
-                                                    <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1 h-8 w-8 text-gray-400" onClick={() => {
-                                                        const isHidden = newTraining.hiddenFields?.includes('communityLink');
-                                                        const updated = isHidden ? newTraining.hiddenFields.filter(f => f !== 'communityLink') : [...(newTraining.hiddenFields || []), 'communityLink'];
-                                                        setNewTraining({ ...newTraining, hiddenFields: updated });
-                                                    }}>
-                                                        {newTraining.hiddenFields?.includes('communityLink') ? <EyeOff className="w-4 h-4 text-red-400" /> : <Eye className="w-4 h-4" />}
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                            <Textarea placeholder="Short Description *" value={newTraining.description} onChange={e => setNewTraining({ ...newTraining, description: e.target.value })} required />
-
-                                            {/* Dynamic Form Builder */}
-                                            <div className="space-y-4 border p-4 rounded-md bg-secondary/10">
-                                                <div className="flex justify-between items-center">
-                                                    <h4 className="font-semibold text-sm">Application Form Fields</h4>
-                                                    <Button type="button" size="sm" variant="outline" onClick={addFormField}>+ Add Field</Button>
-                                                </div>
-
-                                                {(newTraining.formFields || []).map((field, idx) => (
-                                                    <div key={idx} className="flex flex-col gap-2 p-3 border rounded bg-background">
-                                                        <div className="flex gap-2 items-center">
-                                                            <Input
-                                                                placeholder="Field Label (e.g. LinkedIn Profile)"
-                                                                value={field.label}
-                                                                onChange={e => updateFormField(idx, 'label', e.target.value)}
-                                                                className="flex-1"
-                                                            />
-                                                            <select
-                                                                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm w-32"
-                                                                value={field.type}
-                                                                onChange={e => updateFormField(idx, 'type', e.target.value)}
-                                                            >
-                                                                <option value="text">Text</option>
-                                                                <option value="email">Email</option>
-                                                                <option value="number">Number</option>
-                                                                <option value="textarea">Text Area</option>
-                                                                <option value="select">Select</option>
-                                                            </select>
-                                                            {/* Custom Field Visibility Toggle */}
-                                                            <Button type="button" variant="ghost" size="icon" className="text-gray-400" onClick={() => updateFormField(idx, 'isHidden', !field.isHidden)}>
-                                                                {field.isHidden ? <EyeOff className="w-4 h-4 text-red-400" /> : <Eye className="w-4 h-4" />}
-                                                            </Button>
-                                                            <Button type="button" variant="ghost" size="icon" className="text-red-500" onClick={() => removeFormField(idx)}>
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </Button>
-                                                        </div>
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="flex items-center space-x-2">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    id={`req-${idx}`}
-                                                                    checked={field.required}
-                                                                    onChange={e => updateFormField(idx, 'required', e.target.checked)}
-                                                                    className="h-4 w-4 rounded border-gray-300"
-                                                                />
-                                                                <label htmlFor={`req-${idx}`} className="text-xs">Required</label>
-                                                            </div>
-                                                            {field.type === 'select' && (
-                                                                <Input
-                                                                    placeholder="Options (comma separated)"
-                                                                    value={field.options}
-                                                                    onChange={e => updateFormField(idx, 'options', e.target.value)}
-                                                                    className="flex-1 h-8 text-xs"
-                                                                />
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                {(newTraining.formFields || []).length === 0 && <p className="text-xs text-muted-foreground text-center">No custom fields. Default fields: Name, Email.</p>}
-                                            </div>
-
-                                            {/* Email Customization Section */}
-                                            <div className="space-y-4 border p-4 rounded-md bg-indigo-50/30">
-                                                <div className="flex items-center gap-2">
-                                                    <Mail className="w-4 h-4 text-indigo-600" />
-                                                    <h4 className="font-semibold text-sm">Email Customization</h4>
-                                                </div>
-                                                <p className="text-xs text-muted-foreground">Customize the confirmation email sent to applicants.</p>
-
-                                                <Input
-                                                    placeholder="Email Subject (Default: Registration Confirmed...)"
-                                                    value={newTraining.emailSubject || ""}
-                                                    onChange={(e) => setNewTraining({ ...newTraining, emailSubject: e.target.value })}
-                                                />
-
-                                                <Textarea
-                                                    placeholder="Email Body (HTML supported). Use {{name}} for applicant name."
-                                                    value={newTraining.emailBody || ""}
-                                                    onChange={(e) => setNewTraining({ ...newTraining, emailBody: e.target.value })}
-                                                    className="min-h-[100px] font-mono text-sm"
-                                                />
-
-                                                <div className="space-y-2">
-                                                    <Label className="text-xs">Important Links / Buttons</Label>
-                                                    {(newTraining.emailLinks || []).map((link, idx) => (
-                                                        <div key={idx} className="flex gap-2 items-center bg-background p-2 rounded border">
-                                                            <Input
-                                                                placeholder="Label"
-                                                                value={link.label}
-                                                                onChange={(e) => updateTrainingEmailLink(idx, 'label', e.target.value)}
-                                                                className="flex-1 h-8"
-                                                            />
-                                                            <Input
-                                                                placeholder="URL"
-                                                                value={link.url}
-                                                                onChange={(e) => updateTrainingEmailLink(idx, 'url', e.target.value)}
-                                                                className="flex-1 h-8"
-                                                            />
-                                                            <div className="flex items-center gap-1">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={link.isButton}
-                                                                    onChange={(e) => updateTrainingEmailLink(idx, 'isButton', e.target.checked)}
-                                                                    className="h-3 w-3"
-                                                                />
-                                                                <span className="text-[10px]">Btn</span>
-                                                            </div>
-                                                            <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-red-500" onClick={() => removeTrainingEmailLink(idx)}>
-                                                                <Trash2 className="w-3 h-3" />
-                                                            </Button>
-                                                        </div>
-                                                    ))}
-                                                    <Button type="button" variant="outline" size="sm" onClick={addTrainingEmailLink} className="w-full h-8 text-xs border-dashed text-indigo-600 border-indigo-200">+ Add Link</Button>
-                                                </div>
-                                            </div>
-
-                                            <Button type="submit" className="w-full">{editingTrainingId ? "Update Training (Hidden by Default)" : "Create Training (Hidden by Default)"}</Button>
-                                            {editingTrainingId && <Button type="button" variant="outline" className="w-full mt-2" onClick={() => { setNewTraining({ name: "", category: "Full Stack Software Development", topics: "", duration: "", mode: "Online", description: "", syllabusLink: "", status: "Active", formFields: [], startDate: "", endDate: "", applyBy: "", timing: "", note: "", emailSubject: "", emailBody: "", emailLinks: [], hiddenFields: [], communityLink: "" }); setEditingTrainingId(null); }}>Cancel Edit</Button>}
-                                        </form>
-                                    </CardContent>
-                                </Card>
-
-                                <Card>
-                                    <CardHeader className="pb-3">
-                                        <div className="flex justify-between items-center">
-                                            <CardTitle>Existing Trainings</CardTitle>
-                                            <select
-                                                className="h-9 w-40 rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                                value={trainingTopicFilter}
-                                                onChange={(e) => setTrainingTopicFilter(e.target.value)}
-                                            >
-                                                <option value="All">All Topics</option>
-                                                <option>Full Stack Software Development</option>
-                                                <option>Artificial Intelligence & Generative AI</option>
-                                                <option>Database Technologies</option>
-                                                <option>Machine Learning & Data Science</option>
-                                                <option>Cloud Computing</option>
-                                                <option>DevOps & Platform Engineering</option>
-                                                <option>Cybersecurity</option>
-                                                <option>Data Engineering & Analytics</option>
-                                                <option>AI Tools & Automation</option>
-                                                <option>Edge Computing & IoT</option>
-                                                <option>Blockchain & Web3</option>
-                                                <option>AR / VR / XR</option>
-                                                <option>Quantum Computing</option>
-                                            </select>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                                            {trainings
-                                                .filter(t => trainingTopicFilter === "All" || t.category === trainingTopicFilter)
-                                                .map(t => (
-                                                    <div key={t._id} className="p-4 border rounded-lg bg-card flex flex-col gap-2">
-                                                        <div className="flex justify-between items-start">
-                                                            <div>
-                                                                <h4 className="font-bold">{t.name}</h4>
-                                                                <span className="text-xs text-muted-foreground">{t.category} • {t.mode}</span>
-
-                                                                {/* Date Verification Display */}
-                                                                <div className="flex flex-wrap gap-2 mt-2 text-xs">
-                                                                    <div className={`px-2 py-1 rounded border ${t.hiddenFields?.includes('startDate') ? "bg-red-50 border-red-200 text-red-600" : "bg-green-50 border-green-200 text-green-700"}`}>
-                                                                        <span className="font-semibold">Start:</span> {t.startDate ? new Date(t.startDate).toLocaleDateString() : "N/A"} {t.hiddenFields?.includes('startDate') && "(Hidden)"}
-                                                                    </div>
-                                                                    <div className={`px-2 py-1 rounded border ${t.hiddenFields?.includes('endDate') ? "bg-red-50 border-red-200 text-red-600" : "bg-green-50 border-green-200 text-green-700"}`}>
-                                                                        <span className="font-semibold">End:</span> {t.endDate ? new Date(t.endDate).toLocaleDateString() : "N/A"} {t.hiddenFields?.includes('endDate') && "(Hidden)"}
-                                                                    </div>
-                                                                    <div className={`px-2 py-1 rounded border ${t.hiddenFields?.includes('applyBy') ? "bg-red-50 border-red-200 text-red-600" : "bg-green-50 border-green-200 text-green-700"}`}>
-                                                                        <span className="font-semibold">Apply:</span> {t.applyBy ? new Date(t.applyBy).toLocaleDateString() : "N/A"} {t.hiddenFields?.includes('applyBy') && "(Hidden)"}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex gap-1 items-center">
-                                                                {/* Registration Count Badge */}
-                                                                <div className="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-md mr-1" title="Total Registrations">
-                                                                    {trainingApplications.filter(app => app.trainingName === t.name).length} Regs
-                                                                </div>
-
-                                                                {/* Download CSV Button */}
-                                                                <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50" onClick={() => handleDownloadTrainingCSV(t.name)} title="Download Applicant Data">
-                                                                    <Download className="w-4 h-4" />
-                                                                </Button>
-
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className={`h-8 w-8 p-0 ${t.isHidden ? 'text-gray-500 border-gray-200' : 'text-green-600 border-green-200'}`}
-                                                                    onClick={() => handleToggleTrainingVisibility(t._id, t.isHidden, t.name)}
-                                                                    title={t.isHidden ? "Click to Unhide" : "Click to Hide"}
-                                                                >
-                                                                    {t.isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                                </Button>
-                                                                <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => {
-                                                                    setEditingTrainingId(t._id);
-                                                                    setNewTraining({
-                                                                        ...t,
-                                                                        topics: Array.isArray(t.topics) ? t.topics.join(', ') : t.topics,
-                                                                        formFields: t.formFields || [],
-                                                                        startDate: t.startDate || "",
-                                                                        endDate: t.endDate || "",
-                                                                        applyBy: t.applyBy || "",
-                                                                        timing: t.timing || "",
-                                                                        note: t.note || "",
-                                                                        emailSubject: t.emailSubject || "",
-                                                                        emailBody: t.emailBody || "",
-                                                                        emailLinks: t.emailLinks || [],
-                                                                        communityLink: t.communityLink || "" // Populating for edit
-                                                                    });
-                                                                }}><Monitor className="w-4 h-4" /></Button>
-                                                                <Button size="sm" variant="ghost" className="text-red-500 h-8 w-8 p-0" onClick={() => handleDeleteTraining(t._id)}><Trash2 className="w-4 h-4" /></Button>
-                                                            </div>
-                                                        </div>
-                                                        <p className="text-sm text-muted-foreground line-clamp-2">{t.description}</p>
-                                                        {t.syllabusLink && <a href={t.syllabusLink} target="_blank" rel="noreferrer" className="text-xs text-blue-500 flex items-center gap-1"><ExternalLink className="w-3 h-3" /> Syllabus</a>}
-                                                    </div>
-                                                ))}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </TabsContent>
-
-                        {/* TRAINING APPLICATIONS TAB */}
-                        <TabsContent value="training_apps" className="mt-0">
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between">
-                                    <div className="flex flex-col gap-2">
-                                        <CardTitle>Training Applications</CardTitle>
-                                        <CardDescription>Select Category and Training to view applications</CardDescription>
-                                    </div>
-                                    <Button variant="outline" size="sm" onClick={handleDownloadTrainingApplicationsCSV} className="text-green-600 border-green-200">
-                                        <Download className="w-4 h-4 mr-2" />
-                                        Download CSV
-                                    </Button>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="flex gap-4 mb-6">
-                                        <div className="w-1/2">
-                                            <Label>Select Category</Label>
-                                            <select
-                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                                value={trainingAppCategory}
-                                                onChange={(e) => {
-                                                    setTrainingAppCategory(e.target.value);
-                                                    setTrainingAppName("All"); // Reset training selection
-                                                }}
-                                            >
-                                                <option value="All">All Categories</option>
-                                                <option>Full Stack Software Development</option>
-                                                <option>Artificial Intelligence & Generative AI</option>
-                                                <option>Database Technologies</option>
-                                                <option>Machine Learning & Data Science</option>
-                                                <option>Cloud Computing</option>
-                                                <option>DevOps & Platform Engineering</option>
-                                                <option>Cybersecurity</option>
-                                                <option>Data Engineering & Analytics</option>
-                                                <option>AI Tools & Automation</option>
-                                                <option>Edge Computing & IoT</option>
-                                                <option>Blockchain & Web3</option>
-                                                <option>AR / VR / XR</option>
-                                                <option>Quantum Computing</option>
-                                            </select>
-                                        </div>
-                                        <div className="w-1/2">
-                                            <Label>Select Training</Label>
-                                            <select
-                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                                value={trainingAppName}
-                                                onChange={(e) => setTrainingAppName(e.target.value)}
-                                                disabled={trainingAppCategory === "All"}
-                                            >
-                                                <option value="All">All Trainings</option>
-                                                {trainings
-                                                    .filter(t => t.category === trainingAppCategory)
-                                                    .map(t => (
-                                                        <option key={t._id} value={t.name}>{t.name}</option>
-                                                    ))}
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {/* Show Table Only if filtered or just show all but filtered */}
-                                    <div className="rounded-md border border-border">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Date</TableHead>
-                                                    <TableHead>Name</TableHead>
-                                                    <TableHead>Training</TableHead>
-                                                    <TableHead>Contact</TableHead>
-                                                    {/* Changed: Removed Transaction Column */}
-                                                    <TableHead>Status</TableHead>
-                                                    <TableHead>Actions</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {trainingApplications
-                                                    .filter(app => {
-                                                        const matchCategory = trainingAppCategory === "All" || trainings.find(t => t.name === app.trainingName)?.category === trainingAppCategory;
-                                                        const matchName = trainingAppName === "All" || app.trainingName === trainingAppName;
-                                                        return matchCategory && matchName;
-                                                    })
-                                                    .map(app => (
-                                                        <TableRow key={app._id}>
-                                                            <TableCell className="text-xs">{new Date(app.submittedAt).toLocaleDateString()}</TableCell>
-                                                            <TableCell>{app.name}</TableCell>
-                                                            <TableCell>{app.trainingName}</TableCell>
-                                                            <TableCell>
-                                                                <div className="flex flex-col text-xs">
-                                                                    <span>{app.email}</span>
-                                                                    <span>{app.phone || (app.dynamicData?.["Phone Number"]) || (app.dynamicData?.["Contact"])}</span>
-                                                                    {(app.linkedinProfile || app.dynamicData?.["Linkdin Profile"]) &&
-                                                                        <a href={app.linkedinProfile || app.dynamicData?.["Linkdin Profile"]} target="_blank" className="text-blue-500 hover:underline">LinkedIn</a>
-                                                                    }
-                                                                </div>
-                                                            </TableCell>
-                                                            {/* Changed: Removed Transaction Column */}
-                                                            <TableCell>
-                                                                <span className="px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs font-bold">{app.status}</span>
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <Button variant="ghost" size="sm" onClick={() => setSelectedAppForDetails(app)}>
-                                                                    View Details
-                                                                </Button>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                {trainingApplications.length === 0 && (
-                                                    <TableRow>
-                                                        <TableCell colSpan={5} className="text-center h-24">No applications found.</TableCell>
-                                                    </TableRow>
-                                                )}
-                                            </TableBody>
-                                        </Table>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
-
 
                         {/* SOCIAL POSTS TAB */}
                         <TabsContent value="social-posts" className="mt-0">
-                            <SocialPostManager />
+                            <SocialPostManager showControls={!isSharedAdminMode} />
                         </TabsContent>
 
                         {/* AI POSTS TAB */}
                         <TabsContent value="ai-posts" className="mt-0">
-                            <AIPostManager />
+                            <AIPostManager showControls={!isSharedAdminMode} />
                         </TabsContent>
 
                         {/* ADS TAB */}
                         <TabsContent value="ads" className="mt-0">
-                            <NewsAdminPanel />
+                            <NewsAdminPanel showControls={!isSharedAdminMode} />
                         </TabsContent>
 
                         {/* WEBINARS TAB */}
 
                         <TabsContent value="webinars" className="mt-0">
-                            <WebinarManager />
+                            <WebinarManager showControls={!isSharedAdminMode} />
                         </TabsContent>
 
                         {/* CAREER GUIDANCE TAB */}
                         <TabsContent value="career_guidance" className="mt-0">
-                            <CareerGuidanceAdmin />
+                            <CareerGuidanceAdmin showControls={!isSharedAdminMode} />
                         </TabsContent>
 
                     </Tabs>
@@ -3159,6 +1480,32 @@ const AdminPanel = () => {
                         )}
                         <DialogFooter>
                             <Button onClick={() => setSelectedAppForDetails(null)}>Close</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* SHARED ADMIN PASSWORD MODAL */}
+                <Dialog open={!!pendingSection} onOpenChange={() => setPendingSection(null)}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Section Locked</DialogTitle>
+                            <DialogDescription>
+                                Enter password to access {pendingSection?.replace(/-/g, ' ').replace(/_/g, ' ')}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <Input
+                                type="password"
+                                value={passwordInput}
+                                onChange={(e) => setPasswordInput(e.target.value)}
+                                placeholder="Enter section password"
+                                onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                                autoFocus
+                            />
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setPendingSection(null)}>Cancel</Button>
+                            <Button onClick={handlePasswordSubmit}>Unlock</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 
-const WebinarManager = () => {
+const WebinarManager = ({ showControls = true }: { showControls?: boolean }) => {
     const [webinars, setWebinars] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -216,9 +216,11 @@ const WebinarManager = () => {
                                     <div key={cat._id} className={`text-xs bg-white border px-2 py-1 rounded flex items-center gap-2 group ${cat.isHidden ? 'opacity-60 border-dashed' : ''}`}>
                                         {cat.name}
                                         <div className="flex gap-1 items-center ml-2 border-l pl-2">
-                                            <button onClick={() => toggleCategoryVisibility(cat._id, cat.isHidden)} className="text-gray-400 hover:text-blue-600">
-                                                {cat.isHidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                                            </button>
+                                            {showControls && (
+                                                <button onClick={() => toggleCategoryVisibility(cat._id, cat.isHidden)} className="text-gray-400 hover:text-blue-600">
+                                                    {cat.isHidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                                                </button>
+                                            )}
                                             <button onClick={() => handleDeleteCategory(cat._id)} className="text-red-400 hover:text-red-600">
                                                 <X className="w-3 h-3" />
                                             </button>
@@ -323,15 +325,17 @@ const WebinarManager = () => {
                                             </div>
                                         </div>
                                         <div className="flex sm:flex-col gap-2 justify-center border-t sm:border-t-0 sm:border-l pt-3 sm:pt-0 sm:pl-3 mt-3 sm:mt-0">
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                className={`h-8 w-full justify-start ${webinar.isHidden ? "text-gray-500" : "text-green-600"}`}
-                                                onClick={() => handleToggleVisibility(webinar._id, webinar.isHidden, webinar.title)}
-                                            >
-                                                {webinar.isHidden ? <EyeOff className="w-3 h-3 mr-2" /> : <Eye className="w-3 h-3 mr-2" />}
-                                                {webinar.isHidden ? "Hidden" : "Visible"}
-                                            </Button>
+                                            {showControls && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className={`h-8 w-full justify-start ${webinar.isHidden ? "text-gray-500" : "text-green-600"}`}
+                                                    onClick={() => handleToggleVisibility(webinar._id, webinar.isHidden, webinar.title)}
+                                                >
+                                                    {webinar.isHidden ? <EyeOff className="w-3 h-3 mr-2" /> : <Eye className="w-3 h-3 mr-2" />}
+                                                    {webinar.isHidden ? "Hidden" : "Visible"}
+                                                </Button>
+                                            )}
                                             <Button size="sm" variant="ghost" className="h-8 w-full justify-start" onClick={() => handleEdit(webinar)}>
                                                 <Pencil className="w-3 h-3 mr-2" /> Edit
                                             </Button>

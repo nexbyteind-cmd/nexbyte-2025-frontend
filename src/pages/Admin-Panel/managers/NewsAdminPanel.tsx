@@ -24,7 +24,7 @@ import {
 const IK_PUBLIC_KEY = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY;
 const IK_URL_ENDPOINT = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
 
-const NewsAdminPanel = () => {
+const NewsAdminPanel = ({ showControls = true }: { showControls?: boolean }) => {
     const authenticator = async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/api/imagekit-auth`);
@@ -836,9 +836,11 @@ const NewsAdminPanel = () => {
                                                 <TableCell>{ad.category}</TableCell>
                                                 <TableCell>{ad.homepageVisible ? "Featured" : "Standard"}</TableCell>
                                                 <TableCell className="flex gap-2">
-                                                    <Button size="sm" variant={ad.isVisible === false ? "secondary" : "ghost"} onClick={() => toggleAdVisibility(ad)}>
-                                                        {ad.isVisible === false ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                                                    </Button>
+                                                    {showControls && (
+                                                        <Button size="sm" variant={ad.isVisible === false ? "secondary" : "ghost"} onClick={() => toggleAdVisibility(ad)}>
+                                                            {ad.isVisible === false ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                                                        </Button>
+                                                    )}
                                                     <Button size="sm" variant="outline" onClick={() => handleEditAd(ad)}><Pencil className="w-4 h-4" /></Button>
                                                     <Button size="sm" variant="destructive" onClick={() => handleDeleteAd(ad._id)}><Trash2 className="w-4 h-4" /></Button>
                                                 </TableCell>

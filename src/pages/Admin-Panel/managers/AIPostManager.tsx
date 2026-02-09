@@ -6,31 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Trash2, Image as ImageIcon, Loader2, Eye, EyeOff, MessageSquare, MessageSquareOff, Calendar, Pencil } from "lucide-react";
+import { Trash2, Image as ImageIcon, Loader2, Eye, EyeOff, MessageSquare, MessageSquareOff, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Plus } from "lucide-react";
+import { Plus, X, Tag, Pencil } from "lucide-react";
 
 // ImageKit Config
 const IK_PUBLIC_KEY = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY;
 const IK_URL_ENDPOINT = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
 
-const TECH_CATEGORIES = [
-    { label: "Python", value: "Python" },
-    { label: "Oracle DBA", value: "ORACLE DBA" },
-    { label: "MSSQL", value: "SQL SERVER DBA" },
-    { label: "MySQL", value: "MY SQL" },
-    { label: "PostgreSQL", value: "POSTGRESS" },
-    { label: "MongoDB", value: "MongoDB" }
-];
-
-interface TechPostManagerProps {
-    fixedCategory?: string;
-}
-
-const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
+const AIPostManager = ({ showControls = true }: { showControls?: boolean }) => {
     const authenticator = async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/api/imagekit-auth`);
@@ -53,35 +40,27 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
 
     // Filter State
     const [date, setDate] = useState<Date | undefined>(undefined);
-    const [adminSelectedCategory, setAdminSelectedCategory] = useState(fixedCategory || "All");
+    const [adminSelectedCategory, setAdminSelectedCategory] = useState("All");
 
     // Form State
     const [newPost, setNewPost] = useState({
         content: "",
         image: null as string | null,
-        category: fixedCategory || "",
-        subcategory: "",
+        category: "",
         actionLink: "",
         buttonText: "More Info"
     });
     const [uploading, setUploading] = useState(false);
     const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
-    // Subcategory State
-    const [subcategories, setSubcategories] = useState<any[]>([]);
-    const [newSubcategory, setNewSubcategory] = useState("");
-    const [isCreatingSubcategory, setIsCreatingSubcategory] = useState(false);
-
-    useEffect(() => {
-        if (fixedCategory) {
-            setAdminSelectedCategory(fixedCategory);
-            setNewPost(prev => ({ ...prev, category: fixedCategory }));
-            fetchSubcategories(fixedCategory);
-        }
-    }, [fixedCategory]);
+    // Category State
+    const [categories, setCategories] = useState<any[]>([]);
+    const [newCategory, setNewCategory] = useState("");
+    const [isCreatingCategory, setIsCreatingCategory] = useState(false);
 
     useEffect(() => {
         fetchPosts();
+        fetchCategories();
     }, [sortBy, adminSelectedCategory]);
 
     useEffect(() => {
@@ -96,7 +75,8 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
     const fetchPosts = async () => {
         setLoading(true);
         try {
-            let url = `${API_BASE_URL}/api/admin/tech-posts?sort=${sortBy}`;
+            // Use Admin endpoint to get ALL posts (including hidden)
+            let url = `${API_BASE_URL}/api/admin/ai-posts?sort=${sortBy}`;
             if (adminSelectedCategory && adminSelectedCategory !== "All") {
                 url += `&category=${encodeURIComponent(adminSelectedCategory)}`;
             }
@@ -114,75 +94,76 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
         }
     };
 
-
-    const fetchSubcategories = async (category: string) => {
+    const fetchCategories = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/tech-subcategories?category=${encodeURIComponent(category)}&includeHidden=true`);
+            // Admin needs to see ALL categories, including hidden ones
+            const response = await fetch(`${API_BASE_URL}/api/ai-categories?includeHidden=true`);
             const data = await response.json();
             if (data.success) {
-                setSubcategories(data.data);
+                setCategories(data.data);
             }
         } catch (error) {
-            console.error("Error fetching subcategories:", error);
+            console.error("Error fetching categories:", error);
         }
     };
 
-    const handleCreateSubcategory = async () => {
-        if (!newSubcategory.trim()) return;
-        setIsCreatingSubcategory(true);
+    const handleCreateCategory = async () => {
+        if (!newCategory.trim()) return;
+        setIsCreatingCategory(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/api/tech-subcategories`, {
+            const response = await fetch(`${API_BASE_URL}/api/ai-categories`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: newSubcategory, parentCategory: fixedCategory })
+                body: JSON.stringify({ name: newCategory })
             });
             const data = await response.json();
             if (data.success) {
-                toast.success("Subcategory created");
-                setNewSubcategory("");
-                if (fixedCategory) fetchSubcategories(fixedCategory);
+                toast.success("Category created");
+                setNewCategory("");
+                fetchCategories();
             } else {
-                toast.error(data.message || "Failed to create subcategory");
+                toast.error(data.message || "Failed to create category");
             }
         } catch (error) {
-            toast.error("Error creating subcategory");
+            toast.error("Error creating category");
         } finally {
-            setIsCreatingSubcategory(false);
+            setIsCreatingCategory(false);
         }
     };
 
-    const handleDeleteSubcategory = async (id: string) => {
-        if (!confirm("Delete this subcategory?")) return;
+    const handleDeleteCategory = async (id: string) => {
+        if (!confirm("Delete this category?")) return;
         try {
-            const response = await fetch(`${API_BASE_URL}/api/tech-subcategories/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/ai-categories/${id}`, {
                 method: "DELETE"
             });
             if (response.ok) {
-                toast.success("Subcategory deleted");
-                if (fixedCategory) fetchSubcategories(fixedCategory);
+                toast.success("Category deleted");
+                fetchCategories();
             } else {
-                toast.error("Failed to delete subcategory");
+                toast.error("Failed to delete category");
             }
         } catch (error) {
-            toast.error("Error deleting subcategory");
+            toast.error("Error deleting category");
         }
     };
 
-    const toggleSubcategoryVisibility = async (id: string, currentStatus: boolean) => {
+    const toggleCategoryVisibility = async (id: string, currentStatus: boolean) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/tech-subcategories/${id}/visibility`, {
+            const response = await fetch(`${API_BASE_URL}/api/ai-categories/${id}/visibility`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ isHidden: !currentStatus })
             });
             if (response.ok) {
-                toast.success(currentStatus ? "Subcategory Unhidden" : "Subcategory Hidden");
-                if (fixedCategory) fetchSubcategories(fixedCategory);
+                toast.success(currentStatus ? "Category Unhidden" : "Category Hidden");
+                fetchCategories();
+                fetchPosts(); // Refresh posts as their visibility might depend on category
             } else {
-                toast.error("Failed to update subcategory visibility");
+                toast.error("Failed to update category visibility");
             }
         } catch (error) {
-            toast.error("Error updating subcategory visibility");
+            toast.error("Error updating category visibility");
         }
     };
 
@@ -201,12 +182,9 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
         if (!newPost.content && !newPost.image) {
             return toast.error("Please add text or an image");
         }
-        if (!newPost.category) {
-            return toast.error("Please select a category");
-        }
 
         try {
-            const response = await fetch(`${API_BASE_URL}/api/tech-posts`, {
+            const response = await fetch(`${API_BASE_URL}/api/ai-posts`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(newPost)
@@ -215,14 +193,7 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
 
             if (data.success) {
                 toast.success("Post created successfully!");
-                setNewPost({
-                    content: "",
-                    image: null,
-                    category: fixedCategory || "",
-                    subcategory: "",
-                    actionLink: "",
-                    buttonText: "More Info"
-                });
+                setNewPost({ content: "", image: null, category: "", actionLink: "", buttonText: "More Info" });
                 fetchPosts();
             } else {
                 toast.error("Failed to create post");
@@ -237,7 +208,6 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
             content: post.content || "",
             image: post.image || null,
             category: post.category || "",
-            subcategory: post.subcategory || "",
             actionLink: post.actionLink || "",
             buttonText: post.buttonText || "More Info"
         });
@@ -246,14 +216,7 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
     };
 
     const handleCancelEdit = () => {
-        setNewPost({
-            content: "",
-            image: null,
-            category: fixedCategory || "",
-            subcategory: "",
-            actionLink: "",
-            buttonText: "More Info"
-        });
+        setNewPost({ content: "", image: null, category: "", actionLink: "", buttonText: "More Info" });
         setEditingPostId(null);
     };
 
@@ -265,7 +228,7 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
 
         setUploading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/api/tech-posts/${editingPostId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/ai-posts/${editingPostId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -292,7 +255,7 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
     const handleDeletePost = async (id: string) => {
         if (!confirm("Are you sure you want to delete this post?")) return;
         try {
-            const response = await fetch(`${API_BASE_URL}/api/tech-posts/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/ai-posts/${id}`, {
                 method: "DELETE"
             });
             if (response.ok) {
@@ -308,13 +271,13 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
 
     const toggleVisibility = async (id: string, currentStatus: boolean) => {
         try {
-            await fetch(`${API_BASE_URL}/api/tech-posts/${id}`, {
+            await fetch(`${API_BASE_URL}/api/ai-posts/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ type: "visibility", payload: { isHidden: !currentStatus } })
             });
             toast.success(currentStatus ? "Post is now visible" : "Post hidden");
-            fetchPosts();
+            fetchPosts(); // Refresh to update UI state properly
         } catch (error) {
             toast.error("Error updating visibility");
         }
@@ -322,7 +285,7 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
 
     const toggleComments = async (id: string, currentStatus: boolean) => {
         try {
-            await fetch(`${API_BASE_URL}/api/tech-posts/${id}`, {
+            await fetch(`${API_BASE_URL}/api/ai-posts/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ type: "comments-toggle", payload: { commentsHidden: !currentStatus } })
@@ -345,98 +308,72 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <Card className="lg:col-span-1 h-fit">
                         <CardHeader>
-                            <CardTitle>{editingPostId ? "Edit Tech Post" : `Create ${fixedCategory ? fixedCategory : 'Tech'} Post`}</CardTitle>
-                            <CardDescription>{editingPostId ? "Modify your existing post" : "Share technology updates"}</CardDescription>
+                            <CardTitle>{editingPostId ? "Edit Post" : "Create New AI Post"}</CardTitle>
+                            <CardDescription>{editingPostId ? "Modify your existing post" : "Share AI updates with the community"}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
 
-                            {/* Category Selection (Only if not fixed) */}
-                            {!fixedCategory && (
-                                <div className="space-y-2">
-                                    <Label>Category</Label>
-                                    <Select
-                                        value={newPost.category}
-                                        onValueChange={(val) => setNewPost({ ...newPost, category: val })}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Category" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {TECH_CATEGORIES.map((cat) => (
-                                                <SelectItem key={cat.value} value={cat.value}>
-                                                    {cat.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                            {/* Category Creation (Embedded) */}
+                            <div className="bg-gray-50 p-3 rounded-md border border-gray-100 mb-2">
+                                <Label className="text-xs text-gray-500 mb-1.5 block">Add New Category</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        placeholder="New Category Name"
+                                        value={newCategory}
+                                        onChange={(e) => setNewCategory(e.target.value)}
+                                        className="h-8 text-xs bg-white"
+                                    />
+                                    <Button size="sm" onClick={handleCreateCategory} disabled={isCreatingCategory || !newCategory.trim()} className="h-8">
+                                        {isCreatingCategory ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                                    </Button>
                                 </div>
-                            )}
-                            {/* Display fixed category if set */}
-                            {fixedCategory && (
-                                <div className="mb-2">
-                                    <span className="text-sm font-medium text-gray-500">Posting to: </span>
-                                    <span className="text-sm font-bold text-blue-600">{fixedCategory}</span>
-                                </div>
-                            )}
-
-                            {/* Subcategory Management (Only if fixedCategory is present) */}
-                            {fixedCategory && (
-                                <div className="bg-gray-50 p-3 rounded-md border border-gray-100 mb-2">
-                                    <Label className="text-xs text-gray-500 mb-1.5 block">Manage Subcategories</Label>
-                                    <div className="flex gap-2">
-                                        <Input
-                                            placeholder="New Subcategory"
-                                            value={newSubcategory}
-                                            onChange={(e) => setNewSubcategory(e.target.value)}
-                                            className="h-8 text-xs bg-white"
-                                        />
-                                        <Button size="sm" onClick={handleCreateSubcategory} disabled={isCreatingSubcategory || !newSubcategory.trim()} className="h-8">
-                                            {isCreatingSubcategory ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
-                                        </Button>
-                                    </div>
-                                    <div className="mt-2 flex flex-wrap gap-1">
-                                        {subcategories.map(sub => (
-                                            <div key={sub._id} className={`text-xs bg-white border px-2 py-1 rounded flex items-center gap-2 group ${sub.isHidden ? 'opacity-60 border-dashed border-gray-400' : ''}`}>
-                                                {sub.name}
-                                                <div className="flex gap-1 items-center ml-2 border-l pl-2 border-gray-200">
-                                                    <button onClick={() => toggleSubcategoryVisibility(sub._id, sub.isHidden)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded" title={sub.isHidden ? "Unhide Subcategory" : "Hide Subcategory"}>
-                                                        {sub.isHidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                                <div className="mt-2 flex flex-wrap gap-1">
+                                    {categories.map(cat => (
+                                        <div key={cat._id} className={`text-xs bg-white border px-2 py-1 rounded flex items-center gap-2 group ${cat.isHidden ? 'opacity-60 border-dashed border-gray-400' : ''}`}>
+                                            {cat.name}
+                                            <div className="flex gap-1 items-center ml-2 border-l pl-2 border-gray-200">
+                                                {showControls && (
+                                                    <button onClick={() => toggleCategoryVisibility(cat._id, cat.isHidden)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded" title={cat.isHidden ? "Unhide Category" : "Hide Category"}>
+                                                        {cat.isHidden ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                                     </button>
-                                                    <button onClick={() => handleDeleteSubcategory(sub._id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded" title="Delete Subcategory">
-                                                        <X className="w-3 h-3" />
-                                                    </button>
-                                                </div>
+                                                )}
+                                                <button onClick={() => handleDeleteCategory(cat._id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded" title="Delete Category">
+                                                    <X className="w-5 h-5" />
+                                                </button>
                                             </div>
-                                        ))}
-                                    </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            )}
+                            </div>
+
+                            {/* Category Selection */}
+                            <div className="space-y-2">
+                                <Label>Category</Label>
+                                <Select
+                                    value={newPost.category}
+                                    onValueChange={(val) => setNewPost({ ...newPost, category: val })}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map((cat) => (
+                                            <SelectItem key={cat._id} value={cat.name}>
+                                                {cat.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
                             <div className="space-y-2">
-                                <Label>Subcategory (Optional)</Label>
-                                {fixedCategory ? (
-                                    <Select
-                                        value={newPost.subcategory}
-                                        onValueChange={(val) => setNewPost({ ...newPost, subcategory: val })}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Subcategory" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {subcategories.filter(s => !s.isHidden).map((sub) => (
-                                                <SelectItem key={sub._id} value={sub.name}>
-                                                    {sub.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                ) : (
-                                    <Input
-                                        placeholder="e.g. Arrays, Lists, OOP"
-                                        value={newPost.subcategory}
-                                        onChange={(e) => setNewPost({ ...newPost, subcategory: e.target.value })}
-                                    />
-                                )}
+                                <Label>Post Content</Label>
+                                <Textarea
+                                    placeholder="What's new in AI?"
+                                    value={newPost.content}
+                                    onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
+                                    className="min-h-[100px]"
+                                />
                             </div>
 
                             <div className="space-y-2">
@@ -466,21 +403,11 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Post Content</Label>
-                                <Textarea
-                                    placeholder={`What's new in ${newPost.category || 'Tech'}?`}
-                                    value={newPost.content}
-                                    onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-                                    className="min-h-[100px]"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
                                 <Label>Image (Optional)</Label>
                                 <div className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors relative">
                                     <IKUpload
-                                        fileName="tech-post-image.jpg"
-                                        tags={["tech-post"]}
+                                        fileName="custom-ai-post-image.jpg"
+                                        tags={["ai-post"]}
                                         useUniqueFileName={true}
                                         responseFields={["tags"]}
                                         onError={handleUploadError}
@@ -511,27 +438,25 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
                     {/* Posts List Section */}
                     <div className="lg:col-span-2">
                         <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-                            <h2 className="text-xl font-bold">Recent Posts ({filteredPosts.length})</h2>
+                            <h2 className="text-xl font-bold">Recent AI Posts ({filteredPosts.length})</h2>
                             <div className="flex items-center gap-2">
-                                {/* Category Filter (If not fixed) */}
-                                {!fixedCategory && (
-                                    <Select
-                                        value={adminSelectedCategory}
-                                        onValueChange={setAdminSelectedCategory}
-                                    >
-                                        <SelectTrigger className="w-[180px] h-9 text-xs">
-                                            <SelectValue placeholder="Filter Category" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="All">All Categories</SelectItem>
-                                            {TECH_CATEGORIES.map((cat) => (
-                                                <SelectItem key={cat.value} value={cat.value}>
-                                                    {cat.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                )}
+                                {/* Category Filter */}
+                                <Select
+                                    value={adminSelectedCategory}
+                                    onValueChange={setAdminSelectedCategory}
+                                >
+                                    <SelectTrigger className="w-[180px] h-9 text-xs">
+                                        <SelectValue placeholder="Filter Category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="All">All Categories</SelectItem>
+                                        {categories.map((cat) => (
+                                            <SelectItem key={cat._id} value={cat.name}>
+                                                {cat.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
 
                                 {/* Sorting Toggle */}
                                 <div className="flex items-center bg-gray-100/50 p-1 rounded-md border border-gray-200">
@@ -573,7 +498,7 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
                             </div>
                         </div>
 
-                        {/* COMPACT GRID */}
+                        {/* COMPACT GRID: 3 columns on lg+ */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {filteredPosts.map((post) => (
                                 <Card key={post._id} className={`overflow-hidden flex flex-col ${post.isHidden ? 'opacity-60 bg-gray-50 border-dashed' : ''}`}>
@@ -603,12 +528,7 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
                                             {post.isHidden && <span className="text-[10px] uppercase font-bold text-gray-500 border border-gray-300 px-1 rounded">Hidden</span>}
                                             {post.category && (
                                                 <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium border border-blue-100">
-                                                    {TECH_CATEGORIES.find(c => c.value === post.category)?.label || post.category}
-                                                </span>
-                                            )}
-                                            {post.subcategory && (
-                                                <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-medium border border-gray-200 ml-1">
-                                                    {post.subcategory}
+                                                    {post.category}
                                                 </span>
                                             )}
                                         </div>
@@ -628,15 +548,17 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
                                         {/* Action Buttons Row */}
                                         <div className="grid grid-cols-4 gap-1">
                                             {/* Toggle HIDE */}
-                                            <Button
-                                                variant="outline"
-                                                size="icon"
-                                                className="h-7 w-full"
-                                                title={post.isHidden ? "Show Post" : "Hide Post"}
-                                                onClick={() => toggleVisibility(post._id, post.isHidden)}
-                                            >
-                                                {post.isHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                                            </Button>
+                                            {showControls && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    className="h-7 w-full"
+                                                    title={post.isHidden ? "Show Post" : "Hide Post"}
+                                                    onClick={() => toggleVisibility(post._id, post.isHidden)}
+                                                >
+                                                    {post.isHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                                                </Button>
+                                            )}
 
                                             {/* Toggle Comments */}
                                             <Button
@@ -682,4 +604,4 @@ const TechPostManager = ({ fixedCategory }: TechPostManagerProps) => {
     );
 };
 
-export default TechPostManager;
+export default AIPostManager;
