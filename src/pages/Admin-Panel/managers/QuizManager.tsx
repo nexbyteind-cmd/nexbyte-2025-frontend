@@ -4,9 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Trash2, Save, Plus, Trash, Download } from "lucide-react";
+import { Trash2, Save, Plus, Trash, Download, Loader2, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { API_BASE_URL } from "@/config";
+import { IKContext, IKUpload } from "imagekitio-react";
+
+const IK_PUBLIC_KEY = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY;
+const IK_URL_ENDPOINT = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
 
 const QuizManager = () => {
     const [quizzes, setQuizzes] = useState<any[]>([]);
@@ -23,6 +27,34 @@ const QuizManager = () => {
         durationMinutes: 5,
         questions: [] as any[]
     });
+
+    const [uploadingBanner, setUploadingBanner] = useState(false);
+
+    const authenticator = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/imagekit-auth`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Request failed with status ${response.status}: ${errorText}`);
+            }
+            const data = await response.json();
+            const { signature, expire, token } = data;
+            return { signature, expire, token };
+        } catch (error: any) {
+            throw new Error(`Authentication request failed: ${error.message}`);
+        }
+    };
+
+    const handleUploadError = (err: any) => {
+        setUploadingBanner(false);
+        toast.error("Image upload failed");
+    };
+
+    const handleUploadSuccess = (res: any) => {
+        setUploadingBanner(false);
+        setNewQuiz({ ...newQuiz, bannerImage: res.url });
+        toast.success("Image uploaded successfully");
+    };
 
     useEffect(() => {
         fetchQuizzes();
@@ -176,7 +208,12 @@ const QuizManager = () => {
 
 
     return (
-        <div className="space-y-8">
+        <IKContext
+            publicKey={IK_PUBLIC_KEY}
+            urlEndpoint={IK_URL_ENDPOINT}
+            authenticator={authenticator}
+        >
+            <div className="space-y-8">
             <div className="grid lg:grid-cols-2 gap-6">
                 {/* Create Quiz Form */}
                 <Card>
@@ -192,8 +229,34 @@ const QuizManager = () => {
                             </div>
                             
                             <div className="space-y-2">
-                                <Label>Banner Image URL <span className="text-red-500">*</span></Label>
-                                <Input type="url" required value={newQuiz.bannerImage} onChange={(e) => setNewQuiz({ ...newQuiz, bannerImage: e.target.value })} placeholder="https://example.com/banner.jpg" />
+                                <Label>Banner Image <span className="text-red-500">*</span></Label>
+                                <div className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors relative">
+                                    <IKUpload
+                                        fileName="quiz-banner.jpg"
+                                        folder="/quizzes"
+                                        useUniqueFileName={true}
+                                        onError={handleUploadError}
+                                        onSuccess={handleUploadSuccess}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        onUploadStart={() => setUploadingBanner(true)}
+                                    />
+                                    {uploadingBanner ? (
+                                        <div className="flex flex-col items-center justify-center">
+                                            <Loader2 className="mx-auto h-8 w-8 text-blue-500 animate-spin mb-2" />
+                                            <span className="text-sm text-blue-500 font-medium">Uploading...</span>
+                                        </div>
+                                    ) : newQuiz.bannerImage ? (
+                                        <div className="flex flex-col items-center justify-center">
+                                            <img src={newQuiz.bannerImage} alt="Banner Preview" className="max-h-24 object-contain mb-2 rounded" />
+                                            <span className="text-sm text-green-600 font-medium">Image Uploaded Successfully! Click to replace.</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center">
+                                            <ImageIcon className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                                            <span className="text-sm text-gray-500">Click to upload banner image</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
@@ -372,7 +435,8 @@ const QuizManager = () => {
                     )}
                 </CardContent>
             </Card>
-        </div>
+            </div>
+        </IKContext>
     );
 };
 
