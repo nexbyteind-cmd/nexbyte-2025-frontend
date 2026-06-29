@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { ExternalLink, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
+import { ExternalLink, CheckCircle2, Clock, AlertTriangle, ArrowRight, Star } from "lucide-react";
 import { IKImage } from "imagekitio-react";
 
 const IK_URL_ENDPOINT = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
@@ -34,6 +34,8 @@ export default function QuizPage() {
 
     const timerRef = useRef<any>(null);
     const contentRef = useRef<HTMLDivElement>(null);
+    const timePerQuestionRef = useRef<number[]>([]);
+    const lastQuestionTimestampRef = useRef<number>(0);
 
     useEffect(() => {
         const fetchQuiz = async () => {
@@ -96,12 +98,18 @@ export default function QuizPage() {
             return toast.error("Email and Mobile are required");
         }
         setStep("active");
+        lastQuestionTimestampRef.current = Date.now();
         setTimeout(() => {
             contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
     };
 
     const handleAnswerClick = (selectedOption: string) => {
+        const now = Date.now();
+        const timeSpent = Math.round((now - lastQuestionTimestampRef.current) / 1000);
+        timePerQuestionRef.current.push(timeSpent);
+        lastQuestionTimestampRef.current = now;
+
         const currentQuestion = quiz.questions[currentQuestionIndex];
         if (selectedOption === currentQuestion.correctAnswer) {
             setCorrectCount(prev => prev + 1);
@@ -136,7 +144,8 @@ export default function QuizPage() {
                 correctCount, // Note: this might be off by 1 for the last question due to stale closure if not careful.
                 wrongCount,
                 totalTimeSeconds: totalTimeTaken,
-                avgTimePerQuestion: totalTimeTaken / quiz.questions.length
+                avgTimePerQuestion: totalTimeTaken / quiz.questions.length,
+                timePerQuestion: timePerQuestionRef.current
             };
 
             await fetch(`${API_BASE_URL}/api/quizzes/${quizId}/attempts`, {
@@ -170,44 +179,67 @@ export default function QuizPage() {
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col font-sans">
             <Navbar />
 
-            <main className="flex-1 pt-24 pb-20 flex flex-col items-center w-full">
+            <main className="flex-1 pt-12 pb-20 flex flex-col items-center w-full">
                 
-                {/* Banner Section */}
-                <div className="w-full relative shadow-2xl overflow-hidden group">
-                    <div className="h-64 md:h-[450px] w-full bg-slate-900 relative">
-                        {quiz.bannerImage && (
-                            <IKImage urlEndpoint={IK_URL_ENDPOINT} path={quiz.bannerImage} alt="Banner" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700" loading="lazy" />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-transparent flex flex-col items-center justify-center pt-10">
-                            <motion.h1 initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6 }} className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-200 text-center px-4 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] tracking-tight">
-                                {quiz.name}
-                            </motion.h1>
+                {/* Hero Section */}
+                <div className="w-full bg-white relative overflow-hidden mb-12">
+                    {/* Floating Icons (Decorative) */}
+                    <div className="absolute top-10 left-10 text-blue-50 animate-pulse hidden md:block">
+                        <CheckCircle2 className="w-24 h-24" />
+                    </div>
+                    <div className="absolute bottom-10 right-10 text-indigo-50 animate-bounce hidden md:block">
+                        <Star className="w-32 h-32" />
+                    </div>
+                    
+                    <div className="max-w-7xl mx-auto px-4 py-8 md:py-20 relative z-10">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                            
+                            {/* Left Column: Text & CTA */}
+                            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }} className="text-left flex flex-col justify-center order-2 lg:order-1">
+                                <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 font-semibold text-sm mb-6 w-max">
+                                    <span className="mr-2 text-blue-500">Brought to you by</span>
+                                    {quiz.companyName}
+                                </div>
+                                
+                                <h2 className="text-blue-600 font-bold uppercase tracking-widest text-sm mb-3">Discover Your True Potential</h2>
+                                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6 tracking-tight leading-tight">
+                                    {quiz.name}
+                                </h1>
+                                
+                                <p className="text-gray-500 text-lg mb-8 max-w-md">
+                                    Test your knowledge and win exciting prizes. Start your journey now!
+                                </p>
+
+                                {step === "landing" && (
+                                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                                        <Button onClick={handleStartClick} className="w-full sm:w-auto h-14 px-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg shadow-lg transition-all group">
+                                            Start Quiz Now <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                        </Button>
+                                        <a href={quiz.companyLink} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+                                            <Button variant="outline" className="w-full h-14 px-8 rounded-full border-2 border-gray-200 text-gray-700 hover:border-blue-500 hover:text-blue-600 font-medium transition-all">
+                                                Visit Website <ExternalLink className="w-5 h-5 ml-2" />
+                                            </Button>
+                                        </a>
+                                    </div>
+                                )}
+                            </motion.div>
+
+                            {/* Right Column: Banner Image */}
+                            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="order-1 lg:order-2 w-full aspect-video relative rounded-sm overflow-hidden">
+                                {quiz.bannerImage && (
+                                    <IKImage urlEndpoint={IK_URL_ENDPOINT} path={quiz.bannerImage} alt="Banner" className="w-full h-full object-cover" loading="lazy" />
+                                )}
+                            </motion.div>
                         </div>
-                        {/* Elegant Curve at the bottom of the banner */}
-                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-50 to-transparent"></div>
                     </div>
                 </div>
 
-                {/* Company & Intro Section */}
-                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="max-w-4xl mx-auto px-4 text-center mt-8 mb-12">
-                    <div className="inline-flex items-center justify-center px-6 py-2 rounded-full bg-white shadow-sm border border-gray-100 mb-8">
-                        <span className="text-gray-500 font-medium mr-2">Brought to you by</span>
-                        <strong className="text-blue-900 font-bold text-lg">{quiz.companyName}</strong>
-                    </div>
-                    
-                    {step === "landing" && (
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-4">
-                            <a href={quiz.companyLink} target="_blank" rel="noopener noreferrer">
-                                <Button variant="outline" className="w-full sm:w-auto h-14 px-8 rounded-full border-2 border-gray-200 text-gray-700 hover:border-blue-500 hover:text-blue-600 text-lg font-medium transition-all hover:shadow-md">
-                                    Visit Company Website <ExternalLink className="w-5 h-5 ml-2" />
-                                </Button>
-                            </a>
-                            <Button onClick={handleStartClick} className="w-full sm:w-auto h-14 px-12 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg shadow-lg hover:shadow-blue-500/30 hover:-translate-y-1 transition-all">
-                                Start Quiz Now
-                            </Button>
-                        </div>
-                    )}
-                </motion.div>
+                {/* Elegant Section Divider */}
+                <div className="w-full max-w-5xl mx-auto px-4 mb-12 flex items-center justify-center opacity-70">
+                    <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                    <div className="px-4 text-gray-300 font-bold">✧</div>
+                    <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                </div>
 
                 {/* Dynamic Content Area (Registration / Active / Success) */}
                 <div ref={contentRef} className="w-full max-w-4xl px-4 scroll-mt-28">

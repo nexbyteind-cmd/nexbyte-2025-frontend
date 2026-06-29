@@ -212,9 +212,17 @@ const QuizManager = () => {
     const handleDownloadCSV = () => {
         if (attempts.length === 0) return toast.error("No data to download");
 
-        const headers = ["Date", "Name/Mobile", "Email", "Correct", "Wrong", "Total Time (s)", "Avg Time per Q (s)"];
+        const selectedQuiz = quizzes.find(q => q._id === selectedQuizIdForAttempts);
+        const maxQuestions = selectedQuiz ? selectedQuiz.questions.length : 0;
+        
+        const qHeaders = [];
+        for (let i = 1; i <= maxQuestions; i++) {
+            qHeaders.push(`Q${i} Time (s)`);
+        }
+
+        const headers = ["Date", "Name/Mobile", "Email", "Correct", "Wrong", "Total Time (s)", "Avg Time per Q (s)", ...qHeaders];
         const rows = attempts.map(app => {
-            return [
+            const rowData = [
                 new Date(app.submittedAt).toLocaleDateString(),
                 app.mobile,
                 app.email,
@@ -222,16 +230,21 @@ const QuizManager = () => {
                 app.wrongCount,
                 app.totalTimeSeconds,
                 app.avgTimePerQuestion
-            ].map(f => `"${f || ''}"`).join(",");
+            ];
+            
+            for (let i = 0; i < maxQuestions; i++) {
+                rowData.push(app.timePerQuestion && app.timePerQuestion[i] !== undefined ? app.timePerQuestion[i] : "");
+            }
+
+            return rowData.map(f => `"${f || ''}"`).join(",");
         });
 
         const csv = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
         const encodedUri = encodeURI(csv);
         const link = document.createElement("a");
         link.href = encodedUri;
-        const selectedQuiz = quizzes.find(q => q._id === selectedQuizIdForAttempts);
         const quizName = selectedQuiz ? selectedQuiz.name : "Quiz";
-        link.download = `${quizName.replace(/\\s+/g, '_')}_attempts.csv`;
+        link.download = `${quizName.replace(/\s+/g, '_')}_attempts.csv`;
         link.click();
     };
 
