@@ -21,5 +21,6 @@ export const SECTION_PASSWORDS = {
     tech_mssql: "Msql8@",
     tech_mysql: "Mysq9#",
     tech_postgresql: "Pgsl1$",
-    tech_mongodb: "Mong2!"
+    tech_mongodb: "Mong2!",
+    quiz_manager: "Quiz5*"
 };

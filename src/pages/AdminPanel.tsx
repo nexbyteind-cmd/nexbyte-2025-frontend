@@ -38,6 +38,7 @@ import StaffingApplicationsSection from "./Admin-Panel/components/StaffingApplic
 import ExclusiveDataSection from "./Admin-Panel/components/ExclusiveDataSection";
 import TestimonialsSection from "./Admin-Panel/components/TestimonialsSection";
 import RewardManager from "./Admin-Panel/managers/RewardManager";
+import QuizManager from "@/pages/Admin-Panel/managers/QuizManager";
 import {
     Accordion,
     AccordionContent,
@@ -1142,6 +1143,14 @@ const AdminPanel = () => {
                         Hackathons
                     </Button>
                     <Button
+                        variant={activeTab === "quiz_manager" ? "secondary" : "ghost"}
+                        className="w-full justify-start"
+                        onClick={() => onTabChange("quiz_manager")}
+                    >
+                        <ClipboardList className="w-4 h-4 mr-2" />
+                        Quiz Manager
+                    </Button>
+                    <Button
                         variant={activeTab === "programs" ? "secondary" : "ghost"}
                         className="w-full justify-start"
                         onClick={() => onTabChange("programs")}
@@ -1384,6 +1393,11 @@ const AdminPanel = () => {
                                 handleDeleteRecord={handleDeleteRecord}
                                 showControls={!isSharedAdminMode}
                             />
+                        </TabsContent>
+
+                        {/* QUIZ MANAGER TAB */}
+                        <TabsContent value="quiz_manager" className="mt-0 h-full">
+                            <QuizManager />
                         </TabsContent>
 
                         {/* TECH POSTS TAB */}

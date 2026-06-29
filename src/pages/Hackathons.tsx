@@ -246,7 +246,7 @@ const Hackathons = () => {
                                     </Button>
                                 )}
                                 {hackathon.enableQuizButton && (
-                                    <a href={hackathon.quizButtonLink || "#"} target="_blank" rel="noopener noreferrer" className="w-full">
+                                    <a href={hackathon.linkedQuizId ? `/quiz/${hackathon.linkedQuizId}` : (hackathon.quizButtonLink || "#")} target={hackathon.linkedQuizId ? "_self" : "_blank"} rel="noopener noreferrer" className="w-full">
                                         <Button
                                             className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2.5 md:py-3 text-sm rounded-xl shadow-md shadow-violet-200 transition-all"
                                         >

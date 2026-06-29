@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from "@/config";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,20 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
     handleMarkCompleted,
     showControls = true
 }) => {
+    const [quizzes, setQuizzes] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchQuizzes = async () => {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/quizzes`);
+                const data = await res.json();
+                if (data.success) setQuizzes(data.data);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchQuizzes();
+    }, []);
 
     return (
         <div className="grid lg:grid-cols-2 gap-6">
@@ -238,14 +253,18 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Custom Button Link (URL) <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            type="url"
-                                            placeholder="https://..."
-                                            value={newHackathon.quizButtonLink || ""}
-                                            onChange={(e) => setNewHackathon({ ...newHackathon, quizButtonLink: e.target.value })}
+                                        <Label>Link to Quiz <span className="text-red-500">*</span></Label>
+                                        <select
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                            value={newHackathon.linkedQuizId || ""}
+                                            onChange={(e) => setNewHackathon({ ...newHackathon, linkedQuizId: e.target.value })}
                                             required={newHackathon.enableQuizButton}
-                                        />
+                                        >
+                                            <option value="">Select a Quiz...</option>
+                                            {quizzes.map(q => (
+                                                <option key={q._id} value={q._id}>{q._id} - {q.companyName} - {new Date(q.createdAt).toLocaleDateString()}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
                             )}

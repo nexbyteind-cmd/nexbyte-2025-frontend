@@ -41,6 +41,7 @@ import TechPosts from "./pages/TechPosts"; // NEW
 import TechPostDetail from "./pages/TechPostDetail"; // NEW
 import Webinars from "./pages/Webinars"; // NEW
 import RewardsPage from "./pages/RewardsPage"; // NEW
+import QuizPage from "./pages/QuizPage"; // NEW
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,7 @@ const App = () => (
           <Route path="/tech-posts/:id" element={<TechPostDetail />} /> {/* NEW */}
           <Route path="/webinars" element={<Webinars />} /> {/* NEW */}
           <Route path="/rewards" element={<RewardsPage />} /> {/* NEW */}
+          <Route path="/quiz/:quizId" element={<QuizPage />} /> {/* NEW */}
 
           <Route path="/training-discovery" element={<TrainingDiscovery />} /> {/* NEW */}
           <Route path="/google-reviews-marketing" element={<GoogleReviewsMarketing />} /> {/* NEW */}
