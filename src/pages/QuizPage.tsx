@@ -160,38 +160,37 @@ export default function QuizPage() {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Navbar />
 
-            <main className="flex-1 pt-24 pb-12 flex flex-col items-center">
-                <div className="w-full max-w-4xl px-4">
-                    
-                    {step === "landing" && (
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                            <div className="h-48 md:h-64 w-full bg-gray-200 relative">
-                                {quiz.bannerImage && (
-                                    <img src={quiz.bannerImage} alt="Banner" className="w-full h-full object-cover" />
-                                )}
-                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                    <h1 className="text-3xl md:text-5xl font-bold text-white text-center px-4">{quiz.name}</h1>
-                                </div>
+            <main className="flex-1 pt-24 pb-12 flex flex-col items-center w-full">
+                {step === "landing" ? (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full">
+                        <div className="h-64 md:h-[400px] w-full bg-gray-200 relative mb-8">
+                            {quiz.bannerImage && (
+                                <img src={quiz.bannerImage} alt="Banner" className="w-full h-full object-cover" />
+                            )}
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                <h1 className="text-4xl md:text-6xl font-bold text-white text-center px-4 drop-shadow-md">{quiz.name}</h1>
                             </div>
+                        </div>
+                        
+                        <div className="max-w-4xl mx-auto px-4 text-center space-y-8">
+                            <p className="text-gray-600 text-xl">
+                                Brought to you by <strong className="text-gray-900">{quiz.companyName}</strong>
+                            </p>
                             
-                            <div className="p-8 text-center space-y-6">
-                                <p className="text-gray-600 text-lg">
-                                    Brought to you by <strong>{quiz.companyName}</strong>
-                                </p>
-                                
-                                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                                    <a href={quiz.companyLink} target="_blank" rel="noopener noreferrer">
-                                        <Button variant="outline" className="w-full sm:w-auto h-12 px-8 rounded-full border-2">
-                                            Visit Company Website <ExternalLink className="w-4 h-4 ml-2" />
-                                        </Button>
-                                    </a>
-                                    <Button onClick={handleStartClick} className="w-full sm:w-auto h-12 px-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg">
-                                        Start Quiz
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                                <a href={quiz.companyLink} target="_blank" rel="noopener noreferrer">
+                                    <Button variant="outline" className="w-full sm:w-auto h-14 px-8 rounded-full border-2 text-lg">
+                                        Visit Company Website <ExternalLink className="w-5 h-5 ml-2" />
                                     </Button>
-                                </div>
+                                </a>
+                                <Button onClick={handleStartClick} className="w-full sm:w-auto h-14 px-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all">
+                                    Start Quiz
+                                </Button>
                             </div>
-                        </motion.div>
-                    )}
+                        </div>
+                    </motion.div>
+                ) : (
+                    <div className="w-full max-w-4xl px-4">
 
                     {step === "registration" && (
                         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
@@ -282,7 +281,8 @@ export default function QuizPage() {
                             </Button>
                         </motion.div>
                     )}
-                </div>
+                    </div>
+                )}
             </main>
 
             <Footer />

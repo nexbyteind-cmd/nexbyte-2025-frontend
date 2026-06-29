@@ -53,7 +53,8 @@ const QuizManager = () => {
 
     const handleUploadSuccess = (res: any) => {
         setUploadingBanner(false);
-        setNewQuiz({ ...newQuiz, bannerImage: res.url });
+        const fullUrl = res.url || `${IK_URL_ENDPOINT}${res.filePath.startsWith('/') ? '' : '/'}${res.filePath}`;
+        setNewQuiz({ ...newQuiz, bannerImage: fullUrl });
         toast.success("Image uploaded successfully");
     };
 
@@ -318,11 +319,8 @@ const QuizManager = () => {
                             )}
 
                             <div className="mt-8 border-t pt-6">
-                                <div className="flex justify-between items-center mb-4">
+                                <div className="mb-4">
                                     <h4 className="font-bold">Questions ({newQuiz.questions.length})</h4>
-                                    <Button type="button" variant="outline" size="sm" onClick={handleAddQuestion}>
-                                        <Plus className="w-4 h-4 mr-1" /> Add Question
-                                    </Button>
                                 </div>
 
                                 {newQuiz.questions.map((q, qIndex) => (
@@ -358,6 +356,10 @@ const QuizManager = () => {
                                         </div>
                                     </div>
                                 ))}
+
+                                <Button type="button" variant="outline" className="w-full mt-2" onClick={handleAddQuestion}>
+                                    <Plus className="w-4 h-4 mr-1" /> Add Question
+                                </Button>
                             </div>
 
                             <div className="flex gap-2 mt-4">
