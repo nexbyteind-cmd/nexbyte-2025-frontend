@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Trash2, Save, Plus, Trash, Download, Loader2, Image as ImageIcon } from "lucide-react";
+import { Trash2, Save, Plus, Trash, Download, Loader2, Image as ImageIcon, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import { API_BASE_URL } from "@/config";
 import { IKContext, IKUpload } from "imagekitio-react";
@@ -17,6 +17,7 @@ const QuizManager = () => {
     const [loading, setLoading] = useState(false);
     const [attempts, setAttempts] = useState<any[]>([]);
     const [selectedQuizIdForAttempts, setSelectedQuizIdForAttempts] = useState("");
+    const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
 
     const [newQuiz, setNewQuiz] = useState({
         name: "",
@@ -125,6 +126,27 @@ const QuizManager = () => {
         setNewQuiz({ ...newQuiz, questions: updatedQuestions });
     };
 
+    const handleEditClick = (quiz: any) => {
+        setNewQuiz({
+            name: quiz.name,
+            bannerImage: quiz.bannerImage || "",
+            companyName: quiz.companyName || "",
+            companyLink: quiz.companyLink || "",
+            isTimed: quiz.isTimed || false,
+            durationMinutes: quiz.durationMinutes || 5,
+            questions: quiz.questions || []
+        });
+        setEditingQuizId(quiz._id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleCancelEdit = () => {
+        setEditingQuizId(null);
+        setNewQuiz({
+            name: "", bannerImage: "", companyName: "", companyLink: "", isTimed: false, durationMinutes: 5, questions: []
+        });
+    };
+
     const handleCreateQuiz = async (e: React.FormEvent) => {
         e.preventDefault();
         
@@ -141,23 +163,30 @@ const QuizManager = () => {
         }
 
         try {
-            const res = await fetch(`${API_BASE_URL}/api/quizzes`, {
-                method: "POST",
+            const url = editingQuizId ? `${API_BASE_URL}/api/quizzes/${editingQuizId}` : `${API_BASE_URL}/api/quizzes`;
+            const method = editingQuizId ? "PUT" : "POST";
+
+            const res = await fetch(url, {
+                method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(newQuiz)
             });
             const data = await res.json();
             if (data.success) {
-                toast.success("Quiz created successfully!");
+                toast.success(editingQuizId ? "Quiz updated successfully!" : "Quiz created successfully!");
                 fetchQuizzes();
-                setNewQuiz({
-                    name: "", bannerImage: "", companyName: "", companyLink: "", isTimed: false, durationMinutes: 5, questions: []
-                });
+                if (editingQuizId) {
+                    handleCancelEdit();
+                } else {
+                    setNewQuiz({
+                        name: "", bannerImage: "", companyName: "", companyLink: "", isTimed: false, durationMinutes: 5, questions: []
+                    });
+                }
             } else {
-                toast.error("Failed to create quiz.");
+                toast.error(editingQuizId ? "Failed to update quiz." : "Failed to create quiz.");
             }
         } catch (error) {
-            toast.error("Error creating quiz.");
+            toast.error(editingQuizId ? "Error updating quiz." : "Error creating quiz.");
         }
     };
 
@@ -218,8 +247,8 @@ const QuizManager = () => {
                 {/* Create Quiz Form */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Create a New Quiz</CardTitle>
-                        <CardDescription>Design a quiz for a hackathon or event.</CardDescription>
+                        <CardTitle>{editingQuizId ? "Edit Quiz" : "Create a New Quiz"}</CardTitle>
+                        <CardDescription>{editingQuizId ? "Update existing quiz configuration." : "Design a quiz for a hackathon or event."}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleCreateQuiz} className="space-y-4">
@@ -331,10 +360,18 @@ const QuizManager = () => {
                                 ))}
                             </div>
 
-                            <Button type="submit" className="w-full mt-4">
-                                <Save className="w-4 h-4 mr-2" />
-                                Create Quiz
-                            </Button>
+                            <div className="flex gap-2 mt-4">
+                                <Button type="submit" className="flex-1">
+                                    <Save className="w-4 h-4 mr-2" />
+                                    {editingQuizId ? "Update Quiz" : "Create Quiz"}
+                                </Button>
+                                {editingQuizId && (
+                                    <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                                        <X className="w-4 h-4 mr-2" />
+                                        Cancel
+                                    </Button>
+                                )}
+                            </div>
                         </form>
                     </CardContent>
                 </Card>
@@ -358,9 +395,14 @@ const QuizManager = () => {
                                             <p className="text-xs text-gray-500">{quiz.companyName} • {quiz.questions.length} Questions • {quiz.isTimed ? `${quiz.durationMinutes} mins` : 'Untimed'}</p>
                                             <p className="text-[10px] text-gray-400 mt-1">ID: {quiz._id}</p>
                                         </div>
-                                        <Button variant="destructive" size="icon" onClick={() => handleDeleteQuiz(quiz._id)}>
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
+                                        <div className="flex items-center gap-2">
+                                            <Button variant="outline" size="icon" onClick={() => handleEditClick(quiz)}>
+                                                <Pencil className="w-4 h-4" />
+                                            </Button>
+                                            <Button variant="destructive" size="icon" onClick={() => handleDeleteQuiz(quiz._id)}>
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
