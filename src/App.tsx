@@ -44,7 +44,7 @@ import RewardsPage from "./pages/RewardsPage"; // NEW
 import QuizPage from "./pages/QuizPage"; // NEW
 
 const queryClient = new QueryClient();
-
+//New
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
