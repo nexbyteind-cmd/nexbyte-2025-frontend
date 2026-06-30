@@ -127,6 +127,7 @@ const Hackathons = () => {
 
     const renderHackathonCard = (hackathon: any, isCompleted: boolean = false) => {
         const isExpanded = expandedMap[hackathon._id];
+        const isQuiz = hackathon.type === 'Quiz';
         const truncateText = (text: string, maxLength: number) => {
             if (text.length <= maxLength) return text;
             return text.substring(0, maxLength) + '...';
@@ -146,8 +147,8 @@ const Hackathons = () => {
                     <div className="p-4 md:p-8 flex-1 flex flex-col justify-between">
                         <div>
                             <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
-                                <div className="bg-orange-100 text-orange-600 p-2 md:p-3 rounded-xl group-hover:bg-orange-500 group-hover:text-white transition-colors duration-300">
-                                    <Trophy className="w-5 h-5 md:w-6 md:h-6" />
+                                <div className={`${isQuiz ? 'bg-violet-100 text-violet-600 group-hover:bg-violet-500' : 'bg-orange-100 text-orange-600 group-hover:bg-orange-500'} p-2 md:p-3 rounded-xl group-hover:text-white transition-colors duration-300`}>
+                                    {isQuiz ? <Target className="w-5 h-5 md:w-6 md:h-6" /> : <Trophy className="w-5 h-5 md:w-6 md:h-6" />}
                                 </div>
                                 <div className="flex-1">
                                     <h3 className="text-lg md:text-2xl font-bold text-gray-900 mb-1 md:mb-2 leading-tight">{hackathon.name}</h3>
@@ -184,14 +185,14 @@ const Hackathons = () => {
                             {/* Tech Stack / Knowledge - Compact */}
                             <div className="mb-3">
                                 <div className="flex items-center gap-1.5 mb-1.5">
-                                    <Code className="w-3 h-3 text-orange-600" />
-                                    <span className="text-[10px] font-bold text-orange-700 uppercase tracking-wide">
-                                        {hackathon.type === 'Quiz' ? 'Knowledge' : 'Tech Stack'}
+                                    <Code className={`w-3 h-3 ${isQuiz ? 'text-violet-600' : 'text-orange-600'}`} />
+                                    <span className={`text-[10px] font-bold ${isQuiz ? 'text-violet-700' : 'text-orange-700'} uppercase tracking-wide`}>
+                                        {isQuiz ? 'Knowledge' : 'Tech Stack'}
                                     </span>
                                 </div>
                                 <div className="flex flex-wrap gap-1.5">
                                     {hackathon.techStack.split(',').slice(0, 6).map((tech: string, i: number) => (
-                                        <span key={i} className="px-2 py-0.5 bg-orange-50 text-orange-700 text-[10px] rounded border border-orange-200 font-medium">
+                                        <span key={i} className={`px-2 py-0.5 ${isQuiz ? 'bg-violet-50 text-violet-700 border-violet-200' : 'bg-orange-50 text-orange-700 border-orange-200'} text-[10px] rounded border font-medium`}>
                                             {tech.trim()}
                                         </span>
                                     ))}
@@ -208,20 +209,42 @@ const Hackathons = () => {
                                     <p className="text-xs text-gray-700 leading-snug line-clamp-2">{hackathon.benefits}</p>
                                 </div>
                             )}
+
+                            {isCompleted && isQuiz && (
+                                <div className="flex flex-wrap gap-2 mt-4">
+                                    {hackathon.prizeMoney && (
+                                        <div className="bg-violet-50 px-3 py-1.5 rounded-lg border border-violet-100 flex items-center gap-2">
+                                            <span className="text-[10px] font-bold text-violet-600 uppercase">Prize Pool</span>
+                                            <span className="text-xs font-extrabold text-gray-900">{hackathon.prizeMoney}</span>
+                                        </div>
+                                    )}
+                                    <div className="bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 flex items-center gap-2">
+                                        <span className="text-[10px] font-semibold text-gray-500 uppercase">Start Date</span>
+                                        <span className="text-xs font-bold text-gray-900">{new Date(hackathon.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                    </div>
+                                    {(hackathon.helplineNumber || hackathon.organizerContact) && (
+                                        <div className="bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 flex items-center gap-2">
+                                            <MessageSquare className="w-3.5 h-3.5 text-gray-400" />
+                                            <span className="text-xs font-medium text-gray-700">{hackathon.helplineNumber || hackathon.organizerContact}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
 
                     {/* Right Section - Sidebar/Footer */}
-                    <div className="md:w-72 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 border-t md:border-t-0 md:border-l border-orange-200/50 p-4 md:p-6 flex flex-col justify-between">
-                        <div className="grid grid-cols-2 md:grid-cols-1 gap-3">
+                    <div className={`md:w-72 bg-gradient-to-br ${isQuiz ? 'from-violet-50 via-fuchsia-50 to-purple-50 border-violet-200/50' : 'from-orange-50 via-amber-50 to-yellow-50 border-orange-200/50'} border-t md:border-t-0 md:border-l p-4 md:p-6 flex flex-col justify-between`}>
+                        {!(isQuiz && isCompleted) && (
+                            <div className="grid grid-cols-2 md:grid-cols-1 gap-3">
                             {hackathon.prizeMoney && (
-                                <div className="col-span-2 md:col-span-1 bg-white/80 p-2.5 rounded-xl border border-orange-200 shadow-sm text-center">
-                                    <p className="text-[10px] font-bold text-orange-600 uppercase mb-0.5">Prize Pool</p>
+                                <div className={`col-span-2 md:col-span-1 bg-white/80 p-2.5 rounded-xl border ${isQuiz ? 'border-violet-200' : 'border-orange-200'} shadow-sm text-center`}>
+                                    <p className={`text-[10px] font-bold ${isQuiz ? 'text-violet-600' : 'text-orange-600'} uppercase mb-0.5`}>Prize Pool</p>
                                     <p className="text-lg md:text-xl font-extrabold text-gray-900">{hackathon.prizeMoney}</p>
                                 </div>
                             )}
 
-                            <div className="bg-white/60 p-2.5 rounded-lg border border-orange-100">
+                            <div className={`bg-white/60 p-2.5 rounded-lg border ${isQuiz ? 'border-violet-100' : 'border-orange-100'}`}>
                                 <p className="text-[10px] font-semibold text-gray-500 uppercase mb-0.5">Start Date</p>
                                 <p className="text-xs md:text-sm font-bold text-gray-900">{new Date(hackathon.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
                             </div>
@@ -234,19 +257,20 @@ const Hackathons = () => {
                             )}
 
                             {(hackathon.helplineNumber || hackathon.organizerContact) && (
-                                <div className="col-span-2 md:col-span-1 flex items-center gap-2 bg-white/60 p-2 rounded-lg border border-orange-100">
-                                    <MessageSquare className="w-3.5 h-3.5 text-orange-500" />
+                                <div className={`col-span-2 md:col-span-1 flex items-center gap-2 bg-white/60 p-2 rounded-lg border ${isQuiz ? 'border-violet-100' : 'border-orange-100'}`}>
+                                    <MessageSquare className={`w-3.5 h-3.5 ${isQuiz ? 'text-violet-500' : 'text-orange-500'}`} />
                                     <span className="text-xs font-medium text-gray-700 truncate">{hackathon.helplineNumber || hackathon.organizerContact}</span>
                                 </div>
                             )}
                         </div>
+                        )}
 
                         {!isCompleted && (
                             <div className="flex flex-col gap-2 mt-4 md:mt-6">
                                 {hackathon.enableApplyButton !== false && (
                                     <Button
                                         onClick={() => setSelectedHackathon(hackathon)}
-                                        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2.5 md:py-3 text-sm rounded-xl shadow-md shadow-orange-200 transition-all"
+                                        className={`w-full ${isQuiz ? 'bg-violet-600 hover:bg-violet-700 shadow-violet-200' : 'bg-orange-600 hover:bg-orange-700 shadow-orange-200'} text-white font-semibold py-2.5 md:py-3 text-sm rounded-xl shadow-md transition-all`}
                                     >
                                         Apply Now
                                     </Button>
@@ -265,30 +289,31 @@ const Hackathons = () => {
                         )}
 
                         {isCompleted && hackathon.winner && (
-                            <div className="mt-4 md:mt-6 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
-                                <h4 className="text-xs font-bold text-yellow-800 uppercase mb-2 flex items-center gap-1">
-                                    <Trophy className="w-3.5 h-3.5" /> Winners
+                            <div className={isQuiz ? "flex-1 flex flex-col justify-center" : "mt-4 md:mt-6 p-4 bg-yellow-50 rounded-xl border border-yellow-200"}>
+                                <h4 className={`text-sm font-bold ${isQuiz ? 'text-violet-800 mb-4' : 'text-yellow-800 mb-2'} uppercase flex items-center gap-2`}>
+                                    <Trophy className={isQuiz ? "w-5 h-5 text-violet-600" : "w-3.5 h-3.5"} />
+                                    {isQuiz ? 'Quiz Champions' : 'Winners'}
                                 </h4>
-                                <div className="space-y-2">
-                                    <div>
-                                        <p className="text-[10px] text-gray-500 uppercase">1st Prize</p>
-                                        <p className="text-sm font-bold text-gray-900">{hackathon.winner}</p>
+                                <div className={isQuiz ? "space-y-3" : "space-y-2"}>
+                                    <div className={isQuiz ? "bg-white p-3 rounded-lg border border-violet-100 shadow-sm" : ""}>
+                                        <p className={`text-[10px] ${isQuiz ? 'text-violet-500 font-bold' : 'text-gray-500'} uppercase mb-0.5`}>1st Prize</p>
+                                        <p className={`${isQuiz ? 'text-base text-violet-900' : 'text-sm text-gray-900'} font-bold break-words`}>{hackathon.winner}</p>
                                     </div>
                                     {hackathon.secondWinner && (
-                                        <div>
-                                            <p className="text-[10px] text-gray-500 uppercase">2nd Prize</p>
-                                            <p className="text-xs font-bold text-gray-800">{hackathon.secondWinner}</p>
+                                        <div className={isQuiz ? "bg-white/60 p-3 rounded-lg border border-violet-100" : ""}>
+                                            <p className={`text-[10px] ${isQuiz ? 'text-violet-500 font-bold' : 'text-gray-500'} uppercase mb-0.5`}>2nd Prize</p>
+                                            <p className={`${isQuiz ? 'text-sm text-violet-800' : 'text-xs text-gray-800'} font-bold break-words`}>{hackathon.secondWinner}</p>
                                         </div>
                                     )}
                                     {hackathon.raffleWinners && (
-                                        <div>
-                                            <p className="text-[10px] text-gray-500 uppercase">Raffle Winners</p>
-                                            <p className="text-xs text-gray-700">{hackathon.raffleWinners}</p>
+                                        <div className={isQuiz ? "bg-white/40 p-3 rounded-lg border border-violet-100/50" : ""}>
+                                            <p className={`text-[10px] ${isQuiz ? 'text-violet-500 font-bold' : 'text-gray-500'} uppercase mb-0.5`}>Raffle Winners</p>
+                                            <p className={`text-xs ${isQuiz ? 'text-gray-800' : 'text-gray-700'} break-words`}>{hackathon.raffleWinners}</p>
                                         </div>
                                     )}
                                     {hackathon.participantsCount !== undefined && (
-                                        <div className="mt-2 pt-2 border-t border-yellow-200/50">
-                                            <p className="text-xs font-semibold text-yellow-800">{hackathon.participantsCount} Participants</p>
+                                        <div className={`mt-3 pt-3 border-t ${isQuiz ? 'border-violet-200/50' : 'border-yellow-200/50'}`}>
+                                            <p className={`text-xs font-semibold ${isQuiz ? 'text-violet-700' : 'text-yellow-800'}`}>{hackathon.participantsCount} Participants</p>
                                         </div>
                                     )}
                                 </div>
@@ -425,7 +450,7 @@ const Hackathons = () => {
                                 >
                                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold mb-4 bg-gray-100 text-gray-700 border-gray-200">
                                         <CheckCircle2 className="w-4 h-4" />
-                                        <span className="uppercase tracking-wider">Past Events</span>
+                                        <span className="uppercase tracking-wider">Past Quizzes</span>
                                     </div>
                                     <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Previous Quizzes</h2>
                                 </motion.div>
@@ -448,7 +473,7 @@ const Hackathons = () => {
                                 >
                                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold mb-4 bg-gray-100 text-gray-700 border-gray-200">
                                         <CheckCircle2 className="w-4 h-4" />
-                                        <span className="uppercase tracking-wider">Past Events</span>
+                                        <span className="uppercase tracking-wider">Past Hackathons</span>
                                     </div>
                                     <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Previous Hackathons</h2>
                                 </motion.div>

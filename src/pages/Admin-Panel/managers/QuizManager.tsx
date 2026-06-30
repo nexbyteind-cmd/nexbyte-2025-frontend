@@ -428,11 +428,11 @@ const QuizManager = () => {
                     <CardContent>
                         {loading ? (
                             <p className="text-sm text-gray-500">Loading...</p>
-                        ) : quizzes.length === 0 ? (
+                        ) : quizzes.filter(q => q.status !== 'completed').length === 0 ? (
                             <p className="text-sm text-gray-500">No quizzes found.</p>
                         ) : (
                             <div className="space-y-4">
-                                {quizzes.map(quiz => (
+                                {quizzes.filter(q => q.status !== 'completed').map(quiz => (
                                     <div key={quiz._id} className="p-4 border rounded-lg flex justify-between items-center bg-gray-50">
                                         <div>
                                             <h4 className="font-bold">{quiz.name}</h4>

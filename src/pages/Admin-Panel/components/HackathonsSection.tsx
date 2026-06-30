@@ -367,9 +367,15 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
 
                                             <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
                                                 <div className="flex flex-col">
-                                                    <span className="text-sm font-medium text-muted-foreground">
-                                                        {hackathonApps.length} Applicants
-                                                    </span>
+                                                    {h.type === 'Quiz' ? (
+                                                        <span className="text-sm font-medium text-muted-foreground">
+                                                            View in Quiz Manager
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-sm font-medium text-muted-foreground">
+                                                            {hackathonApps.length} Applicants
+                                                        </span>
+                                                    )}
                                                     <span className={`text-[10px] font-bold ${h.type === 'Quiz' ? 'text-violet-600' : 'text-orange-600'} uppercase mt-0.5`}>
                                                         {h.type || 'Hackathon'}
                                                     </span>
@@ -442,7 +448,9 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
                                         {
                                             isExpanded && (
                                                 <div className="bg-secondary/10 p-4 border-t border-border">
-                                                    {hackathonApps.length === 0 ? (
+                                                    {h.type === 'Quiz' ? (
+                                                        <p className="text-sm text-muted-foreground text-center">Quiz attempt data and applications are managed in the <strong className="text-violet-600">Quiz Manager</strong> tab.</p>
+                                                    ) : hackathonApps.length === 0 ? (
                                                         <p className="text-xs text-muted-foreground text-center">No applications yet.</p>
                                                     ) : (
                                                         <div className="overflow-x-auto">
@@ -503,6 +511,169 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
                                                                                     <Button variant="ghost" size="icon" title="Delete Application" onClick={() => handleDeleteRecord('applications', app._id, fetchApplications)}>
                                                                                         <Trash2 className="w-4 h-4 text-red-500" />
                                                                                     </Button>
+                                                                                </div>
+                                                                            </TableCell>
+                                                                        </TableRow>
+                                                                    ))}
+                                                                </TableBody>
+                                                            </Table>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )
+                                        }
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
+            
+            {/* Previous Hackathons & Quizzes List */}
+            <Card className="lg:col-span-1 h-fit mt-6">
+                <CardHeader>
+                    <CardTitle>Previous Hackathons & Quizzes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        {hackathons.filter(h => h.status === 'completed').length === 0 ? (
+                            <p className="text-muted-foreground text-sm">No completed events found.</p>
+                        ) : (
+                            hackathons.filter(h => h.status === 'completed').map((h, i) => {
+                                const hackathonApps = applications.filter(app => app.hackathonId === h._id);
+                                const isExpanded = expandedHackathonId === h._id;
+
+                                const handleDownloadCSV = () => {
+                                    if (hackathonApps.length === 0) {
+                                        toast.error("No data to download");
+                                        return;
+                                    }
+
+                                    const headers = ["Type", "Name/Team Name", "Email/Leader Email", "Phone", "Organization", "GitHub", "Team Members"];
+                                    const rows = hackathonApps.map(app => {
+                                        const type = app.participantType;
+                                        const name = type === 'Team' ? app.teamName : app.fullName;
+                                        const email = type === 'Team' ? app.leader?.email : app.email;
+                                        const phone = type === 'Team' ? app.leader?.phone : app.phone;
+                                        const org = type === 'Team' ? app.leader?.organization : app.organization;
+                                        const github = type === 'Team' ? app.leader?.github : app.github;
+                                        const members = type === 'Team'
+                                            ? app.teamMembers?.map((m: any) => `${m.fullName} (${m.email})`).join("; ")
+                                            : "N/A";
+
+                                        return [type, name, email, phone, org, github, members].map(field => `"${field || ''}"`).join(",");
+                                    });
+
+                                    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
+                                    const encodedUri = encodeURI(csvContent);
+                                    const link = document.createElement("a");
+                                    link.setAttribute("href", encodedUri);
+                                    link.setAttribute("download", `${h.name.replace(/\s+/g, '_')}_applicants.csv`);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                };
+
+                                return (
+                                    <div key={i} className="rounded-lg border border-border bg-card overflow-hidden">
+                                        <div className="p-4 flex flex-col gap-2">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <h4 className="font-semibold">{h.name}</h4>
+                                                    <p className="text-xs text-muted-foreground">{h.mode} • {h.startDate}</p>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                                        {h.status}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
+                                                <div className="flex flex-col">
+                                                    {h.type === 'Quiz' ? (
+                                                        <span className="text-sm font-medium text-muted-foreground">
+                                                            View in Quiz Manager
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-sm font-medium text-muted-foreground">
+                                                            {hackathonApps.length} Applicants
+                                                        </span>
+                                                    )}
+                                                    <span className={`text-[10px] font-bold ${h.type === 'Quiz' ? 'text-violet-600' : 'text-orange-600'} uppercase mt-0.5`}>
+                                                        {h.type || 'Hackathon'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="h-8 gap-1 text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
+                                                        onClick={handleDownloadCSV}
+                                                    >
+                                                        <Download className="w-3 h-3" />
+                                                        CSV
+                                                    </Button>
+
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        onClick={() => handleDeleteHackathon(h._id)}
+                                                        className="h-8 w-8 p-0"
+                                                        title="Delete Event"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+
+                                                    <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => setExpandedHackathonId(isExpanded ? null : h._id)}>
+                                                        {isExpanded ? (
+                                                            <>Hide <ChevronUp className="w-3 h-3" /></>
+                                                        ) : (
+                                                            <>View <ChevronDown className="w-3 h-3" /></>
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {
+                                            isExpanded && (
+                                                <div className="bg-secondary/10 p-4 border-t border-border">
+                                                    {h.type === 'Quiz' ? (
+                                                        <p className="text-sm text-muted-foreground text-center">Quiz attempt data and applications are managed in the <strong className="text-violet-600">Quiz Manager</strong> tab.</p>
+                                                    ) : hackathonApps.length === 0 ? (
+                                                        <p className="text-xs text-muted-foreground text-center">No applications yet.</p>
+                                                    ) : (
+                                                        <div className="overflow-x-auto">
+                                                            <Table>
+                                                                <TableHeader>
+                                                                    <TableRow>
+                                                                        <TableHead className="text-xs">Type</TableHead>
+                                                                        <TableHead className="text-xs">Name / Team</TableHead>
+                                                                        <TableHead className="text-xs">Contact</TableHead>
+                                                                    </TableRow>
+                                                                </TableHeader>
+                                                                <TableBody>
+                                                                    {hackathonApps.map((app, j) => (
+                                                                        <TableRow key={j}>
+                                                                            <TableCell className="text-xs font-medium">
+                                                                                {app.participantType}
+                                                                            </TableCell>
+                                                                            <TableCell className="text-xs">
+                                                                                {app.participantType === 'Team' ? (
+                                                                                    <div>
+                                                                                        <span className="font-bold">{app.teamName}</span>
+                                                                                        <div className="text-[10px] text-muted-foreground">Lead: {app.leader?.fullName}</div>
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    app.fullName
+                                                                                )}
+                                                                            </TableCell>
+                                                                            <TableCell className="text-xs">
+                                                                                <div className="truncate max-w-[100px]">
+                                                                                    {app.participantType === 'Team' ? app.leader?.email : app.email}
                                                                                 </div>
                                                                             </TableCell>
                                                                         </TableRow>
