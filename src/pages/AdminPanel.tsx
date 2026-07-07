@@ -148,7 +148,8 @@ const AdminPanel = () => {
         enableApplyButton: true,
         enableQuizButton: false,
         quizButtonName: "",
-        quizButtonLink: ""
+        quizButtonLink: "",
+        quizStartTime: ""
     });
 
     // Programs State
@@ -622,7 +623,7 @@ const AdminPanel = () => {
                     type: "Hackathon",
                     name: "", mode: "Online", description: "", teamSizeMin: 1, teamSizeMax: 4,
                     isPaid: false, techStack: "", startDate: "", endDate: "", registrationDeadline: "", helplineNumber: "", organizerContact: "", whatsappGroupLink: "", prizeMoney: "", benefits: "",
-                    enableApplyButton: true, enableQuizButton: false, quizButtonName: "", quizButtonLink: ""
+                    enableApplyButton: true, enableQuizButton: false, quizButtonName: "", quizButtonLink: "", quizStartTime: ""
                 });
             } else {
                 toast.error(isEditing ? `Failed to update ${newHackathon.type.toLowerCase()}` : `Failed to create ${newHackathon.type.toLowerCase()}`);
@@ -654,7 +655,8 @@ const AdminPanel = () => {
             enableApplyButton: hackathon.enableApplyButton !== false,
             enableQuizButton: hackathon.enableQuizButton || false,
             quizButtonName: hackathon.quizButtonName || "",
-            quizButtonLink: hackathon.quizButtonLink || ""
+            quizButtonLink: hackathon.quizButtonLink || "",
+            quizStartTime: hackathon.quizStartTime || ""
         });
         // Scroll to form
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -666,7 +668,7 @@ const AdminPanel = () => {
             type: "Hackathon",
             name: "", mode: "Online", description: "", teamSizeMin: 1, teamSizeMax: 4,
             isPaid: false, techStack: "", startDate: "", endDate: "", registrationDeadline: "", helplineNumber: "", organizerContact: "", whatsappGroupLink: "", prizeMoney: "", benefits: "",
-            enableApplyButton: true, enableQuizButton: false, quizButtonName: "", quizButtonLink: ""
+            enableApplyButton: true, enableQuizButton: false, quizButtonName: "", quizButtonLink: "", quizStartTime: ""
         });
     };
 

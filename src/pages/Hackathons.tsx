@@ -23,12 +23,78 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Carousel from "@/components/Carousel";
 
+const QuizCountdownModal = ({ isOpen, startTime, hackathonName, onClose }: { isOpen: boolean, startTime: string | null, hackathonName: string, onClose: () => void }) => {
+    const [timeLeft, setTimeLeft] = useState<{hours: number, minutes: number, seconds: number} | null>(null);
+
+    useEffect(() => {
+        if (!isOpen || !startTime) return;
+
+        const interval = setInterval(() => {
+            const now = new Date().getTime();
+            const start = new Date(startTime).getTime();
+            const diff = start - now;
+
+            if (diff <= 0) {
+                setTimeLeft(null);
+                onClose();
+                window.location.reload();
+                return;
+            }
+
+            setTimeLeft({
+                hours: Math.floor(diff / (1000 * 60 * 60)),
+                minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+                seconds: Math.floor((diff % (1000 * 60)) / 1000)
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [isOpen, startTime]);
+
+    return (
+        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="sm:max-w-md text-center border-violet-200">
+                <DialogHeader>
+                    <DialogTitle className="text-center text-2xl font-bold text-violet-900">Quiz Starts Soon!</DialogTitle>
+                    <DialogDescription className="text-center text-base mt-2">
+                        {hackathonName} is scheduled to go live at:<br/>
+                        <span className="font-semibold text-gray-800">{startTime ? new Date(startTime).toLocaleString() : ''}</span>
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-6">
+                    {timeLeft ? (
+                        <div className="flex justify-center gap-4">
+                            <div className="flex flex-col items-center bg-violet-50 p-4 rounded-xl border border-violet-100 min-w-[80px]">
+                                <span className="text-4xl font-extrabold text-violet-600">{timeLeft.hours}</span>
+                                <span className="text-xs font-bold text-violet-400 uppercase tracking-wider mt-1">Hours</span>
+                            </div>
+                            <div className="flex flex-col justify-center text-3xl font-bold text-violet-300">:</div>
+                            <div className="flex flex-col items-center bg-violet-50 p-4 rounded-xl border border-violet-100 min-w-[80px]">
+                                <span className="text-4xl font-extrabold text-violet-600">{timeLeft.minutes}</span>
+                                <span className="text-xs font-bold text-violet-400 uppercase tracking-wider mt-1">Mins</span>
+                            </div>
+                            <div className="flex flex-col justify-center text-3xl font-bold text-violet-300">:</div>
+                            <div className="flex flex-col items-center bg-violet-50 p-4 rounded-xl border border-violet-100 min-w-[80px]">
+                                <span className="text-4xl font-extrabold text-violet-600">{timeLeft.seconds}</span>
+                                <span className="text-xs font-bold text-violet-400 uppercase tracking-wider mt-1">Secs</span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-xl font-bold text-green-600 animate-pulse">Quiz is Live!</div>
+                    )}
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
 const Hackathons = () => {
     const [hackathons, setHackathons] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedHackathon, setSelectedHackathon] = useState<any | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
     const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
+    const [timerModal, setTimerModal] = useState<{isOpen: boolean, startTime: string | null, hackathonName: string}>({isOpen: false, startTime: null, hackathonName: ""});
 
     // Application Form States
     const [individualForm, setIndividualForm] = useState({
@@ -276,7 +342,26 @@ const Hackathons = () => {
                                     </Button>
                                 )}
                                 {hackathon.enableQuizButton && (
-                                    <a href={hackathon.linkedQuizId ? `/quiz/${hackathon.linkedQuizId}` : (hackathon.quizButtonLink || "#")} target={hackathon.linkedQuizId ? "_self" : "_blank"} rel="noopener noreferrer" className="w-full">
+                                    <a
+                                        href={hackathon.linkedQuizId ? `/quiz/${hackathon.linkedQuizId}` : (hackathon.quizButtonLink || "#")}
+                                        target={hackathon.linkedQuizId ? "_self" : "_blank"}
+                                        rel="noopener noreferrer"
+                                        className="w-full"
+                                        onClick={(e) => {
+                                            if (hackathon.quizStartTime) {
+                                                const start = new Date(hackathon.quizStartTime).getTime();
+                                                const now = new Date().getTime();
+                                                if (start > now) {
+                                                    e.preventDefault();
+                                                    setTimerModal({
+                                                        isOpen: true,
+                                                        startTime: hackathon.quizStartTime,
+                                                        hackathonName: hackathon.name
+                                                    });
+                                                }
+                                            }
+                                        }}
+                                    >
                                         <Button
                                             className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2.5 md:py-3 text-sm rounded-xl shadow-md shadow-violet-200 transition-all"
                                         >
@@ -839,6 +924,13 @@ const Hackathons = () => {
                     )}
                 </DialogContent>
             </Dialog>
+
+            <QuizCountdownModal
+                isOpen={timerModal.isOpen}
+                startTime={timerModal.startTime}
+                hackathonName={timerModal.hackathonName}
+                onClose={() => setTimerModal({ ...timerModal, isOpen: false })}
+            />
 
             <Footer />
         </div>

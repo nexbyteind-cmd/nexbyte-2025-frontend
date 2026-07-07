@@ -263,6 +263,16 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
                                         ))}
                                     </select>
                                 </div>
+                                <div className="space-y-2 mt-4">
+                                    <Label>Quiz Live Date & Time <span className="text-red-500">*</span></Label>
+                                    <Input
+                                        type="datetime-local"
+                                        value={newHackathon.quizStartTime || ""}
+                                        onChange={(e) => setNewHackathon({ ...newHackathon, quizStartTime: e.target.value })}
+                                        required={newHackathon.type === 'Quiz'}
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-1">When this time passes, the quiz button will open the quiz. Before this, it shows a countdown.</p>
+                                </div>
                             </div>
                         )}
                         {/* ------------------------------- */}
