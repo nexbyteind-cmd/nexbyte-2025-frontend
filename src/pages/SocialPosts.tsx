@@ -93,6 +93,12 @@ const SocialPosts = () => {
             setAuthError("Please enter an email address");
             return;
         }
+        // Basic email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(authEmail.trim())) {
+            setAuthError("Please enter a valid email address (e.g. name@company.com)");
+            return;
+        }
         setAuthLoading(true);
         try {
             const response = await fetch(`${API_BASE_URL}/api/social-posts/verify-email`, {
