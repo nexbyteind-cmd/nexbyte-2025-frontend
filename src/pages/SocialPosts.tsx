@@ -3,7 +3,7 @@ import { API_BASE_URL } from "@/config";
 import { IKContext, IKImage } from "imagekitio-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, Share2, MessageCircle, MessageSquare, MessageSquareOff, Send, Loader2, TrendingUp, Calendar, Sparkles, Youtube, Lock } from "lucide-react";
+import { ThumbsUp, Share2, MessageCircle, MessageSquare, MessageSquareOff, Send, Loader2, TrendingUp, Calendar, Sparkles, Youtube, Lock, Mail, ShieldCheck, Activity, BookOpen, ArrowRight, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -85,10 +85,12 @@ const SocialPosts = () => {
     const [authEmail, setAuthEmail] = useState("");
     const [authOtp, setAuthOtp] = useState("");
     const [authLoading, setAuthLoading] = useState(false);
+    const [authError, setAuthError] = useState(""); // Inline error state
 
     const handleVerifyEmail = async () => {
+        setAuthError("");
         if (!authEmail.trim()) {
-            toast.error("Please enter an email address");
+            setAuthError("Please enter an email address");
             return;
         }
         setAuthLoading(true);
@@ -103,18 +105,19 @@ const SocialPosts = () => {
                 toast.success("OTP sent to your email!");
                 setAuthStep(2);
             } else {
-                toast.error(data.message || "Email not authorized");
+                setAuthError(data.message || "Email not authorized");
             }
         } catch (error) {
-            toast.error("Error verifying email");
+            setAuthError("Error verifying email. Please ensure backend is running.");
         } finally {
             setAuthLoading(false);
         }
     };
 
     const handleValidateOtp = async () => {
+        setAuthError("");
         if (!authOtp.trim() || authOtp.length !== 6) {
-            toast.error("Please enter a valid 6-digit OTP");
+            setAuthError("Please enter a valid 6-digit OTP");
             return;
         }
         setAuthLoading(true);
@@ -129,10 +132,10 @@ const SocialPosts = () => {
                 toast.success("Access Granted");
                 setIsAuthenticated(true);
             } else {
-                toast.error(data.message || "Invalid or expired OTP");
+                setAuthError(data.message || "Invalid or expired OTP");
             }
         } catch (error) {
-            toast.error("Error validating OTP");
+            setAuthError("Error validating OTP.");
         } finally {
             setAuthLoading(false);
         }
@@ -248,78 +251,148 @@ const SocialPosts = () => {
 
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen bg-gray-50 flex flex-col">
+            <div className="min-h-screen flex flex-col font-sans bg-white">
                 <Navbar />
-                <div className="flex-1 flex items-center justify-center p-4 mt-16">
-                    <Card className="w-full max-w-md p-8 shadow-xl bg-white border-t-4 border-emerald-500 rounded-2xl">
-                        <div className="text-center mb-8">
-                            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Lock className="w-8 h-8 text-emerald-600" />
+                <div className="flex-1 flex mt-16 overflow-hidden">
+                    
+                    {/* LEFT SIDE - BRANDING */}
+                    <div className="hidden lg:flex w-1/2 bg-[#0B1120] flex-col justify-between p-12 lg:p-20 text-white relative overflow-hidden">
+                        {/* Grid Background Pattern */}
+                        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+                        
+                        
+                        {/* Center Content */}
+                        <div className="relative z-10 -mt-10">
+                            <h1 className="text-4xl lg:text-5xl font-bold leading-[1.1] tracking-tight mb-12">
+                                "The best platform we use<br/>for our <span className="text-[#3b82f6]">knowledge sharing</span>."
+                            </h1>
+                            
+                            <div className="space-y-8">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-slate-800/80 flex items-center justify-center border border-slate-700/50">
+                                        <ShieldCheck className="w-5 h-5 text-gray-400" />
+                                    </div>
+                                    <span className="text-gray-300 font-medium tracking-wide">Enterprise-grade access security</span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-slate-800/80 flex items-center justify-center border border-slate-700/50">
+                                        <Activity className="w-5 h-5 text-gray-400" />
+                                    </div>
+                                    <span className="text-gray-300 font-medium tracking-wide">Real-time engagement tracking</span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-slate-800/80 flex items-center justify-center border border-slate-700/50">
+                                        <BookOpen className="w-5 h-5 text-gray-400" />
+                                    </div>
+                                    <span className="text-gray-300 font-medium tracking-wide">Curated tech insights & resources</span>
+                                </div>
                             </div>
-                            <h2 className="text-2xl font-bold text-gray-800">Secure Access</h2>
-                            <p className="text-gray-500 mt-2">
-                                Please verify your identity to access Social Posts.
-                            </p>
                         </div>
 
-                        {authStep === 1 ? (
-                            <div className="space-y-4">
-                                <div>
-                                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        placeholder="Enter your authorized email"
-                                        value={authEmail}
-                                        onChange={(e) => setAuthEmail(e.target.value)}
-                                        className="mt-1 h-12"
-                                        onKeyDown={(e) => e.key === 'Enter' && handleVerifyEmail()}
-                                    />
-                                </div>
-                                <Button 
-                                    className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-lg rounded-xl transition-colors"
-                                    onClick={handleVerifyEmail}
-                                    disabled={authLoading}
-                                >
-                                    {authLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Verify Email"}
-                                </Button>
+                        {/* Footer */}
+                        <div className="relative z-10 text-sm text-slate-500 font-medium">
+                            © 2026 NexByte Inc. All rights reserved.
+                        </div>
+
+                        {/* Subtle Glows */}
+                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3"></div>
+                    </div>
+
+                    {/* RIGHT SIDE - FORM */}
+                    <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-16 lg:p-24 bg-white relative">
+                        <div className="w-full max-w-[420px] space-y-8">
+                            <div>
+                                <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Welcome Back</h2>
+                                <p className="text-gray-500 mt-2 text-sm">
+                                    Sign in to continue your knowledge journey.
+                                </p>
                             </div>
-                        ) : (
-                            <div className="space-y-4">
-                                <div>
-                                    <Label htmlFor="otp" className="text-sm font-medium text-gray-700">6-Digit OTP</Label>
-                                    <Input
-                                        id="otp"
-                                        type="text"
-                                        maxLength={6}
-                                        placeholder="Enter the OTP sent to your email"
-                                        value={authOtp}
-                                        onChange={(e) => setAuthOtp(e.target.value)}
-                                        className="mt-1 h-12 text-center text-lg tracking-[0.25em]"
-                                        onKeyDown={(e) => e.key === 'Enter' && handleValidateOtp()}
-                                    />
-                                    <p className="text-xs text-gray-500 mt-2 text-center">
-                                        OTP is valid for 1 minute.
-                                    </p>
+
+                            {authStep === 1 ? (
+                                <div className="space-y-6 pt-2">
+                                    <div>
+                                        <Label htmlFor="email" className="text-sm font-semibold text-gray-700">Email Address</Label>
+                                        <div className="relative mt-2">
+                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                                <Mail className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <Input
+                                                id="email"
+                                                type="email"
+                                                placeholder="john@example.com"
+                                                value={authEmail}
+                                                onChange={(e) => setAuthEmail(e.target.value)}
+                                                className={`pl-11 h-12 rounded-xl border-gray-200 focus:border-[#2563eb] focus:ring-[#2563eb] transition-shadow ${authError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleVerifyEmail()}
+                                            />
+                                        </div>
+                                        {authError && <p className="text-red-500 text-sm mt-1.5 font-medium">{authError}</p>}
+                                    </div>
+                                    <Button 
+                                        className="w-full h-12 bg-[#2563eb] hover:bg-blue-700 text-white font-semibold text-[15px] rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 mt-2"
+                                        onClick={handleVerifyEmail}
+                                        disabled={authLoading}
+                                    >
+                                        {authLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                                            <>Sign In <ArrowRight className="w-4 h-4" /></>
+                                        )}
+                                    </Button>
                                 </div>
-                                <Button 
-                                    className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-lg rounded-xl transition-colors"
-                                    onClick={handleValidateOtp}
-                                    disabled={authLoading}
-                                >
-                                    {authLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Unlock Access"}
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    className="w-full mt-2"
-                                    onClick={() => { setAuthStep(1); setAuthOtp(""); }}
-                                    disabled={authLoading}
-                                >
-                                    Use a different email
-                                </Button>
+                            ) : (
+                                <div className="space-y-6 pt-2">
+                                    <div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <Label htmlFor="otp" className="text-sm font-semibold text-gray-700">One-Time Password</Label>
+                                            <button 
+                                                onClick={() => { setAuthStep(1); setAuthOtp(""); setAuthError(""); }}
+                                                className="text-[13px] text-[#2563eb] hover:text-blue-700 font-medium"
+                                                type="button"
+                                            >
+                                                Change email?
+                                            </button>
+                                        </div>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                                <KeyRound className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <Input
+                                                id="otp"
+                                                type="text"
+                                                maxLength={6}
+                                                placeholder="••••••"
+                                                value={authOtp}
+                                                onChange={(e) => setAuthOtp(e.target.value)}
+                                                className={`pl-11 h-12 rounded-xl border-gray-200 focus:border-[#2563eb] focus:ring-[#2563eb] transition-shadow text-lg tracking-[0.2em] font-mono ${authError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleValidateOtp()}
+                                            />
+                                        </div>
+                                        {authError ? (
+                                            <p className="text-red-500 text-sm mt-1.5 font-medium">{authError}</p>
+                                        ) : (
+                                            <p className="text-xs text-gray-500 mt-2">
+                                                OTP sent to <span className="font-medium text-gray-700">{authEmail}</span>. Valid for 1m.
+                                            </p>
+                                        )}
+                                    </div>
+                                    <Button 
+                                        className="w-full h-12 bg-[#2563eb] hover:bg-blue-700 text-white font-semibold text-[15px] rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 mt-2"
+                                        onClick={handleValidateOtp}
+                                        disabled={authLoading}
+                                    >
+                                        {authLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                                            <>Verify & Access <ArrowRight className="w-4 h-4" /></>
+                                        )}
+                                    </Button>
+                                </div>
+                            )}
+                            
+                            <div className="mt-8 pt-8 border-t border-gray-100 text-center">
+                                <p className="text-[13px] text-gray-500">
+                                    Don't have an account? <a href="#" className="font-semibold text-[#2563eb] hover:text-blue-500">Contact IT Support</a>
+                                </p>
                             </div>
-                        )}
-                    </Card>
+                        </div>
+                    </div>
                 </div>
                 <Footer />
             </div>
