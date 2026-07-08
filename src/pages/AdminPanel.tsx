@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Textarea } from "@/components/ui/textarea";
 
 import SocialPostManager from "@/pages/Admin-Panel/managers/SocialPostManager";
+import SocialPostValidationManager from "@/pages/Admin-Panel/managers/SocialPostValidationManager";
 import AIPostManager from "@/pages/Admin-Panel/managers/AIPostManager";
 import CSECorePostManager from "@/pages/Admin-Panel/managers/CSECorePostManager";
 import NewsAdminPanel from "@/pages/Admin-Panel/managers/NewsAdminPanel";
@@ -1189,6 +1190,14 @@ const AdminPanel = () => {
                         <MessageSquare className="w-4 h-4 mr-2" />
                         Social Posts
                     </Button>
+                    <Button
+                        variant={activeTab === "social-post-validation" ? "secondary" : "ghost"}
+                        className="w-full justify-start"
+                        onClick={() => onTabChange("social-post-validation")}
+                    >
+                        <Lock className="w-4 h-4 mr-2" />
+                        Social Post Validation
+                    </Button>
 
                     <Button
                         variant={activeTab === "webinars" ? "secondary" : "ghost"}
@@ -1514,6 +1523,11 @@ const AdminPanel = () => {
                         {/* SOCIAL POSTS TAB */}
                         <TabsContent value="social-posts" className="mt-0">
                             <SocialPostManager showControls={!isSharedAdminMode} />
+                        </TabsContent>
+
+                        {/* SOCIAL POST VALIDATION TAB */}
+                        <TabsContent value="social-post-validation" className="mt-0">
+                            <SocialPostValidationManager />
                         </TabsContent>
 
                         {/* AI POSTS TAB */}

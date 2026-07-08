@@ -3,12 +3,14 @@ import { API_BASE_URL } from "@/config";
 import { IKContext, IKImage } from "imagekitio-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, Share2, MessageCircle, MessageSquare, MessageSquareOff, Send, Loader2, TrendingUp, Calendar, Sparkles, Youtube } from "lucide-react";
+import { ThumbsUp, Share2, MessageCircle, MessageSquare, MessageSquareOff, Send, Loader2, TrendingUp, Calendar, Sparkles, Youtube, Lock } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { useSearchParams } from "react-router-dom";
 import { FaShareAlt, FaLightbulb, FaHandshake, FaGlobe } from "react-icons/fa";
 
@@ -76,6 +78,65 @@ const SocialPosts = () => {
 
     const [posts, setPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Auth State
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [authStep, setAuthStep] = useState(1);
+    const [authEmail, setAuthEmail] = useState("");
+    const [authOtp, setAuthOtp] = useState("");
+    const [authLoading, setAuthLoading] = useState(false);
+
+    const handleVerifyEmail = async () => {
+        if (!authEmail.trim()) {
+            toast.error("Please enter an email address");
+            return;
+        }
+        setAuthLoading(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/social-posts/verify-email`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: authEmail.trim() })
+            });
+            const data = await response.json();
+            if (data.success) {
+                toast.success("OTP sent to your email!");
+                setAuthStep(2);
+            } else {
+                toast.error(data.message || "Email not authorized");
+            }
+        } catch (error) {
+            toast.error("Error verifying email");
+        } finally {
+            setAuthLoading(false);
+        }
+    };
+
+    const handleValidateOtp = async () => {
+        if (!authOtp.trim() || authOtp.length !== 6) {
+            toast.error("Please enter a valid 6-digit OTP");
+            return;
+        }
+        setAuthLoading(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/social-posts/validate-otp`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: authEmail.trim(), otp: authOtp.trim() })
+            });
+            const data = await response.json();
+            if (data.success) {
+                toast.success("Access Granted");
+                setIsAuthenticated(true);
+            } else {
+                toast.error(data.message || "Invalid or expired OTP");
+            }
+        } catch (error) {
+            toast.error("Error validating OTP");
+        } finally {
+            setAuthLoading(false);
+        }
+    };
     const [sortBy, setSortBy] = useState("latest");
     const [date, setDate] = useState<Date | undefined>(undefined);
     const [expandedPosts, setExpandedPosts] = useState<Record<string, boolean>>({});
@@ -184,6 +245,86 @@ const SocialPosts = () => {
 
     const currentTheme = getTheme(selectedCategory);
     const CurrentIcon = currentTheme.icon;
+
+    if (!isAuthenticated) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col">
+                <Navbar />
+                <div className="flex-1 flex items-center justify-center p-4 mt-16">
+                    <Card className="w-full max-w-md p-8 shadow-xl bg-white border-t-4 border-emerald-500 rounded-2xl">
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Lock className="w-8 h-8 text-emerald-600" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-800">Secure Access</h2>
+                            <p className="text-gray-500 mt-2">
+                                Please verify your identity to access Social Posts.
+                            </p>
+                        </div>
+
+                        {authStep === 1 ? (
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="Enter your authorized email"
+                                        value={authEmail}
+                                        onChange={(e) => setAuthEmail(e.target.value)}
+                                        className="mt-1 h-12"
+                                        onKeyDown={(e) => e.key === 'Enter' && handleVerifyEmail()}
+                                    />
+                                </div>
+                                <Button 
+                                    className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-lg rounded-xl transition-colors"
+                                    onClick={handleVerifyEmail}
+                                    disabled={authLoading}
+                                >
+                                    {authLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Verify Email"}
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="otp" className="text-sm font-medium text-gray-700">6-Digit OTP</Label>
+                                    <Input
+                                        id="otp"
+                                        type="text"
+                                        maxLength={6}
+                                        placeholder="Enter the OTP sent to your email"
+                                        value={authOtp}
+                                        onChange={(e) => setAuthOtp(e.target.value)}
+                                        className="mt-1 h-12 text-center text-lg tracking-[0.25em]"
+                                        onKeyDown={(e) => e.key === 'Enter' && handleValidateOtp()}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-2 text-center">
+                                        OTP is valid for 1 minute.
+                                    </p>
+                                </div>
+                                <Button 
+                                    className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-lg rounded-xl transition-colors"
+                                    onClick={handleValidateOtp}
+                                    disabled={authLoading}
+                                >
+                                    {authLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Unlock Access"}
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    className="w-full mt-2"
+                                    onClick={() => { setAuthStep(1); setAuthOtp(""); }}
+                                    disabled={authLoading}
+                                >
+                                    Use a different email
+                                </Button>
+                            </div>
+                        )}
+                    </Card>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
 
     return (
         <IKContext publicKey={IK_PUBLIC_KEY} urlEndpoint={IK_URL_ENDPOINT}>
