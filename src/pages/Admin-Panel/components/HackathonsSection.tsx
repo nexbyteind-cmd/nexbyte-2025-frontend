@@ -59,6 +59,35 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
         secondWinner: "",
         raffleWinners: ""
     });
+    
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const getRemainingTime = (startTimeStr: string) => {
+        if (!startTimeStr) return null;
+        const target = new Date(startTimeStr);
+        if (isNaN(target.getTime())) return null;
+        
+        const diff = target.getTime() - currentTime.getTime();
+        if (diff <= 0) return "Quiz is already live or time has passed.";
+        
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        const parts = [];
+        if (d > 0) parts.push(`${d} days`);
+        if (h > 0) parts.push(`${h} hours`);
+        if (m > 0) parts.push(`${m} minutes`);
+        parts.push(`${s} seconds`);
+        
+        return `Starts in: ${parts.join(', ')}`;
+    };
 
     useEffect(() => {
         const fetchQuizzes = async () => {
@@ -272,6 +301,11 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
                                         required={newHackathon.type === 'Quiz'}
                                     />
                                     <p className="text-xs text-muted-foreground mt-1">When this time passes, the quiz button will open the quiz. Before this, it shows a countdown.</p>
+                                    {newHackathon.quizStartTime && (
+                                        <p className="text-xs font-semibold text-blue-600 mt-1">
+                                            {getRemainingTime(newHackathon.quizStartTime)}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         )}
