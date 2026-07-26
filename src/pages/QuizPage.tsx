@@ -20,6 +20,7 @@ export default function QuizPage() {
     const [quiz, setQuiz] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [step, setStep] = useState<"landing" | "registration" | "active" | "success">("landing");
+    const [startCountdown, setStartCountdown] = useState<{hours: number, minutes: number, seconds: number} | null>(null);
 
     // Registration Form
     const [email, setEmail] = useState("");
@@ -60,6 +61,33 @@ export default function QuizPage() {
         };
         fetchQuiz();
     }, [quizId, navigate]);
+
+    useEffect(() => {
+        if (!quiz?.quizStartTime) {
+            setStartCountdown(null);
+            return;
+        }
+
+        const checkTime = () => {
+            const now = new Date().getTime();
+            const start = new Date(quiz.quizStartTime).getTime();
+            const diff = start - now;
+
+            if (diff <= 0) {
+                setStartCountdown(null);
+            } else {
+                setStartCountdown({
+                    hours: Math.floor(diff / (1000 * 60 * 60)),
+                    minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+                    seconds: Math.floor((diff % (1000 * 60)) / 1000)
+                });
+            }
+        };
+
+        checkTime();
+        const interval = setInterval(checkTime, 1000);
+        return () => clearInterval(interval);
+    }, [quiz?.quizStartTime]);
 
     useEffect(() => {
         if (step === "active" && quiz?.isTimed) {
@@ -212,9 +240,15 @@ export default function QuizPage() {
 
                                 {step === "landing" && (
                                     <div className="flex flex-col sm:flex-row items-center gap-4">
-                                        <Button onClick={handleStartClick} className="w-full sm:w-auto h-14 px-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg shadow-lg transition-all group">
-                                            Start Quiz Now <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                        </Button>
+                                        {startCountdown ? (
+                                            <Button onClick={() => contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="w-full sm:w-auto h-14 px-10 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg shadow-lg transition-all group">
+                                                Quiz Starts Soon <Clock className="ml-2 w-5 h-5 animate-pulse" />
+                                            </Button>
+                                        ) : (
+                                            <Button onClick={handleStartClick} className="w-full sm:w-auto h-14 px-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg shadow-lg transition-all group">
+                                                Start Quiz Now <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                            </Button>
+                                        )}
                                         <a href={quiz.companyLink} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
                                             <Button variant="outline" className="w-full h-14 px-8 rounded-full border-2 border-gray-200 text-gray-700 hover:border-blue-500 hover:text-blue-600 font-medium transition-all">
                                                 Visit Website <ExternalLink className="w-5 h-5 ml-2" />
@@ -241,9 +275,47 @@ export default function QuizPage() {
                     <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
                 </div>
 
-                {/* Dynamic Content Area (Registration / Active / Success) */}
+                {/* Dynamic Content Area (Registration / Active / Success / Countdown) */}
                 <div ref={contentRef} className="w-full max-w-4xl px-4 scroll-mt-28">
-                    {step === "registration" && (
+                    {startCountdown ? (
+                        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="max-w-xl mx-auto bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-2xl p-10 text-center border border-indigo-100 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600"></div>
+                            <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-70 pointer-events-none"></div>
+                            <div className="absolute bottom-0 left-0 w-40 h-40 bg-violet-50 rounded-full blur-3xl -ml-10 -mb-10 opacity-70 pointer-events-none"></div>
+                            
+                            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-violet-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-indigo-200">
+                                <Clock className="w-10 h-10 animate-pulse" />
+                            </div>
+                            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">Quiz Starts Soon!</h2>
+                            <p className="text-gray-600 text-base mb-8 max-w-md mx-auto">
+                                <strong className="text-indigo-950">{quiz.name}</strong> is scheduled to go live on:<br/>
+                                <span className="text-indigo-600 font-bold block mt-1 text-lg">{new Date(quiz.quizStartTime).toLocaleString(undefined, { dateStyle: 'full', timeStyle: 'short' })}</span>
+                            </p>
+
+                            <div className="flex justify-center items-center gap-3 sm:gap-6 my-6">
+                                <div className="flex flex-col items-center bg-indigo-50/80 p-5 rounded-2xl border border-indigo-100/80 min-w-[90px] shadow-sm">
+                                    <span className="text-4xl md:text-5xl font-extrabold text-indigo-600">{startCountdown.hours}</span>
+                                    <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider mt-2">Hours</span>
+                                </div>
+                                <div className="flex flex-col justify-center text-3xl font-extrabold text-indigo-300 animate-pulse">:</div>
+                                <div className="flex flex-col items-center bg-indigo-50/80 p-5 rounded-2xl border border-indigo-100/80 min-w-[90px] shadow-sm">
+                                    <span className="text-4xl md:text-5xl font-extrabold text-indigo-600">{startCountdown.minutes}</span>
+                                    <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider mt-2">Mins</span>
+                                </div>
+                                <div className="flex flex-col justify-center text-3xl font-extrabold text-indigo-300 animate-pulse">:</div>
+                                <div className="flex flex-col items-center bg-indigo-50/80 p-5 rounded-2xl border border-indigo-100/80 min-w-[90px] shadow-sm">
+                                    <span className="text-4xl md:text-5xl font-extrabold text-indigo-600">{startCountdown.seconds}</span>
+                                    <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider mt-2">Secs</span>
+                                </div>
+                            </div>
+
+                            <p className="text-xs text-gray-400 mt-8">
+                                Please keep this page open. The quiz will automatically unlock right here when the countdown reaches zero!
+                            </p>
+                        </motion.div>
+                    ) : (
+                        <>
+                            {step === "registration" && (
                         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="max-w-md mx-auto bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-2xl p-8 border border-white relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
                             <div className="text-center mb-8 pt-4">
@@ -343,6 +415,8 @@ export default function QuizPage() {
                                 Return to Hackathons
                             </Button>
                         </motion.div>
+                    )}
+                        </>
                     )}
                 </div>
             </main>
