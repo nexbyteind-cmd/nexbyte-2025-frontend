@@ -1436,15 +1436,31 @@ const AdminPanel = () => {
                                 </div>
 
                                 {/* QUIZ WORKFLOW EXPLANATION CARD */}
-                                <Card className="mb-6 bg-violet-50/50 dark:bg-violet-950/20 border-violet-100 dark:border-violet-900/50">
-                                    <CardContent className="p-4 flex gap-3 items-start">
-                                        <Sparkles className="w-5 h-5 text-violet-600 dark:text-violet-400 mt-0.5 flex-shrink-0" />
-                                        <div className="text-sm space-y-1 text-neutral-600 dark:text-neutral-300">
-                                            <p className="font-semibold text-violet-950 dark:text-violet-200">How Quiz Management Works:</p>
-                                            <ul className="list-disc list-inside space-y-1 text-xs">
-                                                <li><span className="font-medium text-violet-900 dark:text-violet-300">Quiz Scheduling & Events:</span> Use the complete checkmark button here to freeze registrations and complete the overall live schedule/announcement.</li>
-                                                <li><span className="font-medium text-violet-900 dark:text-violet-300">Questionnaires & Submissions:</span> Use the complete button in the questionnaire list to submit final quiz answer scores, add the raffle winners, and calculate candidate standings.</li>
-                                            </ul>
+                                <Card className="mb-6 bg-gradient-to-r from-amber-50/70 to-violet-50/50 dark:from-amber-950/10 dark:to-violet-950/20 border-amber-200/50 dark:border-amber-900/30 shadow-sm">
+                                    <CardContent className="p-5 flex gap-4 items-start">
+                                        <Sparkles className="w-6 h-6 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0 animate-pulse" />
+                                        <div className="text-sm space-y-3 text-neutral-700 dark:text-neutral-300 w-full font-sans">
+                                            <p className="font-bold text-base text-neutral-900 dark:text-neutral-100">Required Quiz Completion Workflow:</p>
+                                            
+                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                <div className="bg-white/80 dark:bg-neutral-900/50 p-3.5 rounded-xl border border-neutral-100 dark:border-neutral-800">
+                                                    <span className="font-bold text-xs uppercase tracking-wider text-violet-700 dark:text-violet-400 block mb-1">Step 1: Declare Winners</span>
+                                                    <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                                                        Go to <strong className="text-violet-900 dark:text-violet-300">Questionnaires & Submissions</strong>, click "Complete" on the questionnaire, and input the first/second and raffle winners. This saves and publishes the scores.
+                                                     </p>
+                                                </div>
+                                                <div className="bg-white/80 dark:bg-neutral-900/50 p-3.5 rounded-xl border border-neutral-100 dark:border-neutral-800">
+                                                    <span className="font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-400 block mb-1">Step 2: Archive Event Shell</span>
+                                                    <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                                                        Once the questionnaire and winners are declared, the event shell in <strong className="text-amber-900 dark:text-amber-300">Quiz Scheduling & Events</strong> is automatically updated. Direct completion here is locked to prevent closing without announcing winners.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="text-xs bg-amber-50/80 dark:bg-amber-950/20 text-amber-900 dark:text-amber-300 p-3 rounded-lg border border-amber-100 dark:border-amber-900/50 flex gap-2 items-center">
+                                                <span className="font-bold text-amber-700">⚠️ Illegal Action Warning:</span>
+                                                <span>You must announce the winners before the quiz event is closed. Direct event completion is blocked until winners are announced.</span>
+                                            </div>
                                         </div>
                                     </CardContent>
                                 </Card>

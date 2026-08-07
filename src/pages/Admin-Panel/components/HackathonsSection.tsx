@@ -503,9 +503,15 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        onClick={() => setCompleteModalData({ isOpen: true, hackathonId: h._id, winner: "", secondWinner: "", raffleWinners: "" })}
+                                                        onClick={() => {
+                                                            if (h.type === 'Quiz') {
+                                                                toast.warning("For Quizzes, you must announce the winners in 'Questionnaires & Submissions' first. Direct event completion is blocked until winners are declared.");
+                                                                return;
+                                                            }
+                                                            setCompleteModalData({ isOpen: true, hackathonId: h._id, winner: "", secondWinner: "", raffleWinners: "" });
+                                                        }}
                                                         className="h-8 w-8 p-0 text-green-600 border-green-200 hover:bg-green-50"
-                                                        title="Mark as Completed"
+                                                        title={h.type === 'Quiz' ? "Announce winners in Questionnaire manager first" : "Mark as Completed"}
                                                     >
                                                         <CheckCircle className="w-4 h-4" />
                                                     </Button>
