@@ -118,12 +118,12 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
     }, [onlyType, newHackathon.type, setNewHackathon]);
 
     const activeEvents = hackathons.filter(h => {
-        const matchesType = !onlyType || h.type === onlyType;
+        const matchesType = !onlyType || (h.type || 'Hackathon') === onlyType;
         return h.status !== 'completed' && matchesType;
     });
 
     const completedEvents = hackathons.filter(h => {
-        const matchesType = !onlyType || h.type === onlyType;
+        const matchesType = !onlyType || (h.type || 'Hackathon') === onlyType;
         return h.status === 'completed' && matchesType;
     });
 

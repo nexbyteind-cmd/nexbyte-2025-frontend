@@ -1413,31 +1413,57 @@ const AdminPanel = () => {
 
                         {/* QUIZ MANAGER TAB */}
                         <TabsContent value="quiz_manager" className="mt-0 h-full">
-                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-                                <HackathonsSection
-                                    onlyType="Quiz"
-                                    hackathons={hackathons}
-                                    applications={applications}
-                                    expandedHackathonId={expandedHackathonId}
-                                    setExpandedHackathonId={setExpandedHackathonId}
-                                    newHackathon={newHackathon}
-                                    setNewHackathon={setNewHackathon}
-                                    editingHackathonId={editingHackathonId}
-                                    handleCreateHackathon={handleCreateHackathon}
-                                    handleEditHackathon={handleEditHackathon}
-                                    handleCancelEditHackathon={handleCancelEditHackathon}
-                                    handleDeleteHackathon={handleDeleteHackathon}
-                                    handleMarkCompleted={handleMarkCompleted}
-                                    handleToggleVisibility={handleToggleVisibility}
-                                    fetchApplications={fetchApplications}
-                                    resendingId={resendingId}
-                                    handleResendEmail={handleResendEmail}
-                                    openEmailModal={openEmailModal}
-                                    handleDeleteRecord={handleDeleteRecord}
-                                    showControls={!isSharedAdminMode}
-                                />
-                                <QuizManager />
-                            </div>
+                            <Tabs defaultValue="quiz_events" className="w-full">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4 mb-6">
+                                    <div>
+                                        <h2 className="text-xl font-bold tracking-tight">Quizzes & Challenges</h2>
+                                        <p className="text-sm text-muted-foreground">Manage your quiz events, live countdowns, scheduling, questions, and participant data.</p>
+                                    </div>
+                                    <TabsList className="bg-muted p-1 border rounded-lg flex self-start md:self-center gap-1">
+                                        <TabsTrigger 
+                                            value="quiz_events" 
+                                            className="px-4 py-2 text-sm font-semibold rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                                        >
+                                            Quiz Scheduling & Events
+                                        </TabsTrigger>
+                                        <TabsTrigger 
+                                            value="quiz_questions" 
+                                            className="px-4 py-2 text-sm font-semibold rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                                        >
+                                            Questionnaires & Submissions
+                                        </TabsTrigger>
+                                    </TabsList>
+                                </div>
+
+                                <TabsContent value="quiz_events" className="mt-0 outline-none">
+                                    <HackathonsSection
+                                        onlyType="Quiz"
+                                        hackathons={hackathons}
+                                        applications={applications}
+                                        expandedHackathonId={expandedHackathonId}
+                                        setExpandedHackathonId={setExpandedHackathonId}
+                                        newHackathon={newHackathon}
+                                        setNewHackathon={setNewHackathon}
+                                        editingHackathonId={editingHackathonId}
+                                        handleCreateHackathon={handleCreateHackathon}
+                                        handleEditHackathon={handleEditHackathon}
+                                        handleCancelEditHackathon={handleCancelEditHackathon}
+                                        handleDeleteHackathon={handleDeleteHackathon}
+                                        handleMarkCompleted={handleMarkCompleted}
+                                        handleToggleVisibility={handleToggleVisibility}
+                                        fetchApplications={fetchApplications}
+                                        resendingId={resendingId}
+                                        handleResendEmail={handleResendEmail}
+                                        openEmailModal={openEmailModal}
+                                        handleDeleteRecord={handleDeleteRecord}
+                                        showControls={!isSharedAdminMode}
+                                    />
+                                </TabsContent>
+
+                                <TabsContent value="quiz_questions" className="mt-0 outline-none">
+                                    <QuizManager />
+                                </TabsContent>
+                            </Tabs>
                         </TabsContent>
 
                         {/* TECH POSTS TAB */}
