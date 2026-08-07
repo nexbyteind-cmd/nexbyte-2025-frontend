@@ -260,31 +260,9 @@ export default function QuizPage() {
                                         </div>
 
                                         <div className="mt-8 space-y-6 max-w-md w-full">
-                                            {quiz.techStack && (
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center gap-2 text-violet-700 dark:text-violet-400">
-                                                        <Code className="w-4 h-4" />
-                                                        <span className="text-xs font-bold uppercase tracking-wider">Knowledge Area</span>
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-1.5">
-                                                        {quiz.techStack.split(',').map((tech: string, i: number) => (
-                                                            <span key={i} className="px-3 py-1 bg-violet-50 text-violet-700 border border-violet-100/50 text-xs rounded-full font-semibold">
-                                                                {tech.trim()}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
+                                       
 
-                                            {quiz.benefits && (
-                                                <div className="p-4 bg-gradient-to-br from-violet-50/60 to-indigo-50/30 rounded-2xl border border-violet-100/80 shadow-sm">
-                                                    <div className="flex items-center gap-2 mb-2 text-indigo-700">
-                                                        <Sparkles className="w-4 h-4" />
-                                                        <span className="text-xs font-bold uppercase tracking-wider">Perks & Rewards</span>
-                                                    </div>
-                                                    <p className="text-xs text-gray-750 leading-relaxed font-medium">{quiz.benefits}</p>
-                                                </div>
-                                            )}
+                                     
 
                                             {(quiz.prizeMoney || quiz.mode) && (
                                                 <div className="flex gap-4">

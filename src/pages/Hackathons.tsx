@@ -316,11 +316,7 @@ const Hackathons = () => {
                                             <p className={`text-xs ${isQuiz ? 'text-gray-800' : 'text-gray-700'} break-words`}>{hackathon.raffleWinners}</p>
                                         </div>
                                     )}
-                                    {hackathon.participantsCount !== undefined && (
-                                        <div className={`mt-3 pt-3 border-t ${isQuiz ? 'border-violet-200/50' : 'border-yellow-200/50'}`}>
-                                            <p className={`text-xs font-semibold ${isQuiz ? 'text-violet-700' : 'text-yellow-800'}`}>{hackathon.participantsCount} Participants</p>
-                                        </div>
-                                    )}
+                                
                                 </div>
                             </div>
                         )}
