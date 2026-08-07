@@ -132,9 +132,13 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
             {/* Create Hackathon Form */}
             <Card>
                 <CardHeader>
-                    <CardTitle>{editingHackathonId ? "Edit Hackathon or Quiz" : "Create New Hackathon or Quiz"}</CardTitle>
+                    <CardTitle>
+                        {editingHackathonId 
+                            ? (onlyType ? `Edit ${onlyType}` : "Edit Hackathon or Quiz")
+                            : (onlyType ? `Create New ${onlyType}` : "Create New Hackathon or Quiz")}
+                    </CardTitle>
                     <CardDescription>
-                        {editingHackathonId ? "Update the event details below." : "Fill in the details to publish a new event."}
+                        {editingHackathonId ? "Update the details below." : "Fill in the details to publish a new event."}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -376,7 +380,9 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
             {/* Existing Hackathons List */}
             <Card className="lg:col-span-1 h-fit">
                 <CardHeader>
-                    <CardTitle>Existing Hackathons & Quizzes</CardTitle>
+                    <CardTitle>
+                        {onlyType === 'Hackathon' ? 'Existing Hackathons' : onlyType === 'Quiz' ? 'Existing Quizzes' : 'Existing Hackathons & Quizzes'}
+                    </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
@@ -604,7 +610,9 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
             {/* Previous Hackathons & Quizzes List */}
             <Card className="lg:col-span-1 h-fit mt-6">
                 <CardHeader>
-                    <CardTitle>Previous Hackathons & Quizzes</CardTitle>
+                    <CardTitle>
+                        {onlyType === 'Hackathon' ? 'Previous Hackathons' : onlyType === 'Quiz' ? 'Previous Quizzes' : 'Previous Hackathons & Quizzes'}
+                    </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">

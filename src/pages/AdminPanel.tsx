@@ -1435,6 +1435,20 @@ const AdminPanel = () => {
                                     </TabsList>
                                 </div>
 
+                                {/* QUIZ WORKFLOW EXPLANATION CARD */}
+                                <Card className="mb-6 bg-violet-50/50 dark:bg-violet-950/20 border-violet-100 dark:border-violet-900/50">
+                                    <CardContent className="p-4 flex gap-3 items-start">
+                                        <Sparkles className="w-5 h-5 text-violet-600 dark:text-violet-400 mt-0.5 flex-shrink-0" />
+                                        <div className="text-sm space-y-1 text-neutral-600 dark:text-neutral-300">
+                                            <p className="font-semibold text-violet-950 dark:text-violet-200">How Quiz Management Works:</p>
+                                            <ul className="list-disc list-inside space-y-1 text-xs">
+                                                <li><span className="font-medium text-violet-900 dark:text-violet-300">Quiz Scheduling & Events:</span> Use the complete checkmark button here to freeze registrations and complete the overall live schedule/announcement.</li>
+                                                <li><span className="font-medium text-violet-900 dark:text-violet-300">Questionnaires & Submissions:</span> Use the complete button in the questionnaire list to submit final quiz answer scores, add the raffle winners, and calculate candidate standings.</li>
+                                            </ul>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
                                 <TabsContent value="quiz_events" className="mt-0 outline-none">
                                     <HackathonsSection
                                         onlyType="Quiz"
