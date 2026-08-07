@@ -32,6 +32,8 @@ const QuizManager = () => {
         companyLink: "",
         isTimed: false,
         durationMinutes: 5,
+        description: "",
+        brokers: "",
         questions: [] as any[]
     });
 
@@ -140,6 +142,8 @@ const QuizManager = () => {
             companyLink: quiz.companyLink || "",
             isTimed: quiz.isTimed || false,
             durationMinutes: quiz.durationMinutes || 5,
+            description: quiz.description || "",
+            brokers: Array.isArray(quiz.brokers) ? quiz.brokers.join(', ') : (quiz.brokers || ""),
             questions: quiz.questions || []
         });
         setEditingQuizId(quiz._id);
@@ -149,7 +153,7 @@ const QuizManager = () => {
     const handleCancelEdit = () => {
         setEditingQuizId(null);
         setNewQuiz({
-            name: "", bannerImage: "", companyName: "", companyLink: "", isTimed: false, durationMinutes: 5, questions: []
+            name: "", bannerImage: "", companyName: "", companyLink: "", isTimed: false, durationMinutes: 5, description: "", brokers: "", questions: []
         });
     };
 
@@ -172,10 +176,15 @@ const QuizManager = () => {
             const url = editingQuizId ? `${API_BASE_URL}/api/quizzes/${editingQuizId}` : `${API_BASE_URL}/api/quizzes`;
             const method = editingQuizId ? "PUT" : "POST";
 
+            const payload = {
+                ...newQuiz,
+                brokers: newQuiz.brokers ? newQuiz.brokers.split(',').map((b: string) => b.trim()).filter(Boolean) : []
+            };
+
             const res = await fetch(url, {
                 method,
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(newQuiz)
+                body: JSON.stringify(payload)
             });
             const data = await res.json();
             if (data.success) {
@@ -185,7 +194,7 @@ const QuizManager = () => {
                     handleCancelEdit();
                 } else {
                     setNewQuiz({
-                        name: "", bannerImage: "", companyName: "", companyLink: "", isTimed: false, durationMinutes: 5, questions: []
+                        name: "", bannerImage: "", companyName: "", companyLink: "", isTimed: false, durationMinutes: 5, description: "", brokers: "", questions: []
                     });
                 }
             } else {
@@ -250,12 +259,13 @@ const QuizManager = () => {
             qHeaders.push(`Q${i} Time (s)`);
         }
 
-        const headers = ["Date", "Name/Mobile", "Email", "Correct", "Wrong", "Total Time (s)", "Avg Time per Q (s)", ...qHeaders];
+        const headers = ["Date", "Name/Mobile", "Email", "Referral Source", "Correct", "Wrong", "Total Time (s)", "Avg Time per Q (s)", ...qHeaders];
         const rows = attempts.map(app => {
             const rowData = [
                 new Date(app.submittedAt).toLocaleDateString(),
                 app.mobile,
                 app.email,
+                app.referralSource || "N/A",
                 app.correctCount,
                 app.wrongCount,
                 app.totalTimeSeconds,
@@ -266,7 +276,7 @@ const QuizManager = () => {
                 rowData.push(app.timePerQuestion && app.timePerQuestion[i] !== undefined ? app.timePerQuestion[i] : "");
             }
 
-            return rowData.map(f => `"${f || ''}"`).join(",");
+            return rowData.map(f => `"${String(f || '').replace(/"/g, '""')}"`).join(",");
         });
 
         const csv = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
@@ -298,6 +308,16 @@ const QuizManager = () => {
                             <div className="space-y-2">
                                 <Label>Quiz Name <span className="text-red-500">*</span></Label>
                                 <Input required value={newQuiz.name} onChange={(e) => setNewQuiz({ ...newQuiz, name: e.target.value })} />
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <Label>Quiz Description</Label>
+                                <textarea
+                                    className="w-full border rounded-md px-3 py-2 text-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    value={newQuiz.description}
+                                    onChange={(e) => setNewQuiz({ ...newQuiz, description: e.target.value })}
+                                    placeholder="Enter quiz description/tagline here..."
+                                />
                             </div>
                             
                             <div className="space-y-2">
@@ -359,6 +379,16 @@ const QuizManager = () => {
                                     <Input type="number" min="1" required value={newQuiz.durationMinutes} onChange={(e) => setNewQuiz({ ...newQuiz, durationMinutes: parseInt(e.target.value) })} />
                                 </div>
                             )}
+
+                            <div className="space-y-2">
+                                <Label>Broker Names (Comma-separated, optional)</Label>
+                                <Input
+                                    value={newQuiz.brokers}
+                                    onChange={(e) => setNewQuiz({ ...newQuiz, brokers: e.target.value })}
+                                    placeholder="e.g. Alice, Bob, Charlie"
+                                />
+                                <p className="text-[11px] text-gray-500">If users are referred by specific brokers/promoters, enter their names here separated by commas. Users will be able to select them from a dropdown.</p>
+                            </div>
 
                             <div className="mt-8 border-t pt-6">
                                 <div className="mb-4">
@@ -500,6 +530,7 @@ const QuizManager = () => {
                                                 <TableHead>Date</TableHead>
                                                 <TableHead>Mobile/Name</TableHead>
                                                 <TableHead>Email</TableHead>
+                                                <TableHead>Referral Source</TableHead>
                                                 <TableHead>Correct</TableHead>
                                                 <TableHead>Wrong</TableHead>
                                                 <TableHead>Total Time</TableHead>
@@ -512,6 +543,7 @@ const QuizManager = () => {
                                                     <TableCell className="text-xs">{new Date(att.submittedAt).toLocaleDateString()}</TableCell>
                                                     <TableCell className="text-xs">{att.mobile}</TableCell>
                                                     <TableCell className="text-xs">{att.email}</TableCell>
+                                                    <TableCell className="text-xs font-medium text-blue-600">{att.referralSource || "N/A"}</TableCell>
                                                     <TableCell className="text-xs font-bold text-green-600">{att.correctCount}</TableCell>
                                                     <TableCell className="text-xs font-bold text-red-600">{att.wrongCount}</TableCell>
                                                     <TableCell className="text-xs">{att.totalTimeSeconds}s</TableCell>

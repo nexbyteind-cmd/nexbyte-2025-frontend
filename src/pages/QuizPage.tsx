@@ -25,6 +25,7 @@ export default function QuizPage() {
     // Registration Form
     const [email, setEmail] = useState("");
     const [mobile, setMobile] = useState("");
+    const [referralSource, setReferralSource] = useState("");
 
     // Active Quiz State
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -122,8 +123,8 @@ export default function QuizPage() {
 
     const handleRegistrationSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email || !mobile) {
-            return toast.error("Email and Mobile are required");
+        if (!email || !mobile || !referralSource) {
+            return toast.error("Email, Mobile, and Referral Source are required");
         }
         setStep("active");
         lastQuestionTimestampRef.current = Date.now();
@@ -169,6 +170,7 @@ export default function QuizPage() {
             const payload = {
                 email,
                 mobile,
+                referralSource,
                 correctCount, // Note: this might be off by 1 for the last question due to stale closure if not careful.
                 wrongCount,
                 totalTimeSeconds: totalTimeTaken,
@@ -235,7 +237,7 @@ export default function QuizPage() {
                                 </h1>
                                 
                                 <p className="text-gray-500 text-lg mb-8 max-w-md">
-                                    Test your knowledge and win exciting prizes. Start your journey now!
+                                    {quiz.description || "Test your knowledge and win exciting prizes. Start your journey now!"}
                                 </p>
 
                                 {step === "landing" && (
@@ -334,6 +336,35 @@ export default function QuizPage() {
                                 <div className="space-y-2">
                                     <Label className="text-gray-600 font-semibold ml-1">Mobile Number</Label>
                                     <Input type="tel" required value={mobile} onChange={e => setMobile(e.target.value)} placeholder="+91..." className="h-14 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all text-lg" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-gray-600 font-semibold ml-1">Where did you hear about this quiz? <span className="text-red-500">*</span></Label>
+                                    <select
+                                        required
+                                        value={referralSource}
+                                        onChange={e => setReferralSource(e.target.value)}
+                                        className="w-full h-14 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all text-lg px-4"
+                                    >
+                                        <option value="" disabled>Select an option...</option>
+                                        <optgroup label="Social Media">
+                                            <option value="Instagram">Instagram</option>
+                                            <option value="Facebook">Facebook</option>
+                                            <option value="Twitter">Twitter</option>
+                                            <option value="WhatsApp">WhatsApp</option>
+                                            <option value="Google">Google</option>
+                                            <option value="Snapchat">Snapchat</option>
+                                        </optgroup>
+                                        {quiz.brokers && quiz.brokers.length > 0 && (
+                                            <optgroup label="Brokers / Promoters">
+                                                {quiz.brokers.map((broker: string, idx: number) => (
+                                                    <option key={idx} value={broker}>{broker}</option>
+                                                ))}
+                                            </optgroup>
+                                        )}
+                                        <optgroup label="Other">
+                                            <option value="Others">Others / None of the above</option>
+                                        </optgroup>
+                                    </select>
                                 </div>
                                 <Button type="submit" className="w-full h-14 text-lg font-bold bg-gray-900 hover:bg-black text-white rounded-xl mt-6 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all">
                                     Continue to Questions
