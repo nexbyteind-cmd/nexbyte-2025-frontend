@@ -355,7 +355,7 @@ export default function QuizPage() {
                                             <option value="Snapchat">Snapchat</option>
                                         </optgroup>
                                         {quiz.brokers && quiz.brokers.length > 0 && (
-                                            <optgroup label="Brokers / Promoters">
+                                            <optgroup label="Marketing Representative / Tech Professional">
                                                 {quiz.brokers.map((broker: string, idx: number) => (
                                                     <option key={idx} value={broker}>{broker}</option>
                                                 ))}

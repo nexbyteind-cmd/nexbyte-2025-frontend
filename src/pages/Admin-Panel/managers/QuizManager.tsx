@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Trash2, Save, Plus, Trash, Download, Loader2, Image as ImageIcon, Pencil, X, CheckCircle } from "lucide-react";
+import { Trash2, Save, Plus, Trash, Download, Upload, Loader2, Image as ImageIcon, Pencil, X, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { API_BASE_URL } from "@/config";
 import { IKContext, IKUpload, IKImage } from "imagekitio-react";
+import * as XLSX from 'xlsx';
 
 const IK_PUBLIC_KEY = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY;
 const IK_URL_ENDPOINT = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
@@ -132,6 +133,93 @@ const QuizManager = () => {
         const updatedQuestions = [...newQuiz.questions];
         updatedQuestions.splice(index, 1);
         setNewQuiz({ ...newQuiz, questions: updatedQuestions });
+    };
+
+    const handleDownloadSampleExcel = () => {
+        const headers = ["Question", "Option 1", "Option 2", "Option 3", "Option 4", "Correct Answer"];
+        const sampleData = [
+            {
+                "Question": "What is the primary purpose of an operating system?",
+                "Option 1": "Managing hardware resources",
+                "Option 2": "Creating web pages",
+                "Option 3": "Designing graphics",
+                "Option 4": "Sending emails",
+                "Correct Answer": "Managing hardware resources"
+            },
+            {
+                "Question": "Which data structure operates on a Last In, First Out (LIFO) basis?",
+                "Option 1": "Queue",
+                "Option 2": "Stack",
+                "Option 3": "Array",
+                "Option 4": "Linked List",
+                "Correct Answer": "Stack"
+            }
+        ];
+
+        const worksheet = XLSX.utils.json_to_sheet(sampleData, { header: headers });
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Questions");
+        XLSX.writeFile(workbook, "quiz_questions_sample.xlsx");
+        toast.success("Sample Excel sheet downloaded!");
+    };
+
+    const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const workbook = XLSX.read(bstr, { type: 'binary' });
+                const worksheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[worksheetName];
+                const rawData = XLSX.utils.sheet_to_json(worksheet) as any[];
+
+                if (rawData.length === 0) {
+                    toast.error("The uploaded sheet is empty.");
+                    return;
+                }
+
+                const parsedQuestions = rawData.map((row) => {
+                    const question = row["Question"] || row["question"] || "";
+                    const opt1 = String(row["Option 1"] || row["option 1"] || row["Option1"] || "").trim();
+                    const opt2 = String(row["Option 2"] || row["option 2"] || row["Option2"] || "").trim();
+                    const opt3 = String(row["Option 3"] || row["option 3"] || row["Option3"] || "").trim();
+                    const opt4 = String(row["Option 4"] || row["option 4"] || row["Option4"] || "").trim();
+                    const correctAnswer = String(row["Correct Answer"] || row["correct answer"] || row["correctAnswer"] || "").trim();
+
+                    const options = [opt1, opt2, opt3, opt4];
+
+                    return {
+                        question,
+                        options,
+                        correctAnswer
+                    };
+                });
+
+                // Filter out entries that don't have a question or lack completed options/answers
+                const validQuestions = parsedQuestions.filter(q => q.question && q.options.every(Boolean) && q.correctAnswer);
+
+                if (validQuestions.length === 0) {
+                    toast.error("No valid questions found. Ensure columns match the sample template.");
+                    return;
+                }
+
+                setNewQuiz(prev => ({
+                    ...prev,
+                    questions: [...prev.questions, ...validQuestions]
+                }));
+
+                toast.success(`Successfully imported ${validQuestions.length} questions from Excel!`);
+            } catch (err) {
+                console.error("Error parsing Excel:", err);
+                toast.error("Failed to parse the Excel file.");
+            }
+        };
+
+        reader.readAsBinaryString(file);
+        e.target.value = "";
     };
 
     const handleEditClick = (quiz: any) => {
@@ -381,18 +469,49 @@ const QuizManager = () => {
                             )}
 
                             <div className="space-y-2">
-                                <Label>Broker Names (Comma-separated, optional)</Label>
+                                <Label>Marketing Representative / Tech Professional Names (Comma-separated, optional)</Label>
                                 <Input
                                     value={newQuiz.brokers}
                                     onChange={(e) => setNewQuiz({ ...newQuiz, brokers: e.target.value })}
                                     placeholder="e.g. Alice, Bob, Charlie"
                                 />
-                                <p className="text-[11px] text-gray-500">If users are referred by specific brokers/promoters, enter their names here separated by commas. Users will be able to select them from a dropdown.</p>
+                                <p className="text-[11px] text-gray-500">If users are referred by specific marketing representatives or tech professionals, enter their names here separated by commas. Users will be able to select them from a dropdown.</p>
                             </div>
 
                             <div className="mt-8 border-t pt-6">
-                                <div className="mb-4">
-                                    <h4 className="font-bold">Questions ({newQuiz.questions.length})</h4>
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                    <h4 className="font-bold text-base">Questions ({newQuiz.questions.length})</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleDownloadSampleExcel}
+                                            className="text-violet-600 border-violet-200 hover:bg-violet-50 text-xs py-1 px-2.5 h-8 animate-fade-in"
+                                        >
+                                            <Download className="w-3.5 h-3.5 mr-1" />
+                                            Download Template
+                                        </Button>
+                                        <div className="relative">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="text-green-600 border-green-200 hover:bg-green-50 text-xs py-1 px-2.5 h-8 animate-fade-in"
+                                                onClick={() => document.getElementById('excel-question-upload')?.click()}
+                                            >
+                                                <Upload className="w-3.5 h-3.5 mr-1" />
+                                                Import Excel
+                                            </Button>
+                                            <input
+                                                id="excel-question-upload"
+                                                type="file"
+                                                accept=".xlsx, .xls"
+                                                className="hidden"
+                                                onChange={handleExcelUpload}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {newQuiz.questions.map((q, qIndex) => (
