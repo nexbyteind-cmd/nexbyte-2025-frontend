@@ -398,7 +398,7 @@ const QuizManager = () => {
                                 <Input required value={newQuiz.name} onChange={(e) => setNewQuiz({ ...newQuiz, name: e.target.value })} />
                             </div>
                             
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label>Quiz Description</Label>
                                 <textarea
                                     className="w-full border rounded-md px-3 py-2 text-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -406,7 +406,7 @@ const QuizManager = () => {
                                     onChange={(e) => setNewQuiz({ ...newQuiz, description: e.target.value })}
                                     placeholder="Enter quiz description/tagline here..."
                                 />
-                            </div>
+                            </div> */}
                             
                             <div className="space-y-2">
                                 <Label>Banner Image <span className="text-red-500">*</span></Label>

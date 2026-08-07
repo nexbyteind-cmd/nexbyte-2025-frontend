@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { ExternalLink, CheckCircle2, Clock, AlertTriangle, ArrowRight, Star } from "lucide-react";
+import { ExternalLink, CheckCircle2, Clock, AlertTriangle, ArrowRight, Star, Trophy, Globe, Code, Sparkles } from "lucide-react";
 import { IKImage } from "imagekitio-react";
 
 const IK_URL_ENDPOINT = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
@@ -241,22 +241,79 @@ export default function QuizPage() {
                                 </p>
 
                                 {step === "landing" && (
-                                    <div className="flex flex-col sm:flex-row items-center gap-4">
-                                        {startCountdown ? (
-                                            <Button onClick={() => contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="w-full sm:w-auto h-14 px-10 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg shadow-lg transition-all group">
-                                                Quiz Starts Soon <Clock className="ml-2 w-5 h-5 animate-pulse" />
-                                            </Button>
-                                        ) : (
-                                            <Button onClick={handleStartClick} className="w-full sm:w-auto h-14 px-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg shadow-lg transition-all group">
-                                                Start Quiz Now <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                            </Button>
-                                        )}
-                                        <a href={quiz.companyLink} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
-                                            <Button variant="outline" className="w-full h-14 px-8 rounded-full border-2 border-gray-200 text-gray-700 hover:border-blue-500 hover:text-blue-600 font-medium transition-all">
-                                                Visit Website <ExternalLink className="w-5 h-5 ml-2" />
-                                            </Button>
-                                        </a>
-                                    </div>
+                                    <>
+                                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                                            {startCountdown ? (
+                                                <Button onClick={() => contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="w-full sm:w-auto h-14 px-10 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg shadow-lg transition-all group">
+                                                    Quiz Starts Soon <Clock className="ml-2 w-5 h-5 animate-pulse" />
+                                                </Button>
+                                            ) : (
+                                                <Button onClick={handleStartClick} className="w-full sm:w-auto h-14 px-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg shadow-lg transition-all group">
+                                                    Start Quiz Now <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                                </Button>
+                                            )}
+                                            <a href={quiz.companyLink} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+                                                <Button variant="outline" className="w-full h-14 px-8 rounded-full border-2 border-gray-200 text-gray-700 hover:border-blue-500 hover:text-blue-600 font-medium transition-all">
+                                                    Visit Website <ExternalLink className="w-5 h-5 ml-2" />
+                                                </Button>
+                                            </a>
+                                        </div>
+
+                                        <div className="mt-8 space-y-6 max-w-md w-full">
+                                            {quiz.techStack && (
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-2 text-violet-700 dark:text-violet-400">
+                                                        <Code className="w-4 h-4" />
+                                                        <span className="text-xs font-bold uppercase tracking-wider">Knowledge Area</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {quiz.techStack.split(',').map((tech: string, i: number) => (
+                                                            <span key={i} className="px-3 py-1 bg-violet-50 text-violet-700 border border-violet-100/50 text-xs rounded-full font-semibold">
+                                                                {tech.trim()}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {quiz.benefits && (
+                                                <div className="p-4 bg-gradient-to-br from-violet-50/60 to-indigo-50/30 rounded-2xl border border-violet-100/80 shadow-sm">
+                                                    <div className="flex items-center gap-2 mb-2 text-indigo-700">
+                                                        <Sparkles className="w-4 h-4" />
+                                                        <span className="text-xs font-bold uppercase tracking-wider">Perks & Rewards</span>
+                                                    </div>
+                                                    <p className="text-xs text-gray-750 leading-relaxed font-medium">{quiz.benefits}</p>
+                                                </div>
+                                            )}
+
+                                            {(quiz.prizeMoney || quiz.mode) && (
+                                                <div className="flex gap-4">
+                                                    {quiz.prizeMoney && (
+                                                        <div className="flex-1 p-3 bg-emerald-50/40 rounded-xl border border-emerald-100/50 flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                                                                <Trophy className="w-4 h-4" />
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-[10px] font-bold text-emerald-600 uppercase block">Prize Pool</span>
+                                                                <span className="text-xs font-extrabold text-gray-900">{quiz.prizeMoney}</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {quiz.mode && (
+                                                        <div className="flex-1 p-3 bg-blue-50/40 rounded-xl border border-blue-100/50 flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
+                                                                <Globe className="w-4 h-4" />
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-[10px] font-bold text-blue-600 uppercase block">Mode</span>
+                                                                <span className="text-xs font-extrabold text-gray-900">{quiz.mode}</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
                                 )}
                             </motion.div>
 
