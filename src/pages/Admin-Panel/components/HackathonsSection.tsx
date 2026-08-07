@@ -28,6 +28,7 @@ interface HackathonsSectionProps {
     handleDeleteRecord: (collectionRoute: string, id: string, refreshFn: () => void) => void;
     handleMarkCompleted: (id: string, winner?: string, secondWinner?: string, raffleWinners?: string) => void;
     showControls?: boolean;
+    onlyType?: 'Hackathon' | 'Quiz';
 }
 
 const HackathonsSection: React.FC<HackathonsSectionProps> = ({
@@ -49,7 +50,8 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
     openEmailModal,
     handleDeleteRecord,
     handleMarkCompleted,
-    showControls = true
+    showControls = true,
+    onlyType
 }) => {
     const [quizzes, setQuizzes] = useState<any[]>([]);
     const [completeModalData, setCompleteModalData] = useState<{ isOpen: boolean; hackathonId: string; winner: string; secondWinner: string; raffleWinners: string }>({
@@ -102,6 +104,29 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
         fetchQuizzes();
     }, []);
 
+    useEffect(() => {
+        if (onlyType && newHackathon.type !== onlyType) {
+            setNewHackathon({ 
+                ...newHackathon, 
+                type: onlyType,
+                enableApplyButton: onlyType === 'Hackathon',
+                enableQuizButton: onlyType === 'Quiz',
+                quizButtonName: onlyType === 'Quiz' ? 'Take me to the quiz' : '',
+                techStack: onlyType === 'Quiz' ? '' : newHackathon.techStack
+            });
+        }
+    }, [onlyType, newHackathon.type, setNewHackathon]);
+
+    const activeEvents = hackathons.filter(h => {
+        const matchesType = !onlyType || h.type === onlyType;
+        return h.status !== 'completed' && matchesType;
+    });
+
+    const completedEvents = hackathons.filter(h => {
+        const matchesType = !onlyType || h.type === onlyType;
+        return h.status === 'completed' && matchesType;
+    });
+
     return (
         <div className="grid lg:grid-cols-2 gap-6">
             {/* Create Hackathon Form */}
@@ -114,25 +139,26 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleCreateHackathon} className="space-y-4">
-                        <div className="flex gap-4 mb-6 pb-6 border-b">
-                            <Button
-                                type="button"
-                                variant={newHackathon.type === 'Hackathon' ? 'default' : 'outline'}
-                                onClick={() => setNewHackathon({ ...newHackathon, type: 'Hackathon', enableApplyButton: true, enableQuizButton: false })}
-                                className="flex-1"
-                            >
-                                Hackathon
-                            </Button>
-                            <Button
-                                type="button"
-                                variant={newHackathon.type === 'Quiz' ? 'default' : 'outline'}
-                                onClick={() => setNewHackathon({ ...newHackathon, type: 'Quiz', enableApplyButton: false, enableQuizButton: true, quizButtonName: 'Take me to the quiz', techStack: '' })}
-                                className="flex-1"
-                            >
-                                Quiz
-                            </Button>
-                        </div>
-
+                        {!onlyType && (
+                            <div className="flex gap-4 mb-6 pb-6 border-b">
+                                <Button
+                                    type="button"
+                                    variant={newHackathon.type === 'Hackathon' ? 'default' : 'outline'}
+                                    onClick={() => setNewHackathon({ ...newHackathon, type: 'Hackathon', enableApplyButton: true, enableQuizButton: false })}
+                                    className="flex-1"
+                                >
+                                    Hackathon
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant={newHackathon.type === 'Quiz' ? 'default' : 'outline'}
+                                    onClick={() => setNewHackathon({ ...newHackathon, type: 'Quiz', enableApplyButton: false, enableQuizButton: true, quizButtonName: 'Take me to the quiz', techStack: '' })}
+                                    className="flex-1"
+                                >
+                                    Quiz
+                                </Button>
+                            </div>
+                        )}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label>{newHackathon.type === 'Quiz' ? 'Quiz Name' : 'Hackathon Name'} <span className="text-red-500">*</span></Label>
@@ -354,10 +380,10 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {hackathons.filter(h => h.status !== 'completed').length === 0 ? (
+                        {activeEvents.length === 0 ? (
                             <p className="text-muted-foreground text-sm">No active events found.</p>
                         ) : (
-                            hackathons.filter(h => h.status !== 'completed').map((h, i) => {
+                            activeEvents.map((h, i) => {
                                 // Calculate applications for this hackathon
                                 const hackathonApps = applications.filter(app => app.hackathonId === h._id);
                                 const isExpanded = expandedHackathonId === h._id;
@@ -582,10 +608,10 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {hackathons.filter(h => h.status === 'completed').length === 0 ? (
+                        {completedEvents.length === 0 ? (
                             <p className="text-muted-foreground text-sm">No completed events found.</p>
                         ) : (
-                            hackathons.filter(h => h.status === 'completed').map((h, i) => {
+                            completedEvents.map((h, i) => {
                                 const hackathonApps = applications.filter(app => app.hackathonId === h._id);
                                 const isExpanded = expandedHackathonId === h._id;
 
@@ -632,6 +658,7 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
                                                     <div className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
                                                         {h.status}
                                                     </div>
+                                                    {h.isHidden && <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Hidden</span>}
                                                 </div>
                                             </div>
 
@@ -660,6 +687,18 @@ const HackathonsSection: React.FC<HackathonsSectionProps> = ({
                                                         <Download className="w-3 h-3" />
                                                         CSV
                                                     </Button>
+
+                                                    {showControls && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleToggleVisibility(h._id, h.isHidden)}
+                                                            className={`h-8 w-8 p-0 ${h.isHidden ? "text-gray-500" : "text-blue-600"}`}
+                                                            title={h.isHidden ? "Show Event" : "Hide Event"}
+                                                        >
+                                                            {h.isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                        </Button>
+                                                    )}
 
                                                     <Button
                                                         variant="destructive"

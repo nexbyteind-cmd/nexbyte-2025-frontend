@@ -1147,7 +1147,7 @@ const AdminPanel = () => {
                         onClick={() => onTabChange("hackathons")}
                     >
                         <Trophy className="w-4 h-4 mr-2" />
-                        Hackathons & Quizzes
+                        Hackathons
                     </Button>
                     <Button
                         variant={activeTab === "quiz_manager" ? "secondary" : "ghost"}
@@ -1155,7 +1155,7 @@ const AdminPanel = () => {
                         onClick={() => onTabChange("quiz_manager")}
                     >
                         <ClipboardList className="w-4 h-4 mr-2" />
-                        Quiz Manager
+                        Quizzes
                     </Button>
                     <Button
                         variant={activeTab === "programs" ? "secondary" : "ghost"}
@@ -1388,6 +1388,7 @@ const AdminPanel = () => {
                         {/* HACKATHONS TAB */}
                         <TabsContent value="hackathons" className="mt-0">
                             <HackathonsSection
+                                onlyType="Hackathon"
                                 hackathons={hackathons}
                                 applications={applications}
                                 expandedHackathonId={expandedHackathonId}
@@ -1412,7 +1413,31 @@ const AdminPanel = () => {
 
                         {/* QUIZ MANAGER TAB */}
                         <TabsContent value="quiz_manager" className="mt-0 h-full">
-                            <QuizManager />
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+                                <HackathonsSection
+                                    onlyType="Quiz"
+                                    hackathons={hackathons}
+                                    applications={applications}
+                                    expandedHackathonId={expandedHackathonId}
+                                    setExpandedHackathonId={setExpandedHackathonId}
+                                    newHackathon={newHackathon}
+                                    setNewHackathon={setNewHackathon}
+                                    editingHackathonId={editingHackathonId}
+                                    handleCreateHackathon={handleCreateHackathon}
+                                    handleEditHackathon={handleEditHackathon}
+                                    handleCancelEditHackathon={handleCancelEditHackathon}
+                                    handleDeleteHackathon={handleDeleteHackathon}
+                                    handleMarkCompleted={handleMarkCompleted}
+                                    handleToggleVisibility={handleToggleVisibility}
+                                    fetchApplications={fetchApplications}
+                                    resendingId={resendingId}
+                                    handleResendEmail={handleResendEmail}
+                                    openEmailModal={openEmailModal}
+                                    handleDeleteRecord={handleDeleteRecord}
+                                    showControls={!isSharedAdminMode}
+                                />
+                                <QuizManager />
+                            </div>
                         </TabsContent>
 
                         {/* TECH POSTS TAB */}
