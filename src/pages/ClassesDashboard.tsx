@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { BookOpen, Search, LogOut, ChevronRight, PlayCircle, Loader2, Code, Database, Terminal } from "lucide-react";
+import { BookOpen, Search, LogOut, ChevronRight, PlayCircle, Loader2, Code, Database, Terminal, ArrowRight } from "lucide-react";
 import { API_BASE_URL } from "@/config";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
