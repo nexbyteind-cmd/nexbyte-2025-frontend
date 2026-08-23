@@ -7,18 +7,40 @@ import {
 import { API_BASE_URL } from "@/config";
 import LmsWorkspaceLayout from "@/components/LmsWorkspaceLayout";
 
+import { IKImage } from "imagekitio-react";
+const IK_URL_ENDPOINT = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
+
 // Helper: banner thumbnail
 const CategoryThumbnail = ({ banner, name }: { banner?: string; name: string }) => {
     const [imgError, setImgError] = useState(false);
+    
     if (banner && !imgError) {
-        return (
-            <img
-                src={banner}
-                alt={name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                onError={() => setImgError(true)}
-            />
-        );
+        // If it's a full URL, we can use src. If it's a path/filename, use path.
+        const isUrl = banner.startsWith('http');
+        
+        if (isUrl) {
+            return (
+                <IKImage
+                    urlEndpoint={IK_URL_ENDPOINT}
+                    src={banner}
+                    alt={name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={() => setImgError(true)}
+                    loading="lazy"
+                />
+            );
+        } else {
+            return (
+                <IKImage
+                    urlEndpoint={IK_URL_ENDPOINT}
+                    path={banner}
+                    alt={name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={() => setImgError(true)}
+                    loading="lazy"
+                />
+            );
+        }
     }
     return (
         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">

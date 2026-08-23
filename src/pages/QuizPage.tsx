@@ -388,6 +388,7 @@ export default function QuizPage() {
                                             <option value="WhatsApp">WhatsApp</option>
                                             <option value="Google">Google</option>
                                             <option value="Snapchat">Snapchat</option>
+                                            <option value="LinkedIn">LinkedIn</option>
                                         </optgroup>
                                         {quiz.brokers && quiz.brokers.length > 0 && (
                                             <optgroup label="Marketing Representative / Tech Professional">

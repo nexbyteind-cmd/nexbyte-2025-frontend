@@ -154,6 +154,26 @@ const ClassesAdminManager = ({ initialTab = "approve_access" }: ClassesAdminMana
         setRevokeAccessConfirm(null);
     };
 
+    const handleDeleteUser = async (id: string) => {
+        if (!confirm("Are you sure you want to completely remove this learner? This deletes their email, progress, and revokes Drive access. This action cannot be undone.")) return;
+        setLoading(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/classes/admin/learners/${id}`, {
+                method: "DELETE"
+            });
+            const json = await res.json();
+            if (res.ok && json.success) {
+                toast.success("Learner completely removed");
+                fetchLearners();
+            } else {
+                toast.error(json.message || "Failed to delete learner");
+            }
+        } catch (e) {
+            toast.error("Network error");
+        }
+        setLoading(false);
+    };
+
     // --- CREATE CLASS OPERATIONS ---
     const handleCreateCategory = async () => {
         if (!catName.trim()) {
@@ -415,16 +435,21 @@ const ClassesAdminManager = ({ initialTab = "approve_access" }: ClassesAdminMana
                                                 {learner.approvedAt ? new Date(learner.approvedAt).toLocaleDateString() : 'N/A'}
                                             </td>
                                             <td className="p-4 text-right">
-                                                {learner.status === 'active' && (
-                                                    <Button variant="destructive" size="sm" onClick={() => setRevokeAccessConfirm(learner._id)}>
-                                                        <XCircle className="w-4 h-4 mr-2" /> Revoke
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {learner.status === 'active' && (
+                                                        <Button variant="destructive" size="sm" onClick={() => setRevokeAccessConfirm(learner._id)}>
+                                                            <XCircle className="w-4 h-4 mr-2" /> Revoke
+                                                        </Button>
+                                                    )}
+                                                    {learner.status === 'revoked' && (
+                                                        <Button variant="outline" size="sm" className="text-green-600" onClick={() => { setNewEmail(learner.email); handleAddAccess(); }}>
+                                                            <CheckCircle2 className="w-4 h-4 mr-2" /> Re-Approve
+                                                        </Button>
+                                                    )}
+                                                    <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200" onClick={() => handleDeleteUser(learner._id)} disabled={loading}>
+                                                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                                                     </Button>
-                                                )}
-                                                {learner.status === 'revoked' && (
-                                                    <Button variant="outline" size="sm" className="text-green-600" onClick={() => { setNewEmail(learner.email); handleAddAccess(); }}>
-                                                        <CheckCircle2 className="w-4 h-4 mr-2" /> Re-Approve
-                                                    </Button>
-                                                )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
