@@ -110,7 +110,14 @@ const ClassesVideo = () => {
         );
     }
 
-    const videoSrc = data?.video?._id ? `${API_BASE_URL}/api/classes/videos/${data.video._id}/embed` : "";
+
+    // The embed endpoint requires authentication. Since iframes cannot send
+    // Authorization headers, we pass the session token as a query parameter.
+    // The token is stored in localStorage and was issued by our own backend.
+    const sessionToken = localStorage.getItem("classes_token") || "";
+    const videoSrc = data?.video?._id
+        ? `${API_BASE_URL}/api/classes/videos/${data.video._id}/embed?token=${encodeURIComponent(sessionToken)}`
+        : "";
     const topics = data?.remainingTopics || [];
     const currentIdx = topics.findIndex((t: any) => t._id === id);
     const prevTopic = currentIdx > 0 ? topics[currentIdx - 1] : null;
@@ -166,32 +173,10 @@ const ClassesVideo = () => {
 
                 {/* ── MAIN SCROLL AREA ── */}
                 <div className="flex-1 flex flex-col overflow-y-auto min-w-0">
-
-                    {/* VIDEO PLAYER — 16:9, fills width */}
+                    {/* VIDEO PLAYER — 16:9 black container, no overlay divs */}
                     <div className="bg-black w-full relative select-none flex-shrink-0" style={{ aspectRatio: "16/9" }}>
-                        {/* 
-                            The iframe loads via our backend proxy which redirects to:
-                            https://drive.google.com/file/d/{id}/preview?rm=minimal
-                            ?rm=minimal suppresses Drive's top toolbar (pop-out, share, download buttons).
-                            We additionally overlay the top-right corner of the player to mask any
-                            residual Drive controls that may appear there, using a color-matched div.
-                            This is a CSS masking approach since cross-origin iframe DOM is inaccessible.
-                        */}
-                        <div
-                            aria-hidden="true"
-                            style={{
-                                position: "absolute",
-                                top: 0,
-                                right: 0,
-                                width: "52px",
-                                height: "52px",
-                                background: "#000",
-                                zIndex: 10,
-                                pointerEvents: "none",
-                            }}
-                        />
 
-                        {/* User watermark */}
+                        {/* User email watermark — pointer-events:none so it never blocks playback */}
                         {userEmail && (
                             <div
                                 aria-hidden="true"
