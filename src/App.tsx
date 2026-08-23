@@ -43,6 +43,11 @@ import Webinars from "./pages/Webinars"; // NEW
 import RewardsPage from "./pages/RewardsPage"; // NEW
 import QuizPage from "./pages/QuizPage"; // NEW
 
+import ClassesLogin from "./pages/ClassesLogin";
+import ClassesDashboard from "./pages/ClassesDashboard";
+import ClassesCategory from "./pages/ClassesCategory";
+import ClassesVideo from "./pages/ClassesVideo";
+
 const queryClient = new QueryClient();
 //New
 const App = () => (
@@ -78,6 +83,12 @@ const App = () => (
           <Route path="/webinars" element={<Webinars />} /> {/* NEW */}
           <Route path="/rewards" element={<RewardsPage />} /> {/* NEW */}
           <Route path="/quiz/:quizId" element={<QuizPage />} /> {/* NEW */}
+          
+          {/* CLASSES ROUTES */}
+          <Route path="/classes" element={<ClassesLogin />} />
+          <Route path="/classes/dashboard" element={<ClassesDashboard />} />
+          <Route path="/classes/category/:id" element={<ClassesCategory />} />
+          <Route path="/classes/video/:id" element={<ClassesVideo />} />
 
           <Route path="/training-discovery" element={<TrainingDiscovery />} /> {/* NEW */}
           <Route path="/google-reviews-marketing" element={<GoogleReviewsMarketing />} /> {/* NEW */}

@@ -40,6 +40,7 @@ import ExclusiveDataSection from "./Admin-Panel/components/ExclusiveDataSection"
 import TestimonialsSection from "./Admin-Panel/components/TestimonialsSection";
 import RewardManager from "./Admin-Panel/managers/RewardManager";
 import QuizManager from "@/pages/Admin-Panel/managers/QuizManager";
+import ClassesAdminManager from "@/pages/Admin-Panel/managers/ClassesAdminManager";
 import {
     Accordion,
     AccordionContent,
@@ -115,6 +116,7 @@ const AdminPanel = () => {
     // Exclusive Data State
     const [exclusiveData, setExclusiveData] = useState<any[]>([]);
     const [isTechPostsOpen, setIsTechPostsOpen] = useState(false);
+    const [isOnlineClassesOpen, setIsOnlineClassesOpen] = useState(false);
     const [techPostCategory, setTechPostCategory] = useState("Python");
 
 
@@ -1224,6 +1226,38 @@ const AdminPanel = () => {
                         <Briefcase className="w-4 h-4 mr-2" />
                         Career Guidance
                     </Button>
+                    {/* ONLINE CLASSES DROPDOWN */}
+                    <div>
+                        <Button
+                            variant="ghost"
+                            className="w-full justify-between"
+                            onClick={() => setIsOnlineClassesOpen(!isOnlineClassesOpen)}
+                        >
+                            <div className="flex items-center">
+                                <GraduationCap className="w-4 h-4 mr-2" />
+                                Online Classes
+                            </div>
+                            {isOnlineClassesOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </Button>
+                        {isOnlineClassesOpen && (
+                            <div className="ml-6 mt-1 flex flex-col gap-1">
+                                <Button
+                                    variant={activeTab === "online_classes_create" ? "secondary" : "ghost"}
+                                    className="w-full justify-start text-sm h-8"
+                                    onClick={() => onTabChange("online_classes_create")}
+                                >
+                                    Create Class
+                                </Button>
+                                <Button
+                                    variant={activeTab === "online_classes_approve" ? "secondary" : "ghost"}
+                                    className="w-full justify-start text-sm h-8"
+                                    onClick={() => onTabChange("online_classes_approve")}
+                                >
+                                    Approve Access
+                                </Button>
+                            </div>
+                        )}
+                    </div>
 
 
 
@@ -1383,6 +1417,15 @@ const AdminPanel = () => {
                         {/* CAREER GUIDANCE TAB */}
                         <TabsContent value="career_guidance" className="mt-0 h-full">
                             <CareerGuidanceAdmin showControls={!isSharedAdminMode} />
+                        </TabsContent>
+
+                        {/* ONLINE CLASSES TAB */}
+                        <TabsContent value="online_classes_create" className="mt-0 h-full">
+                            <ClassesAdminManager initialTab="create_class" />
+                        </TabsContent>
+
+                        <TabsContent value="online_classes_approve" className="mt-0 h-full">
+                            <ClassesAdminManager initialTab="approve_access" />
                         </TabsContent>
 
                         {/* HACKATHONS TAB */}
