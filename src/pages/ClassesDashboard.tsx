@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { BookOpen, Search, LogOut, ChevronRight, PlayCircle, Loader2, Code, Database, Terminal, ArrowRight } from "lucide-react";
+import { BookOpen, PlayCircle, Loader2, CheckCircle2, Clock, ChevronRight, LayoutGrid } from "lucide-react";
 import { API_BASE_URL } from "@/config";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import LmsLayout from "@/components/LmsLayout";
 
 const ClassesDashboard = () => {
     const [data, setData] = useState<any>(null);
@@ -12,10 +11,7 @@ const ClassesDashboard = () => {
 
     useEffect(() => {
         const token = localStorage.getItem("classes_token");
-        if (!token) {
-            navigate("/classes");
-            return;
-        }
+        if (!token) { navigate("/classes"); return; }
 
         const fetchDashboard = async () => {
             try {
@@ -29,173 +25,201 @@ const ClassesDashboard = () => {
                     localStorage.removeItem("classes_token");
                     navigate("/classes");
                 }
-            } catch (e) {
-                console.error("Dashboard fetch error", e);
+            } catch {
+                console.error("Dashboard fetch error");
             }
             setLoading(false);
         };
         fetchDashboard();
     }, [navigate]);
 
-    const handleLogout = () => {
-        localStorage.removeItem("classes_token");
-        navigate("/classes");
-    };
+    const userEmail = data?.userEmail || "";
+    const firstName = userEmail ? userEmail.split("@")[0].split(".")[0] : "Learner";
+    const displayName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+            <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
+                <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                    <span className="text-sm text-gray-400">Loading workspace...</span>
+                </div>
             </div>
         );
     }
 
+    const totalVideos = data?.totalVideos || 0;
+    const completedVideos = data?.completedVideos || 0;
+    const inProgress = totalVideos - completedVideos > 0 ? totalVideos - completedVideos : 0;
+    const categories = data?.categories || [];
+
     return (
-        <div className="min-h-screen flex flex-col bg-[#F9FAFB] font-sans selection:bg-blue-100 selection:text-blue-900 relative overflow-hidden">
-            <Navbar />
+        <LmsLayout userEmail={userEmail}>
+            <div className="flex-1 max-w-[1100px] w-full mx-auto px-4 md:px-6 py-8">
 
-            {/* Floating Decorative Elements */}
-            <div className="absolute top-20 right-10 w-32 h-32 bg-yellow-50 rounded-full flex items-center justify-center opacity-70 animate-bounce" style={{ animationDuration: '6s', zIndex: 0 }}>
-                <Database className="w-12 h-12 text-yellow-400" />
-            </div>
-            <div className="absolute top-60 left-10 w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center opacity-70 animate-pulse" style={{ animationDuration: '4s', zIndex: 0 }}>
-                <Code className="w-10 h-10 text-blue-400" />
-            </div>
+                {/* Welcome header */}
+                <div className="mb-8">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                        Welcome back, {displayName} 👋
+                    </h1>
+                    <p className="text-gray-500 text-sm">Pick up where you left off or explore a new module.</p>
+                </div>
 
-            {/* Dashboard Header */}
-            <header className="bg-white border-b border-gray-200 sticky top-20 z-40 mt-20">
-                <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                            <BookOpen className="w-4 h-4 text-white" />
+                {/* Stats row */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+                    {[
+                        { label: "Total Classes", value: totalVideos, icon: <LayoutGrid className="w-4 h-4 text-blue-600" />, bg: "bg-blue-50" },
+                        { label: "Completed", value: completedVideos, icon: <CheckCircle2 className="w-4 h-4 text-green-600" />, bg: "bg-green-50" },
+                        { label: "In Progress", value: inProgress, icon: <PlayCircle className="w-4 h-4 text-amber-600" />, bg: "bg-amber-50" },
+                        { label: "Modules", value: categories.length, icon: <BookOpen className="w-4 h-4 text-purple-600" />, bg: "bg-purple-50" },
+                    ].map(stat => (
+                        <div key={stat.label} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
+                            <div className={`${stat.bg} p-2 rounded-lg flex-shrink-0`}>
+                                {stat.icon}
+                            </div>
+                            <div>
+                                <p className="text-xl font-bold text-gray-900">{stat.value}</p>
+                                <p className="text-xs text-gray-500">{stat.label}</p>
+                            </div>
                         </div>
-                        <span className="font-bold text-gray-900">Learning Workspace</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <button onClick={handleLogout} className="text-gray-500 hover:text-gray-900 text-sm font-medium flex items-center gap-2 transition-colors">
-                            <LogOut className="w-4 h-4" /> Sign Out
-                        </button>
-                    </div>
-                </div>
-            </header>
-
-            <main className="flex-1 container mx-auto px-6 py-12 relative z-10">
-                
-                <div className="mb-12 text-center md:text-left">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">My Learning Path</h1>
-                    <p className="text-gray-500 text-lg">Continue your journey in software engineering and architecture.</p>
+                    ))}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    
-                    {/* Main Categories Section */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <h2 className="text-xl font-bold text-gray-900">Available Modules</h2>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {data?.categories?.map((cat: any) => (
-                                <Link 
-                                    to={`/classes/category/${cat._id}`} 
-                                    key={cat._id}
-                                    className="group bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                                >
-                                    <div className="h-40 bg-gray-100 overflow-hidden relative">
-                                        {cat.banner ? (
-                                            <img src={cat.banner} alt={cat.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
-                                                <Terminal className="w-12 h-12 text-blue-300" />
+                {/* Categories section */}
+                <div>
+                    <h2 className="text-base font-semibold text-gray-800 mb-4">My Learning</h2>
+
+                    {categories.length === 0 ? (
+                        <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
+                            <BookOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                            <p className="font-semibold text-gray-600 mb-1">No modules available yet</p>
+                            <p className="text-sm text-gray-400">Check back soon or contact your administrator.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {categories.map((cat: any) => {
+                                const catProgress = cat.progress || 0;
+                                const catTotal = cat.topicCount || 0;
+                                return (
+                                    <Link
+                                        key={cat._id}
+                                        to={`/classes/category/${cat._id}`}
+                                        className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-blue-300 hover:shadow-md transition-all duration-200"
+                                    >
+                                        {/* Thumbnail */}
+                                        <div className="h-[140px] bg-gray-100 overflow-hidden relative">
+                                            {cat.banner ? (
+                                                <>
+                                                    <img
+                                                        src={cat.banner}
+                                                        alt={cat.name}
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                        onError={(e) => {
+                                                            e.currentTarget.style.display = 'none';
+                                                            const fb = e.currentTarget.nextElementSibling as HTMLElement;
+                                                            if (fb) fb.style.display = 'flex';
+                                                        }}
+                                                    />
+                                                    <div
+                                                        className="w-full h-full items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 absolute inset-0"
+                                                        style={{ display: 'none' }}
+                                                    >
+                                                        <BookOpen className="w-10 h-10 text-blue-300" />
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+                                                    <BookOpen className="w-10 h-10 text-blue-300" />
+                                                </div>
+                                            )}
+                                            {catTotal > 0 && (
+                                                <div className="absolute top-3 right-3 bg-black/60 text-white text-[11px] font-medium px-2 py-0.5 rounded-full backdrop-blur-sm">
+                                                    {catTotal} {catTotal === 1 ? 'class' : 'classes'}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Info */}
+                                        <div className="p-4">
+                                            <h3 className="font-semibold text-gray-900 text-sm mb-1 group-hover:text-blue-700 transition-colors line-clamp-1">
+                                                {cat.name}
+                                            </h3>
+                                            {cat.description && (
+                                                <p className="text-gray-500 text-xs line-clamp-2 mb-3">{cat.description}</p>
+                                            )}
+
+                                            {/* Tags */}
+                                            {cat.tags && cat.tags.length > 0 && (
+                                                <div className="flex flex-wrap gap-1 mb-3">
+                                                    {cat.tags.slice(0, 3).map((tag: string) => (
+                                                        <span key={tag} className="text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                                                            {tag.startsWith('#') ? tag : `#${tag}`}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Progress */}
+                                            {catTotal > 0 && (
+                                                <div className="mb-3">
+                                                    <div className="flex justify-between text-[11px] text-gray-400 mb-1">
+                                                        <span>{catProgress}% complete</span>
+                                                        <span>{Math.round((catProgress / 100) * catTotal)}/{catTotal}</span>
+                                                    </div>
+                                                    <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full bg-blue-600 rounded-full transition-all"
+                                                            style={{ width: `${catProgress}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-1 text-[11px] text-gray-400">
+                                                    <Clock className="w-3 h-3" />
+                                                    {catTotal} {catTotal === 1 ? 'video' : 'videos'}
+                                                </div>
+                                                <div className="flex items-center gap-1 text-xs font-semibold text-blue-600 group-hover:gap-2 transition-all">
+                                                    {catProgress > 0 ? 'Continue' : 'Start'} <ChevronRight className="w-3.5 h-3.5" />
+                                                </div>
                                             </div>
-                                        )}
-                                        <div className="absolute top-4 left-4">
-                                            <span className="bg-white/90 backdrop-blur-sm text-gray-900 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                                                Module
+                                        </div>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                {/* Recent activity */}
+                {data?.recentProgress?.length > 0 && (
+                    <div className="mt-8">
+                        <h2 className="text-base font-semibold text-gray-800 mb-3">Recent Activity</h2>
+                        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                            {data.recentProgress.slice(0, 5).map((prog: any, i: number) => (
+                                <div key={i} className={`flex items-center gap-4 px-5 py-3.5 ${i < data.recentProgress.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                                    <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                        <PlayCircle className="w-3.5 h-3.5 text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-800">Continued learning</p>
+                                        <p className="text-xs text-gray-400">{new Date(prog.lastWatchedTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                    </div>
+                                    {prog.completed && (
+                                        <div className="ml-auto">
+                                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-green-600 bg-green-50 border border-green-100 px-2 py-0.5 rounded-full">
+                                                <CheckCircle2 className="w-3 h-3" /> Completed
                                             </span>
                                         </div>
-                                    </div>
-                                    <div className="p-6">
-                                        <h3 className="font-bold text-xl text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">{cat.name}</h3>
-                                        <p className="text-sm text-gray-500 mb-4 line-clamp-2">{cat.description}</p>
-                                        <div className="flex items-center text-blue-600 font-semibold text-sm mt-auto">
-                                            Explore Module <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                                        </div>
-                                    </div>
-                                </Link>
+                                    )}
+                                </div>
                             ))}
-                            {(!data?.categories || data.categories.length === 0) && (
-                                <div className="col-span-1 md:col-span-2 p-12 bg-white rounded-2xl border border-gray-200 text-center shadow-sm">
-                                    <Terminal className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                                    <p className="text-gray-500 font-medium">No modules available yet.</p>
-                                </div>
-                            )}
                         </div>
                     </div>
-
-                    {/* Sidebar Sidebar */}
-                    <div className="space-y-8">
-                        {/* Progress Card */}
-                        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm relative overflow-hidden">
-                            <div className="absolute -right-4 -top-4 w-24 h-24 bg-green-50 rounded-full opacity-50"></div>
-                            <h3 className="font-bold text-gray-900 mb-6 relative z-10">Overall Progress</h3>
-                            
-                            <div className="flex items-end gap-2 mb-2 relative z-10">
-                                <span className="text-4xl font-black text-gray-900">{data?.progress || 0}%</span>
-                                <span className="text-gray-500 text-sm font-medium pb-1">completed</span>
-                            </div>
-                            
-                            <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden mb-6 relative z-10">
-                                <div 
-                                    className="h-full bg-blue-600 rounded-full"
-                                    style={{ width: `${data?.progress || 0}%` }}
-                                ></div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4 relative z-10 border-t border-gray-100 pt-6">
-                                <div>
-                                    <p className="text-sm text-gray-500 mb-1">Total Videos</p>
-                                    <p className="font-bold text-lg text-gray-900">{data?.totalVideos || 0}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-500 mb-1">Completed</p>
-                                    <p className="font-bold text-lg text-gray-900">{data?.completedVideos || 0}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Recent Activity */}
-                        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-                            <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                <PlayCircle className="w-5 h-5 text-purple-500" /> Recent Activity
-                            </h3>
-                            <div className="space-y-4">
-                                {data?.recentProgress?.length > 0 ? (
-                                    data.recentProgress.map((prog: any, i: number) => {
-                                        // Need to find topic title from categories if possible, or just show ID
-                                        return (
-                                            <div key={i} className="flex gap-4 items-start group cursor-pointer hover:bg-gray-50 p-2 -mx-2 rounded-lg transition-colors">
-                                                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
-                                                    <PlayCircle className="w-5 h-5 text-blue-600" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Continued learning</p>
-                                                    <p className="text-xs text-gray-500 mt-1">{new Date(prog.lastWatchedTime).toLocaleDateString()}</p>
-                                                </div>
-                                            </div>
-                                        )
-                                    })
-                                ) : (
-                                    <div className="text-center py-6">
-                                        <p className="text-gray-500 text-sm">No recent activity.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main>
-
-            <Footer />
-        </div>
+                )}
+            </div>
+        </LmsLayout>
     );
 };
 
