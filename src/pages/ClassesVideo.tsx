@@ -5,6 +5,7 @@ import {
     MessageSquare, ChevronLeft, ChevronRight, BookOpen, Check, Menu, X
 } from "lucide-react";
 import { API_BASE_URL } from "@/config";
+import { toast } from "sonner";
 
 // ─── Security: scope all protections to this page only ───
 const useVideoPageSecurity = () => {
@@ -83,10 +84,14 @@ const ClassesVideo = () => {
             });
             const json = await res.json();
             if (json.success) {
-                setData((prev: any) => ({ ...prev, comments: [json.data, ...prev.comments] }));
+                toast.success("Feedback submitted successfully. We will get back to you soon!");
                 setComment("");
+            } else {
+                toast.error("Failed to submit feedback");
             }
-        } catch { /* silent */ }
+        } catch { 
+            toast.error("Network error. Please try again.");
+        }
         setPostingComment(false);
     };
 
@@ -284,21 +289,16 @@ const ClassesVideo = () => {
                     {/* DISCUSSION */}
                     <div className="px-5 md:px-8 py-6 bg-[#F6F7F9] flex-1">
                         <div className="max-w-[700px]">
-                            <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2 mb-4">
-                                <MessageSquare className="w-4 h-4 text-blue-600" />
-                                Class Discussion
-                                {data?.comments?.length > 0 && (
-                                    <span className="text-[10px] text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded-full font-medium">
-                                        {data.comments.length}
-                                    </span>
-                                )}
-                            </h2>
+                            <div className="flex items-center gap-2 mb-4">
+                                <MessageSquare className="w-5 h-5 text-gray-500" />
+                                <h3 className="text-sm font-semibold text-gray-900">Feedback & Questions</h3>
+                            </div>
 
-                            <form onSubmit={handleComment} className="mb-5 bg-white border border-gray-200 rounded-xl p-4">
+                            <form onSubmit={handleComment} className="mb-6 bg-white border border-gray-200 rounded-xl p-3 shadow-sm focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all">
                                 <textarea
                                     value={comment}
                                     onChange={(e) => setComment(e.target.value)}
-                                    placeholder="Ask a question or leave a note..."
+                                    placeholder="If you have any questions or any doubts please contact us..."
                                     rows={3}
                                     className="w-full text-sm text-gray-900 placeholder:text-gray-400 resize-none outline-none border-none"
                                 />
@@ -309,36 +309,10 @@ const ClassesVideo = () => {
                                         className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
                                     >
                                         {postingComment ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                                        Post
+                                        Submit Feedback
                                     </button>
                                 </div>
                             </form>
-
-                            {data?.comments?.length === 0 ? (
-                                <div className="text-center py-8 border border-gray-200 rounded-xl bg-white">
-                                    <MessageSquare className="w-6 h-6 text-gray-300 mx-auto mb-2" />
-                                    <p className="text-sm text-gray-400">No comments yet. Start the discussion!</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {data.comments.map((c: any) => (
-                                        <div key={c._id} className="flex gap-3 bg-white border border-gray-100 rounded-xl p-4">
-                                            <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-700 text-xs font-bold">
-                                                {c.userEmail.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-sm font-semibold text-gray-900">{c.userEmail.split("@")[0]}</span>
-                                                    <span className="text-xs text-gray-400">
-                                                        {new Date(c.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                                                    </span>
-                                                </div>
-                                                <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{c.content}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>

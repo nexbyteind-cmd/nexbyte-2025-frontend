@@ -1255,6 +1255,13 @@ const AdminPanel = () => {
                                 >
                                     Approve Access
                                 </Button>
+                                <Button
+                                    variant={activeTab === "online_classes_feedback" ? "secondary" : "ghost"}
+                                    className="w-full justify-start text-sm h-8"
+                                    onClick={() => onTabChange("online_classes_feedback")}
+                                >
+                                    Feedback
+                                </Button>
                             </div>
                         )}
                     </div>
@@ -1426,6 +1433,10 @@ const AdminPanel = () => {
 
                         <TabsContent value="online_classes_approve" className="mt-0 h-full">
                             <ClassesAdminManager initialTab="approve_access" />
+                        </TabsContent>
+
+                        <TabsContent value="online_classes_feedback" className="mt-0 h-full">
+                            <ClassesAdminManager initialTab="feedback" />
                         </TabsContent>
 
                         {/* HACKATHONS TAB */}

@@ -3,7 +3,7 @@ import { API_BASE_URL } from "@/config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Loader2, Plus, Edit2, Trash2, Check, X, CheckCircle2, XCircle, Video, Folder, Users, Eye, EyeOff, AlertTriangle } from "lucide-react";
+import { Loader2, Plus, Edit2, Trash2, Check, X, CheckCircle2, XCircle, Video, Folder, Users, Eye, EyeOff, AlertTriangle, MessageSquare, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { IKContext, IKUpload } from "imagekitio-react";
 import {
@@ -33,18 +33,25 @@ const authenticator = async () => {
 };
 
 interface ClassesAdminManagerProps {
-    initialTab?: "approve_access" | "create_class";
+    initialTab?: "approve_access" | "create_class" | "feedback";
 }
 
 const ClassesAdminManager = ({ initialTab = "approve_access" }: ClassesAdminManagerProps) => {
-    const [activeTab, setActiveTab] = useState(initialTab); // create_class, approve_access
+    const [activeTab, setActiveTab] = useState(initialTab); // create_class, approve_access, feedback
     const [learners, setLearners] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [topics, setTopics] = useState<any[]>([]);
+    const [feedbackData, setFeedbackData] = useState<any[]>([]);
+    const [feedbackSort, setFeedbackSort] = useState<"latest" | "oldest">("latest");
     const [loading, setLoading] = useState(false);
 
     // Approve Access Form
     const [newEmail, setNewEmail] = useState("");
+    const [selectedAllowedCategories, setSelectedAllowedCategories] = useState<string[]>([]);
+
+    // Edit Access Form
+    const [editAccessUser, setEditAccessUser] = useState<any>(null);
+    const [editAccessCategories, setEditAccessCategories] = useState<string[]>([]);
 
     // Create Category Form
     const [catName, setCatName] = useState("");
@@ -73,6 +80,7 @@ const ClassesAdminManager = ({ initialTab = "approve_access" }: ClassesAdminMana
         fetchLearners();
         fetchCategories();
         fetchTopics();
+        fetchFeedback();
     }, []);
 
     useEffect(() => {
@@ -111,6 +119,45 @@ const ClassesAdminManager = ({ initialTab = "approve_access" }: ClassesAdminMana
         }
     };
 
+    const fetchFeedback = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/classes/admin/feedback`);
+            const json = await res.json();
+            if (json.success) setFeedbackData(json.data);
+        } catch (e) {
+            console.error("Failed to fetch feedback");
+        }
+    };
+
+    const handleDownloadFeedbackCSV = () => {
+        if (feedbackData.length === 0) return toast.error("No feedback to download");
+        
+        const sorted = [...feedbackData].sort((a, b) => {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            return feedbackSort === "latest" ? dateB - dateA : dateA - dateB;
+        });
+
+        const headers = ["S.No", "Email ID", "Date", "Course Name", "Topic Title", "Question"];
+        const rows = sorted.map((f, i) => {
+            return [
+                i + 1,
+                f.email,
+                new Date(f.date).toLocaleDateString(),
+                f.courseName,
+                f.topicTitle,
+                (f.question || "").replace(/"/g, '""')
+            ].map(v => `"${v}"`).join(",");
+        });
+
+        const csv = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
+        const encodedUri = encodeURI(csv);
+        const link = document.createElement("a");
+        link.href = encodedUri;
+        link.download = `feedback_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+    };
+
     // --- APPROVE ACCESS OPERATIONS ---
     const handleAddAccess = async () => {
         if (!newEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) {
@@ -122,15 +169,39 @@ const ClassesAdminManager = ({ initialTab = "approve_access" }: ClassesAdminMana
             const res = await fetch(`${API_BASE_URL}/api/classes/admin/learners/add-access`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: newEmail.trim() })
+                body: JSON.stringify({ email: newEmail.trim(), allowedCategories: selectedAllowedCategories })
             });
             const json = await res.json();
             if (json.success) {
                 toast.success(json.message);
                 setNewEmail("");
+                setSelectedAllowedCategories([]);
                 fetchLearners();
             } else {
                 toast.error(json.message || "Failed to provide access");
+            }
+        } catch (e) {
+            toast.error("Network error");
+        }
+        setLoading(false);
+    };
+
+    const handleUpdateAccess = async () => {
+        if (!editAccessUser) return;
+        setLoading(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/classes/admin/learners/${editAccessUser._id}/access`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ allowedCategories: editAccessCategories })
+            });
+            const json = await res.json();
+            if (json.success) {
+                toast.success("Course access updated successfully");
+                setEditAccessUser(null);
+                fetchLearners();
+            } else {
+                toast.error(json.message || "Failed to update access");
             }
         } catch (e) {
             toast.error("Network error");
@@ -374,23 +445,73 @@ const ClassesAdminManager = ({ initialTab = "approve_access" }: ClassesAdminMana
                     <Folder className="w-4 h-4 mr-2" />
                     Create Class
                 </Button>
+                <Button 
+                    variant={activeTab === "feedback" ? "default" : "ghost"}
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:text-blue-600"
+                    data-state={activeTab === "feedback" ? "active" : "inactive"}
+                    onClick={() => setActiveTab("feedback")}
+                >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Feedback
+                </Button>
             </div>
 
             {/* TAB: APPROVE ACCESS */}
             {activeTab === "approve_access" && (
                 <div className="space-y-8 animate-in fade-in duration-300">
                     <Card>
-                        <CardContent className="pt-6 flex gap-4">
-                            <Input 
-                                placeholder="Enter Learner Email ID" 
-                                value={newEmail}
-                                onChange={(e) => setNewEmail(e.target.value)}
-                                className="max-w-md"
-                            />
-                            <Button onClick={handleAddAccess} disabled={loading}>
-                                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-                                Provide Access
-                            </Button>
+                        <CardContent className="pt-6 flex flex-col gap-4">
+                            <div className="flex gap-4 items-end">
+                                <div className="flex-1">
+                                    <label className="text-xs font-semibold text-gray-500 mb-1 block">Learner Email ID</label>
+                                    <Input 
+                                        placeholder="Enter Learner Email ID" 
+                                        value={newEmail}
+                                        onChange={(e) => setNewEmail(e.target.value)}
+                                        className="w-full"
+                                    />
+                                </div>
+                                <Button onClick={handleAddAccess} disabled={loading} className="shrink-0">
+                                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                                    Provide Access
+                                </Button>
+                            </div>
+                            <div>
+                                <label className="text-xs font-semibold text-gray-500 mb-2 block">Select Allowed Courses (Optional, default is none)</label>
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    {selectedAllowedCategories.length === 0 && <span className="text-xs text-gray-400">Select courses from below.</span>}
+                                    {selectedAllowedCategories.map(catId => {
+                                        const cat = categories.find(c => c._id === catId);
+                                        return cat ? (
+                                            <div key={catId} className="flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-medium px-2 py-1 rounded-md border border-blue-100">
+                                                {cat.name}
+                                                <button 
+                                                    onClick={() => setSelectedAllowedCategories(prev => prev.filter(id => id !== catId))}
+                                                    className="text-blue-400 hover:text-blue-700 ml-1"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        ) : null;
+                                    })}
+                                </div>
+                                <select 
+                                    className="max-w-md w-full h-9 border rounded-md px-3 text-sm bg-white"
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        if (val && !selectedAllowedCategories.includes(val)) {
+                                            setSelectedAllowedCategories([...selectedAllowedCategories, val]);
+                                        }
+                                        e.target.value = "";
+                                    }}
+                                    defaultValue=""
+                                >
+                                    <option value="" disabled>Select course to add...</option>
+                                    {categories.filter(c => !selectedAllowedCategories.includes(c._id)).map(c => (
+                                        <option key={c._id} value={c._id}>{c.name}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -401,6 +522,7 @@ const ClassesAdminManager = ({ initialTab = "approve_access" }: ClassesAdminMana
                                 <thead className="bg-gray-50 border-b">
                                     <tr>
                                         <th className="p-4 font-medium text-gray-500">Email ID</th>
+                                        <th className="p-4 font-medium text-gray-500">Allowed Courses</th>
                                         <th className="p-4 font-medium text-gray-500">Status</th>
                                         <th className="p-4 font-medium text-gray-500">Date Permission Given</th>
                                         <th className="p-4 font-medium text-gray-500 text-right">Actions</th>
@@ -409,13 +531,22 @@ const ClassesAdminManager = ({ initialTab = "approve_access" }: ClassesAdminMana
                                 <tbody className="divide-y">
                                     {learners.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="p-8 text-center text-gray-500">
+                                            <td colSpan={5} className="p-8 text-center text-gray-500">
                                                 No learners found.
                                             </td>
                                         </tr>
                                     ) : learners.map(learner => (
                                         <tr key={learner._id} className="hover:bg-gray-50">
                                             <td className="p-4 font-medium">{learner.email}</td>
+                                            <td className="p-4">
+                                                {learner.allowedCategories && learner.allowedCategories.length > 0 ? (
+                                                    <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full border border-blue-100">
+                                                        {learner.allowedCategories.length} {learner.allowedCategories.length === 1 ? 'course' : 'courses'}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-gray-400">None</span>
+                                                )}
+                                            </td>
                                             <td className="p-4">
                                                 {learner.status === 'active' ? (
                                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -436,6 +567,16 @@ const ClassesAdminManager = ({ initialTab = "approve_access" }: ClassesAdminMana
                                             </td>
                                             <td className="p-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        onClick={() => {
+                                                            setEditAccessUser(learner);
+                                                            setEditAccessCategories(learner.allowedCategories || []);
+                                                        }}
+                                                    >
+                                                        <Edit2 className="w-4 h-4 mr-2" /> Edit Access
+                                                    </Button>
                                                     {learner.status === 'active' && (
                                                         <Button variant="destructive" size="sm" onClick={() => setRevokeAccessConfirm(learner._id)}>
                                                             <XCircle className="w-4 h-4 mr-2" /> Revoke
@@ -659,6 +800,71 @@ const ClassesAdminManager = ({ initialTab = "approve_access" }: ClassesAdminMana
                 </div>
             )}
 
+            {/* TAB: FEEDBACK */}
+            {activeTab === "feedback" && (
+                <div className="space-y-8 animate-in fade-in duration-300">
+                    <div className="flex justify-between items-center">
+                        <h3 className="font-semibold text-lg">Learner Feedback</h3>
+                        <div className="flex gap-4">
+                            <select 
+                                className="h-9 border rounded-md px-3 text-sm bg-white"
+                                value={feedbackSort}
+                                onChange={(e) => setFeedbackSort(e.target.value as any)}
+                            >
+                                <option value="latest">Latest First</option>
+                                <option value="oldest">Oldest First</option>
+                            </select>
+                            <Button variant="outline" size="sm" onClick={handleDownloadFeedbackCSV}>
+                                <Download className="w-4 h-4 mr-2" /> Download CSV
+                            </Button>
+                        </div>
+                    </div>
+                    <div className="bg-white border rounded-lg overflow-hidden shadow-sm">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-gray-50 border-b">
+                                <tr>
+                                    <th className="p-4 font-medium text-gray-500 w-16">S.No</th>
+                                    <th className="p-4 font-medium text-gray-500 w-48">Email ID</th>
+                                    <th className="p-4 font-medium text-gray-500 w-32">Date</th>
+                                    <th className="p-4 font-medium text-gray-500 w-48">Course Name</th>
+                                    <th className="p-4 font-medium text-gray-500">Question</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                                {feedbackData.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} className="p-8 text-center text-gray-500">
+                                            No feedback found.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    [...feedbackData]
+                                    .sort((a, b) => {
+                                        const dateA = new Date(a.date).getTime();
+                                        const dateB = new Date(b.date).getTime();
+                                        return feedbackSort === "latest" ? dateB - dateA : dateA - dateB;
+                                    })
+                                    .map((f, i) => (
+                                        <tr key={f._id} className="hover:bg-gray-50">
+                                            <td className="p-4 text-gray-500 font-medium">{i + 1}</td>
+                                            <td className="p-4 font-medium">{f.email}</td>
+                                            <td className="p-4 text-gray-500">{new Date(f.date).toLocaleDateString()}</td>
+                                            <td className="p-4">
+                                                <div className="font-medium text-blue-700">{f.courseName}</div>
+                                                <div className="text-xs text-gray-500 mt-1 line-clamp-1">{f.topicTitle}</div>
+                                            </td>
+                                            <td className="p-4 text-gray-700 whitespace-pre-wrap">
+                                                {f.question}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
             {/* EDIT TOPIC DIALOG */}
             <Dialog open={!!editingTopic} onOpenChange={(open) => !open && setEditingTopic(null)}>
                 <DialogContent>
@@ -737,6 +943,68 @@ const ClassesAdminManager = ({ initialTab = "approve_access" }: ClassesAdminMana
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setRevokeAccessConfirm(null)}>Cancel</Button>
                         <Button onClick={handleRevokeAccess}>Revoke Access</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={!!editAccessUser} onOpenChange={(open) => !open && setEditAccessUser(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Course Access</DialogTitle>
+                        <DialogDescription>Modify allowed courses for this learner.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                        <div>
+                            <label className="text-xs font-semibold text-gray-500 mb-1 block">Email ID</label>
+                            <Input value={editAccessUser?.email} readOnly className="bg-gray-50" />
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-gray-500 mb-2 block">Existing Course Access</label>
+                            <div className="flex flex-wrap gap-2 mb-3">
+                                {editAccessCategories.length === 0 && <span className="text-xs text-gray-400">No courses allowed.</span>}
+                                {editAccessCategories.map(catId => {
+                                    const cat = categories.find(c => c._id === catId);
+                                    if (!cat) return null;
+                                    return (
+                                        <div key={catId} className="flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-medium px-2 py-1 rounded-md border border-blue-100">
+                                            {cat.name}
+                                            <button 
+                                                onClick={() => setEditAccessCategories(prev => prev.filter(id => id !== catId))}
+                                                className="text-blue-400 hover:text-blue-700 ml-1"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <label className="text-xs font-semibold text-gray-500 mb-1 block">Add New Course</label>
+                            <div className="flex gap-2">
+                                <select 
+                                    className="flex-1 h-9 border rounded-md px-3 text-sm bg-white"
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        if (val && !editAccessCategories.includes(val)) {
+                                            setEditAccessCategories([...editAccessCategories, val]);
+                                        }
+                                        e.target.value = ""; // reset
+                                    }}
+                                    defaultValue=""
+                                >
+                                    <option value="" disabled>Select course to add...</option>
+                                    {categories.filter(c => !editAccessCategories.includes(c._id)).map(c => (
+                                        <option key={c._id} value={c._id}>{c.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setEditAccessUser(null)}>Cancel</Button>
+                        <Button onClick={handleUpdateAccess} disabled={loading}>
+                            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                            Save Changes
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
