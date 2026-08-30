@@ -3,7 +3,7 @@ import { API_BASE_URL } from "@/config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Loader2, Plus, Edit2, Trash2, Check, X, CheckCircle2, XCircle, Video, Folder, Users, Eye, EyeOff, AlertTriangle, MessageSquare, Download } from "lucide-react";
+import { Loader2, Plus, Edit2, Trash2, Check, X, CheckCircle2, XCircle, Video, Folder, Users, Eye, EyeOff, AlertTriangle, MessageSquare, Download, ChevronDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { IKContext, IKUpload } from "imagekitio-react";
 import {
@@ -48,6 +48,7 @@ const ClassesAdminManager = ({ initialTab = "approve_access" }: ClassesAdminMana
     // Approve Access Form
     const [newEmail, setNewEmail] = useState("");
     const [selectedAllowedCategories, setSelectedAllowedCategories] = useState<string[]>([]);
+    const [isCourseDropdownOpen, setIsCourseDropdownOpen] = useState(false);
 
     // Edit Access Form
     const [editAccessUser, setEditAccessUser] = useState<any>(null);
@@ -460,57 +461,108 @@ const ClassesAdminManager = ({ initialTab = "approve_access" }: ClassesAdminMana
             {activeTab === "approve_access" && (
                 <div className="space-y-8 animate-in fade-in duration-300">
                     <Card>
-                        <CardContent className="pt-6 flex flex-col gap-4">
-                            <div className="flex gap-4 items-end">
-                                <div className="flex-1">
-                                    <label className="text-xs font-semibold text-gray-500 mb-1 block">Learner Email ID</label>
-                                    <Input 
-                                        placeholder="Enter Learner Email ID" 
-                                        value={newEmail}
-                                        onChange={(e) => setNewEmail(e.target.value)}
-                                        className="w-full"
-                                    />
-                                </div>
-                                <Button onClick={handleAddAccess} disabled={loading} className="shrink-0">
+                        <CardContent className="pt-6 flex flex-col gap-6">
+                            <div>
+                                <label className="text-xs font-semibold text-gray-500 mb-1 block">Learner Email ID</label>
+                                <Input 
+                                    placeholder="Enter Learner Email ID" 
+                                    value={newEmail}
+                                    onChange={(e) => setNewEmail(e.target.value)}
+                                    className="w-full max-w-md"
+                                />
+                            </div>
+                            
+                            <div className="relative max-w-md">
+                                <label className="text-xs font-semibold text-gray-500 mb-2 block">Select Allowed Courses (Required)</label>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCourseDropdownOpen(!isCourseDropdownOpen)}
+                                    className="w-full flex items-center justify-between h-10 border rounded-md px-3 text-sm bg-white hover:bg-gray-50 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <span className={selectedAllowedCategories.length > 0 ? "text-gray-900 font-medium" : "text-gray-400"}>
+                                        {selectedAllowedCategories.length === 0 
+                                            ? "Select courses from dropdown..." 
+                                            : selectedAllowedCategories.length === categories.length 
+                                                ? "All Courses Selected" 
+                                                : `${selectedAllowedCategories.length} Course${selectedAllowedCategories.length > 1 ? 's' : ''} Selected`}
+                                    </span>
+                                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isCourseDropdownOpen ? "rotate-180" : ""}`} />
+                                </button>
+
+                                {isCourseDropdownOpen && (
+                                    <div className="absolute left-0 right-0 mt-1 z-30 border rounded-md p-3 space-y-2.5 bg-white max-h-56 overflow-y-auto shadow-lg">
+                                        <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                                            <input 
+                                                type="checkbox"
+                                                id="selectAllCourses"
+                                                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+                                                checked={categories.length > 0 && selectedAllowedCategories.length === categories.length}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedAllowedCategories(categories.map(c => c._id));
+                                                    } else {
+                                                        setSelectedAllowedCategories([]);
+                                                    }
+                                                }}
+                                            />
+                                            <label htmlFor="selectAllCourses" className="text-sm font-semibold text-gray-900 cursor-pointer select-none">
+                                                Select All Courses
+                                            </label>
+                                        </div>
+                                        {categories.map(c => (
+                                            <div key={c._id} className="flex items-center gap-2 hover:bg-gray-50 p-1 rounded">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`course-${c._id}`}
+                                                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+                                                    checked={selectedAllowedCategories.includes(c._id)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedAllowedCategories([...selectedAllowedCategories, c._id]);
+                                                        } else {
+                                                            setSelectedAllowedCategories(selectedAllowedCategories.filter(id => id !== c._id));
+                                                        }
+                                                    }}
+                                                />
+                                                <label htmlFor={`course-${c._id}`} className="text-sm text-gray-700 cursor-pointer select-none flex-1">
+                                                    {c.name}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Selected category tags */}
+                                {selectedAllowedCategories.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 mt-2">
+                                        {selectedAllowedCategories.map(catId => {
+                                            const cat = categories.find(c => c._id === catId);
+                                            return cat ? (
+                                                <span key={catId} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-medium px-2 py-0.5 rounded border border-blue-100">
+                                                    {cat.name}
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setSelectedAllowedCategories(prev => prev.filter(id => id !== catId))}
+                                                        className="text-blue-400 hover:text-blue-700 ml-0.5"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </span>
+                                            ) : null;
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="flex justify-start pt-2">
+                                <Button 
+                                    onClick={handleAddAccess} 
+                                    disabled={loading || !newEmail.trim() || selectedAllowedCategories.length === 0} 
+                                    className={`shrink-0 transition-all ${selectedAllowedCategories.length > 0 && newEmail.trim() ? "bg-blue-600 hover:bg-blue-700 shadow-md" : "opacity-60"}`}
+                                >
                                     {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
                                     Provide Access
                                 </Button>
-                            </div>
-                            <div>
-                                <label className="text-xs font-semibold text-gray-500 mb-2 block">Select Allowed Courses (Optional, default is none)</label>
-                                <div className="flex flex-wrap gap-2 mb-3">
-                                    {selectedAllowedCategories.length === 0 && <span className="text-xs text-gray-400">Select courses from below.</span>}
-                                    {selectedAllowedCategories.map(catId => {
-                                        const cat = categories.find(c => c._id === catId);
-                                        return cat ? (
-                                            <div key={catId} className="flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-medium px-2 py-1 rounded-md border border-blue-100">
-                                                {cat.name}
-                                                <button 
-                                                    onClick={() => setSelectedAllowedCategories(prev => prev.filter(id => id !== catId))}
-                                                    className="text-blue-400 hover:text-blue-700 ml-1"
-                                                >
-                                                    <X className="w-3 h-3" />
-                                                </button>
-                                            </div>
-                                        ) : null;
-                                    })}
-                                </div>
-                                <select 
-                                    className="max-w-md w-full h-9 border rounded-md px-3 text-sm bg-white"
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        if (val && !selectedAllowedCategories.includes(val)) {
-                                            setSelectedAllowedCategories([...selectedAllowedCategories, val]);
-                                        }
-                                        e.target.value = "";
-                                    }}
-                                    defaultValue=""
-                                >
-                                    <option value="" disabled>Select course to add...</option>
-                                    {categories.filter(c => !selectedAllowedCategories.includes(c._id)).map(c => (
-                                        <option key={c._id} value={c._id}>{c.name}</option>
-                                    ))}
-                                </select>
                             </div>
                         </CardContent>
                     </Card>
